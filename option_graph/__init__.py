@@ -6,3 +6,4 @@
 from option_graph.option import Option
 from option_graph.option_graph import OptionGraph
 from option_graph.feature_condition import FeatureCondition
+from option_graph.action import Action

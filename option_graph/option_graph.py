@@ -1,6 +1,11 @@
 # OptionGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
+from __future__ import annotations
+from options_graphs.option_graph.node import Node
+
+from typing import TYPE_CHECKING, Union, Any
+
 import networkx as nx
 
 from matplotlib.axes import Axes
@@ -10,33 +15,60 @@ from matplotlib.legend_handler import HandlerPatch
 
 from option_graph.graph import option_layout, draw_networkx_nodes_images
 
+if TYPE_CHECKING:
+    from option_graph.node import EmptyNode
+    from option_graph.option import Option
+    from option_graph.action import Action
+    from option_graph.feature_condition import FeatureCondition
+
+
 class OptionGraph(nx.DiGraph):
 
-    def add_node_feature_condition(self, node_name:str, image):
-        self.add_node(node_name, type='feature_check', color='blue', image=image)
+    NODES_COLORS = {'feature_check': 'blue', 'action': 'red',
+        'option': 'orange', 'empty': 'purple'}
+    EDGES_COLORS = {0:'red', 1:'green', 2:'blue', 3:'yellow',
+        4:'rose', 5:'cyan', 6:'gray', 'any':'purple'}
 
-    def add_node_option(self, node_name:str, image):
-        self.add_node(node_name, type='option', color='orange', image=image)
+    def __init__(self, all_options, incoming_graph_data, **attr):
+        self.all_options = all_options
+        super().__init__(incoming_graph_data=incoming_graph_data, **attr)
 
-    def add_node_action(self, node_name:str, image):
-        self.add_node(node_name, type='action', color='red', image=image)
+    def add_node(self, node:Union[FeatureCondition, Action, Option]):
+        if isinstance(node, FeatureCondition):
+            node_type = 'feature_check'
+        elif isinstance(node, Action):
+            node_type = 'action'
+        elif isinstance(node, Option):
+            node_type = 'option'
+        elif isinstance(node, EmptyNode):
+            node_type = 'empty'
+        else:
+            raise TypeError("Node type must be one of "
+                            "(FeatureCondition, Action, Option, EmptyNode)"
+                            f"found {type(node)} instead")
+        super().add_node(node.name, type=node_type,
+            color=self.NODES_COLORS[node_type], image=node.image)
 
-    def add_node_empty(self, node_name:str):
-        self.add_node(node_name, type='empty', color='purple', image=None)
-
-    def add_edge_conditional(self, u_of_edge, v_of_edge, is_yes:bool):
-        color = 'green' if is_yes else 'red'
-        self.add_edge(u_of_edge, v_of_edge, type='conditional', color=color)
+    def add_edge_condition(self, u_of_edge, v_of_edge, index:int):
+        node_type = 'condition'
+        self.add_edge(u_of_edge, v_of_edge, index=index,
+            type=node_type, color=self.EDGES_COLORS[index])
 
     def add_edge_any(self, u_of_edge, v_of_edge):
-        self.add_edge(u_of_edge, v_of_edge, type='any', color='purple')
+        node_type = 'any'
+        self.add_edge(u_of_edge, v_of_edge,
+            type=node_type, color=self.EDGES_COLORS[node_type])
 
     def add_predecessors(self, prev_checks, node, force_any=False):
         if len(prev_checks) > 1 or (force_any and len(prev_checks) > 0):
             for pred in prev_checks:
                 self.add_edge_any(pred, node)
         elif len(prev_checks) == 1:
-            self.add_edge_conditional(prev_checks[0], node, True)
+            self.add_edge_condition(prev_checks[0], node, 0)
+
+
+    def __call__(self, observation) -> Any:
+        raise NotImplementedError
 
     def draw(self, ax:Axes, **kwargs) -> Axes:
         fontcolor = kwargs.get('fontcolor', 'black')
@@ -55,17 +87,19 @@ class OptionGraph(nx.DiGraph):
             )
 
             legend_patches = [
-                mpatches.Patch(facecolor='none', edgecolor='blue', label='Feature condition'),
-                mpatches.Patch(facecolor='none', edgecolor='orange', label='Option'),
-                mpatches.Patch(facecolor='none', edgecolor='red', label='Action'),
+                mpatches.Patch(
+                    facecolor='none',
+                    edgecolor=self.NODES_COLORS[node_type],
+                    label=node_type.capitalize()
+                ) for node_type in self.NODES_COLORS
             ]
             legend_arrows = [
-                mpatches.FancyArrow(0, 0, 1, 0,
-                    facecolor='green', edgecolor='none', label='Condition (True)'),
-                mpatches.FancyArrow(0, 0, 1, 0,
-                    facecolor='red', edgecolor='none', label='Condition (False)'),
-                mpatches.FancyArrow(0, 0, 1, 0,
-                    facecolor='purple', edgecolor='none', label='Any'),
+                mpatches.FancyArrow(
+                    0, 0, 1, 0,
+                    facecolor=self.EDGES_COLORS[edge_type],
+                    edgecolor='none',
+                    label=edge_type.capitalize() if isinstance(edge_type, str) else f'Condition ({edge_type})'
+                ) for edge_type in self.EDGES_COLORS
             ]
 
             # Draw the legend

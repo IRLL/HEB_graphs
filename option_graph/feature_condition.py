@@ -1,13 +1,14 @@
 # OptionGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
+from typing import Any
+
 import numpy as np
 
-class FeatureCondition():
+from option_graph.node import Node
 
-    def __init__(self, feature_id:str, image=None) -> None:
-        self.feature_id = feature_id
-        self.image = image
+class FeatureCondition(Node):
+    """ Feature condition. """
 
-    def __call__(self, observations:np.ndarray) -> np.ndarray:
+    def __call__(self, observation:Any) -> int:
         raise NotImplementedError
