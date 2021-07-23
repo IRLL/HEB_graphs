@@ -20,7 +20,7 @@ class Option(Node):
     """ Abstract class for options """
 
     def __init__(self, name:str, image=None) -> None:
-        super().__init__(name, image)
+        super().__init__(name, 'option', image=image)
         self._graph = None
 
     def __call__(self, observation):
@@ -37,7 +37,7 @@ class Option(Node):
             option_done: True if the option is done, False otherwise.
 
         """
-        return self.graph(observation)
+        return self.graph.__call__(observation)
 
     def build_graph(self) -> OptionGraph:
         """ Build the OptionGraph of this Option.
@@ -47,20 +47,6 @@ class Option(Node):
 
         """
         raise NotImplementedError
-
-    def draw_graph(self, ax:Axes, **kwargs) -> Axes:
-        """ Draw this Option's graph on the given Axes.
-
-        See OptionGraph for kwargs documentation.
-
-        Args:
-            ax: The matplotlib ax to draw on.
-
-        Returns:
-            The resulting matplotlib Axes drawn on.
-
-        """
-        return self.graph.draw(ax, **kwargs)
 
     @property
     def graph(self) -> OptionGraph:

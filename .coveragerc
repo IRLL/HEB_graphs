@@ -1,4 +1,2 @@
 [report]
 show_missing = True
-omit =
-    crafting/examples/minecraft/*
