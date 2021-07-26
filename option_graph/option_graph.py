@@ -1,12 +1,15 @@
 # OptionGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
+""" Module containing the OptionGraph base class. """
+
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, List
+from copy import deepcopy
 
 import networkx as nx
-from copy import deepcopy
+import numpy as np
 
 from matplotlib.axes import Axes
 import matplotlib.pyplot as plt
@@ -21,66 +24,106 @@ from option_graph.option import Option
 
 class OptionGraph(nx.DiGraph):
 
+    """ Base class for option graphs.
+
+    An OptionGraph is a DiGraph, and as such stores nodes and directed edges with
+    optional data, or attributes.
+
+    But nodes of an option graph are not arbitrary.
+    Leaf nodes can either be an Action or an Option.
+    Other nodes can either be a FeatureCondition or an EmptyNode.
+
+    An OptionGraph determines the behavior of an option, it can be called with an observation
+    to return the action given by this option.
+
+    An OptionGraph edges are directed and indexed,
+    this indexing for path making when calling the graph.
+
+    As in a DiGraph loops are allowed but multiple (parallel) edges are not.
+
+    Args:
+        option: The Option object from which this graph is built.
+        all_options: A dictionary of Option, this can be used to avoid cirular definitions using
+            the option names as anchor instead of the Option object itself.
+        any_mode: How to choose path, when multiple path are valid.
+        incoming_graph_data: Additional data to include in the graph.
+
+    """
+
     NODES_COLORS = {'feature_condition': 'blue', 'action': 'red',
         'option': 'orange', 'empty': 'purple'}
     EDGES_COLORS = {0:'red', 1:'green', 2:'blue', 3:'yellow',
-        4:'rose', 5:'cyan', 6:'gray', 'any':'purple'}
+        4:'rose', 5:'cyan', 6:'gray'}
     ANY_MODES = ['first', 'random']
 
-    def __init__(self, option:Option, all_options:Dict[str, Option], incoming_graph_data,
+    def __init__(self, option:Option, all_options:Dict[str, Option]=None, incoming_graph_data=None,
             any_mode:str='first', **attr):
         self.option = option
-        self.all_options = all_options
+        self.all_options = all_options if all_options is not None else {}
         self.any_mode = any_mode
         super().__init__(incoming_graph_data=incoming_graph_data, **attr)
 
-    def add_node(self, node:Node):
-        super().add_node(node.name, type=node.type, object=node,
-            color=self.NODES_COLORS[node.type], image=node.image)
+    def add_node(self, node_for_adding:Node, **attr):
+        node = node_for_adding
+        super().add_node(node, type=node.type,
+            color=self.NODES_COLORS[node.type], image=node.image, **attr)
 
-    def add_edge_condition(self, u_of_edge, v_of_edge, index:int):
-        node_type = 'condition'
-        self.add_edge(u_of_edge, v_of_edge, index=index,
-            type=node_type, color=self.EDGES_COLORS[index])
+    def add_edge(self, u_of_edge:Node, v_of_edge:Node, **attr):
+        index = attr.get('index', 1)
+        super().add_edge(u_of_edge, v_of_edge, index=index, color=self.EDGES_COLORS[index], **attr)
 
-    def add_edge_any(self, u_of_edge, v_of_edge):
-        node_type = 'any'
-        self.add_edge(u_of_edge, v_of_edge,
-            type=node_type, color=self.EDGES_COLORS[node_type])
+    def _get_any_action(self, nodes:List[Node], observation, options_in_search:list):
+        actions = []
+        for node in nodes:
+            action = self._get_action(node, observation, options_in_search)
+            if action is None:
+                return None
+            actions.append(action)
+        if self.any_mode == 'first':
+            return actions[0]
+        if self.any_mode == 'last':
+            return actions[-1]
+        if self.any_mode == 'random':
+            return np.random.choice(actions)
 
-    def add_predecessors(self, prev_checks, node, force_any=False):
-        if len(prev_checks) > 1 or (force_any and len(prev_checks) > 0):
-            for pred in prev_checks:
-                self.add_edge_any(pred, node)
-        elif len(prev_checks) == 1:
-            self.add_edge_condition(prev_checks[0], node, int(True))
-
-    def _next(self, node:Node, observation, options_in_search:list):
+    def _get_action(self, node:Node, observation, options_in_search:list):
         if isinstance(node, Action):
             return node(observation)
         if isinstance(node, FeatureCondition):
             next_edge_index = node(observation)
-            succs = self.successors(node.name)
-            for succ in succs:
-                if self.edges[node.name, succ]['index'] == next_edge_index:
-                    next_node = self.nodes[node.name]['object']
-                    return self._next(next_node, observation, options_in_search)
-            raise IndexError(f'FeatureCondition {node} returned index {next_edge_index}'
-                             f' but {next_edge_index} was not found as an edge index')
-        if isinstance(node, Option):
+            succs = self.successors(node)
+            next_nodes = []
+            for next_node in succs:
+                if self.edges[node, next_node]['index'] == next_edge_index:
+                    next_nodes.append(next_node)
+            if len(next_nodes) == 0:
+                raise IndexError(f'FeatureCondition {node} returned index {next_edge_index}'
+                                 f' but {next_edge_index} was not found as an edge index')
+            return self._get_any_action(next_nodes, observation, options_in_search)
+
+        if isinstance(node, (Option, str)):
             try:
-                return self.nodes[node.name]['object'](observation, options_in_search)
+                return node(observation, options_in_search)
             except NotImplementedError:
-                return self.all_options[node.name](observation, options_in_search)
+                return self.all_options[str(node)](observation, options_in_search)
+        if isinstance(node, EmptyNode):
+            next_node = self.successors(node).__next__()
+            return self._get_action(next_node, observation, options_in_search)
+        raise TypeError(f'Unknowed type {type(node)}({node}) for a node.')
 
     def __call__(self, observation, options_in_search=None) -> Any:
-        if options_in_search is None:
-            options_in_search = []
-        else:
-            options_in_search = deepcopy(options_in_search)
+        options_in_search = [] if options_in_search is None else deepcopy(options_in_search)
         options_in_search.append(self.option.name)
+        return self._get_any_action(self.roots, observation, options_in_search)
 
-        raise NotImplementedError
+    @property
+    def roots(self):
+        """ Roots of the option graph (nodes without predecessors). """
+        roots = []
+        for node in self.nodes():
+            if len(list(self.predecessors(node))) == 0:
+                roots.append(node)
+        return roots
 
     def draw(self, ax:Axes, **kwargs) -> Axes:
         """ Draw the OptionGraph on the given Axis.

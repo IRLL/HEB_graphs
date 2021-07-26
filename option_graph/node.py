@@ -22,6 +22,9 @@ class Node():
     def __call__(self, observation:Any) -> Any:
         raise NotImplementedError
 
+    def __str__(self) -> str:
+        return self.name
+
 
 class Action(Node):
 

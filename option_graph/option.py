@@ -12,7 +12,6 @@ from option_graph.node import Node
 
 if TYPE_CHECKING:
     from option_graph.option_graph import OptionGraph
-    from matplotlib.axes import Axes
 
 
 class Option(Node):

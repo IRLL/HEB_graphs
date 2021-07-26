@@ -127,7 +127,7 @@ def leveled_layout(graph:nx.DiGraph, center=None,
 
         energy = 0
         for level in nodes_by_level:
-            for node in nodes_by_level[level]:  
+            for node in nodes_by_level[level]:
                 energy += nodes_strenght * sum(
                     np.square(dist(pos[node], pos[n]))
                     for n in nodes_by_level[level] if n != node
@@ -211,7 +211,8 @@ def option_layout(graph:nx.DiGraph):
             pos[node] = [x_pos, -level]
     return pos
 
-def draw_networkx_nodes_images(graph, pos, ax, img_zoom=1):
+def draw_networkx_nodes_images(graph:nx.DiGraph, pos, ax, img_zoom=1):
+    """ Draw nodes of"""
     for n in graph:
         img = graph.nodes[n]['image']
         color = graph.nodes[n]['color']
