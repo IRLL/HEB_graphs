@@ -51,9 +51,9 @@ class OptionGraph(nx.DiGraph):
     """
 
     NODES_COLORS = {'feature_condition': 'blue', 'action': 'red',
-        'option': 'orange', 'empty': 'purple'}
+        'option': 'orange', 'empty': None}
     EDGES_COLORS = {0:'red', 1:'green', 2:'blue', 3:'yellow',
-        4:'rose', 5:'cyan', 6:'gray'}
+        4:'purple', 5:'cyan', 6:'gray'}
 
     def __init__(self, option:Option, all_options:Dict[str, Option]=None, incoming_graph_data=None,
             any_mode:str='first', **attr):
@@ -68,7 +68,7 @@ class OptionGraph(nx.DiGraph):
             color=self.NODES_COLORS[node.type], image=node.image, **attr)
 
     def add_edge(self, u_of_edge:Node, v_of_edge:Node, **attr):
-        index = attr.get('index', 1)
+        index = attr.pop('index', 1)
         super().add_edge(u_of_edge, v_of_edge, index=index, color=self.EDGES_COLORS[index], **attr)
 
     def _get_any_action(self, nodes:List[Node], observation, options_in_search:list):
@@ -155,14 +155,18 @@ class OptionGraph(nx.DiGraph):
                 edge_color=[color for _, _, color in self.edges(data='color')]
             )
 
+            used_node_types = [node_type for _, node_type in self.nodes(data='type')]
             legend_patches = [
                 mpatches.Patch(facecolor='none', edgecolor=color, label=node_type.capitalize()
                 ) for node_type, color in self.NODES_COLORS.items()
+                if node_type in used_node_types and color is not None
             ]
+            used_edge_indexes = [index for _, _, index in self.edges(data='index')]
             legend_arrows = [
                 mpatches.FancyArrow(0, 0, 1, 0, facecolor=color, edgecolor='none',
-                    label=str(index) if index < 2 else f'{str(bool(index))} ({index})'
+                    label=str(index) if index > 1 else f'{str(bool(index))} ({index})'
                 ) for index, color in self.EDGES_COLORS.items()
+                if index in used_edge_indexes
             ]
 
             # Draw the legend

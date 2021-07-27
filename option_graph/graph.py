@@ -23,39 +23,31 @@ def compute_color(graph:nx.DiGraph):
             if isinstance(graph.edges[node, succ]['color'], list):
                 graph.edges[node, succ]['color'][3] = alpha
 
-def compute_levels(graph:nx.DiGraph, weak_edges_type:List[str]=None):
+def compute_levels(graph:nx.DiGraph):
     """ Compute the hierachical levels of all DiGraph nodes given some weak_edges.
 
     Adds the attribute 'level' for each node in the given graph.
 
     Args:
         graph: A networkx DiGraph.
-        weak_edges_type: List of weak edges types (only the min level of those will be considered).
-            Require edges to have the attribute 'type'.
 
     """
 
-    if weak_edges_type is None:
-        weak_edges_type = []
-
-    def _compute_level_dependencies(graph, node, predecessors):
-        strong_dependencies = [0]
-        weak_dependencies = []
+    def _compute_level_dependencies(graph:nx.DiGraph, node, predecessors):
+        pred_level_by_index = {}
         incomplete = False
         for pred in predecessors:
+            index = graph.edges[pred, node]['index']
             try:
                 pred_level = graph.nodes[pred]['level']
-                if graph.edges[pred, node]['type'] in weak_edges_type:
-                    weak_dependencies.append(pred_level)
+                if index in pred_level_by_index:
+                    pred_level_by_index[index].append(pred_level)
                 else:
-                    strong_dependencies.append(pred_level)
+                    pred_level_by_index[index] = [pred_level]
             except KeyError:
-                if graph.edges[pred, node]['type'] not in weak_edges_type:
-                    incomplete = True
-        dependencies = strong_dependencies
-        if len(weak_dependencies) > 0:
-            dependencies += [min(weak_dependencies)]
-        return 1 + max(dependencies), incomplete
+                incomplete = True
+        min_level_by_index = [min(level_list) for _, level_list in pred_level_by_index.items()]
+        return 1 + max(min_level_by_index), incomplete
 
     all_nodes_have_level = False
     while not all_nodes_have_level:
