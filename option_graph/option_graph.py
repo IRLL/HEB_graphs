@@ -79,6 +79,8 @@ class OptionGraph(nx.DiGraph):
                 return None
             actions.append(action)
         actions = [action for action in actions if action != "Impossible"]
+        if len(actions) == 0:
+            return "Impossible"
         if self.any_mode == 'first':
             return actions[0]
         if self.any_mode == 'last':

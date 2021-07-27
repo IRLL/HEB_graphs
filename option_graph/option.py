@@ -22,7 +22,7 @@ class Option(Node):
         super().__init__(name, 'option', image=image)
         self._graph = None
 
-    def __call__(self, observation):
+    def __call__(self, observation, *args, **kwargs):
         """ Use the option to get next actions.
 
         By default, uses the OptionGraph if it can be built.
@@ -36,7 +36,7 @@ class Option(Node):
             option_done: True if the option is done, False otherwise.
 
         """
-        return self.graph.__call__(observation)
+        return self.graph.__call__(observation, *args, **kwargs)
 
     def build_graph(self) -> OptionGraph:
         """ Build the OptionGraph of this Option.
