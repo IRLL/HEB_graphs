@@ -54,7 +54,6 @@ class OptionGraph(nx.DiGraph):
         'option': 'orange', 'empty': 'purple'}
     EDGES_COLORS = {0:'red', 1:'green', 2:'blue', 3:'yellow',
         4:'rose', 5:'cyan', 6:'gray'}
-    ANY_MODES = ['first', 'random']
 
     def __init__(self, option:Option, all_options:Dict[str, Option]=None, incoming_graph_data=None,
             any_mode:str='first', **attr):
@@ -79,6 +78,7 @@ class OptionGraph(nx.DiGraph):
             if action is None:
                 return None
             actions.append(action)
+        actions = [action for action in actions if action != "Impossible"]
         if self.any_mode == 'first':
             return actions[0]
         if self.any_mode == 'last':
@@ -102,6 +102,8 @@ class OptionGraph(nx.DiGraph):
             return self._get_any_action(next_nodes, observation, options_in_search)
 
         if isinstance(node, (Option, str)):
+            if str(node) in options_in_search:
+                return "Impossible"
             try:
                 return node(observation, options_in_search)
             except NotImplementedError:
@@ -159,9 +161,8 @@ class OptionGraph(nx.DiGraph):
             ]
             legend_arrows = [
                 mpatches.FancyArrow(0, 0, 1, 0, facecolor=color, edgecolor='none',
-                    label=edge_type.capitalize() if isinstance(edge_type, str) \
-                        else f'Condition ({edge_type})'
-                ) for edge_type, color in self.EDGES_COLORS.items()
+                    label=str(index) if index < 2 else f'{str(bool(index))} ({index})'
+                ) for index, color in self.EDGES_COLORS.items()
             ]
 
             # Draw the legend
