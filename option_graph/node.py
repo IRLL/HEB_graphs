@@ -3,7 +3,8 @@
 
 """ Module for base Node classes. """
 
-from typing import Any
+from typing import Any, List
+import numpy as np
 
 class Node():
 
@@ -37,6 +38,19 @@ class Action(Node):
 
     def __call__(self, observation:Any) -> Any:
         return self.action
+
+
+class StochasticAction(Action):
+
+    """ Node representing a stochastic choice between actions in an OptionGraph. """
+
+    def __init__(self, actions: List[Action], probs: list, name: str, image=None) -> None:
+        super().__init__(actions, name=name, image=image)
+        self.probs = probs
+
+    def __call__(self, observation):
+        selected_action = np.random.choice(self.action, p=self.probs)
+        return selected_action(observation)
 
 
 class FeatureCondition(Node):
