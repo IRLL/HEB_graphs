@@ -92,11 +92,11 @@ class OptionGraph(nx.DiGraph):
         if isinstance(node, Action):
             return node(observation)
         if isinstance(node, FeatureCondition):
-            next_edge_index = node(observation)
+            next_edge_index = int(node(observation))
             succs = self.successors(node)
             next_nodes = []
             for next_node in succs:
-                if self.edges[node, next_node]['index'] == next_edge_index:
+                if int(self.edges[node, next_node]['index']) == next_edge_index:
                     next_nodes.append(next_node)
             if len(next_nodes) == 0:
                 raise IndexError(f'FeatureCondition {node} returned index {next_edge_index}'
