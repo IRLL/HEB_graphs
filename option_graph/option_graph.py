@@ -68,6 +68,9 @@ class OptionGraph(nx.DiGraph):
             color=self.NODES_COLORS[node.type], image=node.image, **attr)
 
     def add_edge(self, u_of_edge:Node, v_of_edge:Node, **attr):
+        for node in (u_of_edge, v_of_edge):
+            if node not in self.nodes():
+                self.add_node(node)
         index = attr.pop('index', 1)
         super().add_edge(u_of_edge, v_of_edge, index=index, color=self.EDGES_COLORS[index], **attr)
 
