@@ -4,21 +4,24 @@
 
 """ Additional utility functions for networkx graphs. """
 
-import networkx as nx
+from networkx import DiGraph
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.axes import Axes
 
-def compute_levels(graph:nx.DiGraph):
+def compute_levels(graph:DiGraph):
     """ Compute the hierachical levels of all DiGraph nodes.
 
     Adds the attribute 'level' to each node in the given graph.
+    Adds the attribute 'nodes_by_level' to the given graph.
+    Adds the attribute 'depth' to the given graph.
+    The DiGraph must not have any circuit.
 
     Args:
         graph: A networkx DiGraph.
 
     """
 
-    def _compute_level_dependencies(graph:nx.DiGraph, node, predecessors):
+    def _compute_level_dependencies(graph:DiGraph, node, predecessors):
         pred_level_by_index = {}
         incomplete = False
         for pred in predecessors:
@@ -61,7 +64,7 @@ def compute_levels(graph:nx.DiGraph):
     graph.graph['nodes_by_level'] = nodes_by_level
     graph.graph['depth'] = max(level for level in nodes_by_level)
 
-def compute_edges_color(graph:nx.DiGraph):
+def compute_edges_color(graph:DiGraph):
     """ Compute the edges colors of a leveled graph for readability.
 
     Adds the attribute 'color' and 'linestyle' to each edge in the given graph.
@@ -86,7 +89,7 @@ def compute_edges_color(graph:nx.DiGraph):
             if isinstance(graph.edges[node, succ]['color'], list):
                 graph.edges[node, succ]['color'][3] = alpha
 
-def draw_networkx_nodes_images(graph:nx.DiGraph, pos, ax:Axes, img_zoom:float=1):
+def draw_networkx_nodes_images(graph:DiGraph, pos, ax:Axes, img_zoom:float=1):
     """ Draw nodes images of a networkx DiGraph on a given matplotlib ax.
 
     Args:
