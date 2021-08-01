@@ -16,7 +16,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.legend_handler import HandlerPatch
 
-from option_graph.graph import option_layout, draw_networkx_nodes_images
+from option_graph.graph import draw_networkx_nodes_images
+from option_graph.layouts import option_graph_default_layout
 
 from option_graph.node import Node, Action, FeatureCondition, EmptyNode
 from option_graph.option import Option
@@ -147,7 +148,7 @@ class OptionGraph(nx.DiGraph):
         """
         fontcolor = kwargs.get('fontcolor', 'black')
         if len(list(self.nodes())) > 0:
-            pos = option_layout(self)
+            pos = option_graph_default_layout(self)
             draw_networkx_nodes_images(self, pos, ax=ax, img_zoom=0.5)
 
             nx.draw_networkx_edges(
