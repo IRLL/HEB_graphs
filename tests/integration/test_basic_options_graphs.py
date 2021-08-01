@@ -3,13 +3,26 @@
 
 """ Intergration tests for basic options graphs. """
 
-# import pytest
 import pytest_check as check
-# from pytest_mock import MockerFixture
 
 from option_graph.node import Action, EmptyNode, FeatureCondition
 from option_graph.option import Option
 from option_graph.option_graph import OptionGraph
+
+class FundamentalOption(Option):
+
+    """ Fundamental option based on an Action. """
+
+    def __init__(self, action: Action) -> None:
+        self.action = action
+        name = action.name +"_option"
+        super().__init__(name, image=action.image)
+
+    def build_graph(self) -> OptionGraph:
+        graph = OptionGraph(self)
+        graph.add_node(self.action)
+        return graph
+
 
 class ThresholdFeatureCondition(FeatureCondition):
 
@@ -28,20 +41,6 @@ class ThresholdFeatureCondition(FeatureCondition):
             return int(observation <= self.threshold)
         raise ValueError(f"Unkowned relation: {self.relation}")
 
-class FundamentalOption(Option):
-
-    """ Fundamental option based on an Action. """
-
-    def __init__(self, action: Action) -> None:
-        self.action = action
-        name = action.name +"_option"
-        super().__init__(name, image=action.image)
-
-    def build_graph(self) -> OptionGraph:
-        graph = OptionGraph(self)
-        graph.add_node(self.action)
-        return graph
-
 def test_a_graph():
     """ (A) Fundamental options (single action) should work properly. """
     action_id = 42
@@ -57,15 +56,9 @@ def test_f_a_graph():
 
         def build_graph(self) -> OptionGraph:
             graph = OptionGraph(self)
-
             feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
-            graph.add_node(feature_condition)
-
             for i in range(2):
-                action = Action(i)
-                graph.add_node(action)
-                graph.add_edge_condition(feature_condition, action, i)
-
+                graph.add_edge(feature_condition, Action(i), index=i)
             return graph
 
     option = F_A_Option('F_A')
@@ -83,14 +76,7 @@ def test_e_a_graph():
 
         def build_graph(self) -> OptionGraph:
             graph = OptionGraph(self)
-
-            action = Action(action_id)
-            graph.add_node(action)
-
-            empty = EmptyNode("empty")
-            graph.add_node(empty)
-
-            graph.add_edge_condition(empty, action)
+            graph.add_edge(EmptyNode("empty"), Action(action_id))
             return graph
 
     option = E_A_Option('E_A')
@@ -107,25 +93,17 @@ def test_f_f_a_graph():
             graph = OptionGraph(self)
 
             feature_condition_1 = ThresholdFeatureCondition(relation=">=", threshold=0)
-            graph.add_node(feature_condition_1)
-
             feature_condition_2 = ThresholdFeatureCondition(relation="<=", threshold=1)
-            graph.add_node(feature_condition_2)
-            graph.add_edge_condition(feature_condition_1, feature_condition_2, int(True))
-
             feature_condition_3 = ThresholdFeatureCondition(relation=">=", threshold=-1)
-            graph.add_node(feature_condition_3)
-            graph.add_edge_condition(feature_condition_1, feature_condition_3, int(False))
 
-            for i, edge_index in zip(range(2), (0, 1)):
-                action = Action(i)
-                graph.add_node(action)
-                graph.add_edge_condition(feature_condition_2, action, edge_index)
+            graph.add_edge(feature_condition_1, feature_condition_2, index=True)
+            graph.add_edge(feature_condition_1, feature_condition_3, index=False)
 
-            for i, edge_index in zip(range(2, 4), (0, 1)):
-                action = Action(i)
-                graph.add_node(action)
-                graph.add_edge_condition(feature_condition_3, action, edge_index)
+            for action, edge_index in zip(range(2), (0, 1)):
+                graph.add_edge(feature_condition_2, Action(action), index=edge_index)
+
+            for action, edge_index in zip(range(2, 4), (0, 1)):
+                graph.add_edge(feature_condition_3, Action(action), index=edge_index)
 
             return graph
 
@@ -144,18 +122,13 @@ def test_e_f_a_graph():
 
         def build_graph(self) -> OptionGraph:
             graph = OptionGraph(self)
-
             empty = EmptyNode("empty")
-            graph.add_node(empty)
-
             feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
-            graph.add_node(feature_condition)
-            graph.add_edge_condition(empty, feature_condition)
 
+            graph.add_edge(empty, feature_condition)
             for i, edge_index in zip(range(2), (0, 1)):
                 action = Action(i)
-                graph.add_node(action)
-                graph.add_edge_condition(feature_condition, action, edge_index)
+                graph.add_edge(feature_condition, action, index=edge_index)
 
             return graph
 
@@ -175,23 +148,14 @@ def test_f_e_a_graph():
             graph = OptionGraph(self)
 
             feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
-            graph.add_node(feature_condition)
-
             empty_0 = EmptyNode("empty_0")
-            graph.add_node(empty_0)
-            graph.add_edge_condition(feature_condition, empty_0, int(True))
-
-            action_0 = Action(0)
-            graph.add_node(action_0)
-            graph.add_edge_condition(empty_0, action_0)
-
             empty_1 = EmptyNode("empty_1")
-            graph.add_node(empty_1)
-            graph.add_edge_condition(feature_condition, empty_1, int(False))
 
-            action_1 = Action(1)
-            graph.add_node(action_1)
-            graph.add_edge_condition(empty_1, action_1)
+            graph.add_edge(feature_condition, empty_0, index=int(True))
+            graph.add_edge(feature_condition, empty_1, index=int(False))
+
+            graph.add_edge(empty_0, Action(0))
+            graph.add_edge(empty_1,  Action(1))
 
             return graph
 
@@ -210,15 +174,10 @@ def test_e_e_a_graph():
             graph = OptionGraph(self)
 
             empty_0 = EmptyNode("empty_0")
-            graph.add_node(empty_0)
-
             empty_1 = EmptyNode("empty_1")
-            graph.add_node(empty_1)
-            graph.add_edge_condition(empty_0, empty_1)
 
-            action_0 = Action(0)
-            graph.add_node(action_0)
-            graph.add_edge_condition(empty_1, action_0)
+            graph.add_edge(empty_0, empty_1)
+            graph.add_edge(empty_1, Action(0))
 
             return graph
 
@@ -239,11 +198,8 @@ def test_aa_graph():
         def build_graph(self) -> OptionGraph:
             graph = OptionGraph(self, any_mode=self.any_mode)
 
-            action_0 = Action(0)
-            graph.add_node(action_0)
-
-            action_1 = Action(1)
-            graph.add_node(action_1)
+            graph.add_node(Action(0))
+            graph.add_node(Action(1))
 
             return graph
 
@@ -267,19 +223,11 @@ def test_af_a_graph():
         def build_graph(self) -> OptionGraph:
             graph = OptionGraph(self, any_mode=self.any_mode)
 
-            action_0 = Action(0)
-            graph.add_node(action_0)
-
+            graph.add_node(Action(0))
             feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
-            graph.add_node(feature_condition)
 
-            action_1 = Action(1)
-            graph.add_node(action_1)
-            graph.add_edge_condition(feature_condition, action_1, int(True))
-
-            action_2 = Action(2)
-            graph.add_node(action_2)
-            graph.add_edge_condition(feature_condition, action_2, int(False))
+            graph.add_edge(feature_condition, Action(1), index=int(True))
+            graph.add_edge(feature_condition, Action(2), index=int(False))
 
             return graph
 
@@ -304,21 +252,11 @@ def test_f_af_a_graph():
 
         def build_graph(self) -> OptionGraph:
             graph = OptionGraph(self, any_mode=self.any_mode)
-
             feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
-            graph.add_node(feature_condition)
 
-            action_0 = Action(0)
-            graph.add_node(action_0)
-            graph.add_edge_condition(feature_condition, action_0, int(True))
-
-            action_1 = Action(1)
-            graph.add_node(action_1)
-            graph.add_edge_condition(feature_condition, action_1, int(False))
-
-            action_2 = Action(2)
-            graph.add_node(action_2)
-            graph.add_edge_condition(feature_condition, action_2, int(False))
+            graph.add_edge(feature_condition, Action(0), index=int(True))
+            graph.add_edge(feature_condition, Action(1), index=int(False))
+            graph.add_edge(feature_condition, Action(2), index=int(False))
 
             return graph
 
