@@ -22,4 +22,4 @@ def test_simulated_annealing():
     optimal_x = simulated_annealing(-1, energy, neighbor,
         max_iterations=1000, initial_temperature=5, verbose=1)
 
-    check.less_equal(abs(optimal_x), 2 * step_size)
+    check.less_equal(abs(optimal_x), 3 * step_size)
