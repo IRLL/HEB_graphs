@@ -20,7 +20,7 @@ from matplotlib.legend_handler import HandlerPatch
 from option_graph.graph import draw_networkx_nodes_images
 from option_graph.layouts import option_graph_default_layout
 
-from option_graph.node import Node, Action, FeatureCondition, EmptyNode
+from option_graph.node import Node
 from option_graph.option import Option
 
 

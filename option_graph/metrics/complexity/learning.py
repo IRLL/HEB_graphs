@@ -3,7 +3,7 @@
 
 """ Learning complexity. """
 
-from option_graph.metrics.complexity import general_complexity
+from option_graph.metrics.complexity.general import general_complexity
 
 def learning_complexity(*args, **kwargs):
     return general_complexity(

@@ -18,6 +18,7 @@ def update_sum_dict(dict1, dict2):
 
 def init_individual_complexities(action_nodes, feature_nodes,
     individual_complexities:Union[dict, float]=1.):
+    """ Initialize a dictionary of individual complexities. """
 
     if isinstance(individual_complexities, (float, int)):
         individual_complexities = {

@@ -12,7 +12,7 @@ from tqdm import tqdm
 from option_graph import OptionGraph, Option, Node
 from option_graph.metrics.complexity.utils import update_sum_dict, init_individual_complexities
 
-def get_used_nodes(options:Dict[str, Option], used_nodes:Dict[str, int]=None, 
+def get_used_nodes(options:Dict[str, Option], used_nodes:Dict[str, int]=None,
         individual_complexities:Union[dict, float]=1., verbose=0):
     complexities, used_nodes = {}, {}
 
