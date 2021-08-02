@@ -58,43 +58,28 @@ def leveled_layout_energy(graph:nx.DiGraph, center=None, metaheuristic=simulated
                 )
                 energy -= sum(
                     edges_strenght \
-                        # *graph.edges[pred, node]['color'][3]\
                         /abs(max(1, graph.nodes[node]['level'] - graph.nodes[pred]['level']))\
                         /max(1e-6, dist(pos[node], pos[pred]))
                     for pred in graph.predecessors(node)
                 )
                 energy -= sum(
                     edges_strenght \
-                        # *graph.edges[node, succ]['color'][3]\
                         /abs(max(1, graph.nodes[node]['level'] - graph.nodes[succ]['level']))\
                         /max(1e-6, dist(pos[node], pos[succ]))
                     for succ in graph.successors(node)
                 )
+
         return energy
 
     def neighbor(pos):
         pos_copy = deepcopy(pos)
         choosen_node = np.random.choice(list(pos_copy.keys()))
-        try:
-            choosen_node = int(choosen_node)
-        except ValueError:
-            pass
-        x, y = pos_copy[choosen_node][0], pos_copy[choosen_node][1]
-
-        if y <= 0:
-            sign = 1
-        elif y >= 1:
-            sign = -1
-        else:
-            sign = np.random.choice((-1, 1))
-
-        new_pos = [x, y + sign * step_size]
-
-        for n in pos:
+        choosen_level = graph.nodes(data='level')[choosen_node]
+        new_pos = [pos_copy[choosen_node][0], np.random.choice(spacing)]
+        for n in nodes_by_level[choosen_level]:
             if n != choosen_node and np.all(np.isclose(new_pos, pos_copy[n])):
                 pos_copy[choosen_node], pos_copy[n] = pos_copy[n], pos_copy[choosen_node]
                 return pos_copy
-
         pos_copy[choosen_node] = new_pos
         return pos_copy
 
