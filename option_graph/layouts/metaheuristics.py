@@ -7,7 +7,7 @@ import numpy as np
 
 def simulated_annealing(initial, energy, neighbor,
     max_iterations:int=1000, initial_temperature:float=5,
-    max_iters_without_new:int=100, verbose:bool=1):
+    max_iters_without_new:int=np.inf, verbose:bool=1):
 
     """ Perform simulated annealing metaheuristic on an energy using a neighboring.
 
