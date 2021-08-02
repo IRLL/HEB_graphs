@@ -67,3 +67,33 @@ def general_complexity(option:Option, used_nodes_all:Dict[Node, Dict[Node, int]]
         previous_used_nodes = update_sum_dict(previous_used_nodes, {node: n_used})
 
     return total_complexity - total_saved_complexity, total_saved_complexity
+
+
+def learning_complexity(option:Option, used_nodes_all:Dict[Node, Dict[Node, int]],
+        previous_used_nodes=None, default_node_complexity:float=1.):
+    """ Compute the learning complexity of an Option with used nodes.
+
+    Using the number of time each node is used in its OptionGraph we compute the learning
+    complexity of an option and the total saved complexity.
+
+    Args:
+        option: The Option for which we compute the learning complexity.
+        used_nodes_all: Dictionary of dictionary of the number of times each nodes was used in the
+            past, and thus for each node. Not being in a dictionary is counted as not being used.
+        previous_used_nodes: Dictionary of the number of times each nodes was used in the past,
+            not being in the dictionary is counted as not being used.
+        default_node_complexity: Default individual complexity (if not given by Node).
+            Default is 1.
+
+    Returns:
+        Tuple composed of the learning complexity and the total saved complexity.
+
+    """
+    return general_complexity(
+        option=option,
+        used_nodes_all=used_nodes_all,
+        previous_used_nodes=previous_used_nodes,
+        default_node_complexity=default_node_complexity,
+        saved_complexity=lambda node, k, p: max(0, min(k, p + k - 1)),
+        kcomplexity=lambda node, k: k,
+    )
