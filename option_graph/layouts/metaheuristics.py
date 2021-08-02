@@ -5,27 +5,43 @@
 
 import numpy as np
 
-def simulated_annealing(initial_pos, energy, neighbor, max_iterations=1000, max_iters_without_new=100,
-    iters_without_new=0, initial_temperature=5, verbose=1):
+def simulated_annealing(initial, energy, neighbor,
+    max_iterations:int=1000, initial_temperature:float=5,
+    max_iters_without_new:int=100, verbose:bool=1):
+
+    """ Perform simulated annealing metaheuristic on an energy using a neighboring.
+
+    See https://en.wikipedia.org/wiki/Simulated_annealing for more details.
+
+    Args:
+        initial: Initial variable position.
+        energy: Function giving the energy (aka cost) of a given variable position.
+        neighbor: Function giving a neighbor of a given variable position.
+        max_iterations: Maximum number of iterations.
+        initial_temperature: Initial temperature parameter, more is more random search.
+        max_iters_without_new: Maximum number of iterations without a new best position.
+
+    """
 
     def prob_keep(temperature, delta_e):
         return min(1, np.exp(delta_e/temperature))
 
-    pos = initial_pos
-    energy_pos = energy(pos)
+    x = initial
+    energy_pos = energy(x)
+    iters_without_new = 0
     for k in range(max_iterations):
-        new_pos = neighbor(pos)
-        new_e = energy(new_pos)
+        new_x = neighbor(x)
+        new_e = energy(new_x)
         temperature = initial_temperature/(k+1)
         iters_without_new += 1
         prob = prob_keep(temperature, energy_pos - new_e)
         if np.random.random() < prob:
             if verbose == 1:
                 print(f"{k}\t({prob:.0%})\t{energy_pos:.2f}->{new_e:.2f}", end='\r')
-            pos, energy_pos = new_pos, new_e
+            x, energy_pos = new_x, new_e
             iters_without_new = 0
 
         if iters_without_new >= max_iters_without_new:
             break
 
-    return pos
+    return x
