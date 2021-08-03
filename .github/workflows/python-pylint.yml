@@ -23,7 +23,8 @@ jobs:
         pip install pylint
         score=$(python pylint_score.py --score)
         color=$(python pylint_score.py --color)
-        echo "Score:$score, Color:$color"
+        echo "PYLINT_SCORE=$score/10.00"
+        echo "PYLINT_COLOR=$color"
         echo "PYLINT_SCORE=$score/10.00" >> $GITHUB_ENV
         echo "PYLINT_COLOR=$color" >> $GITHUB_ENV
     - name: Create Pylint Badge
