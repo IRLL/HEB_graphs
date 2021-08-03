@@ -11,5 +11,5 @@ Option Graph - A structure for explainable hierarchical reinforcement learning
    :target: https://github.com/IRLL/options_graphs/actions/workflows/python-tests.yml
 
 
-.. image:: https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/<user>/<gist-ID>/raw/test.json
+.. image:: https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/MathisFederico/00ce73155619a4544884ca6d251954b3/raw/pylint_badge.json
    :alt: Pylint badge
