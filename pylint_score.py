@@ -4,11 +4,11 @@
 """ Module to get pylint score. """
 
 import sys
-from colorsys import hsv_to_rgb
 import html
 from pylint.interfaces import IReporter
 from pylint.reporters import *
 from pylint.lint import Run
+from utils import score_to_color
 
 class MyReporterClass(BaseReporter):
     """Report messages and layouts."""
@@ -51,9 +51,6 @@ def register(linter):
     """Register the reporter classes with the linter."""
     linter.register_reporter(MyReporterClass)
 
-def interpolate(weight, x, y):
-    return x * weight + (1-weight) * y
-
 if __name__ == '__main__':
     options = [
         'option_graph',
@@ -61,18 +58,11 @@ if __name__ == '__main__':
     ]
     results = Run(options, exit=False)
     score = results.linter.stats['global_note']
-
-    score_threshold = 8.0
-    normalized_score = (score - score_threshold) / abs(10 - score_threshold)
-    if normalized_score == 0:
-        raise Exception('Insufficient score with pylint')
-
+    color = score_to_color(score, score_min=8.0, score_max=10,
+        error_msg='Insufficient score with pylint')
     if sys.argv[1] == '--score':
         print(f"{score:.2f}")
     elif sys.argv[1] == '--color':
-        hsv_color = (interpolate(normalized_score, 1/3, 0), 1, 1)
-        rgb_color = hsv_to_rgb(*hsv_color)
-        rgb_color = tuple(int(255*value) for value in rgb_color)
-        print(f"rgb{rgb_color}")
+        print()
     else:
         raise ValueError(f"Unknowed argument: {sys.argv[1]}")
