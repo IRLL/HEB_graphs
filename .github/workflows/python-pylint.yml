@@ -21,12 +21,11 @@ jobs:
     - name: Lint with pylint
       run: |
         pip install pylint
-        output=$(python pylint_score.py)
-        output="${output//'%'/'%25'}"
-        output="${output//$'\n'/'%0A'}"
-        output="${output//$'\r'/'%0D'}"
-        echo "PYLINT_SCORE=$output"
-        echo "PYLINT_SCORE=$output" >> $GITHUB_ENV
+        score=$(python pylint_score.py --score)
+        color=$(python pylint_score.py --color)
+        echo "Score:$score, Color:$color"
+        echo "PYLINT_SCORE=$score/10.00" >> $GITHUB_ENV
+        echo "PYLINT_COLOR=$color" >> $GITHUB_ENV
     - name: Create Pylint Badge
       uses: schneegans/dynamic-badges-action@v1.1.0
       with:
@@ -35,5 +34,5 @@ jobs:
         filename: pylint_badge.json
         label: Pylint
         message: ${{ env.PYLINT_SCORE }}
-        color: green
+        color: ${{ env.PYLINT_COLOR }}
         style: plastic
