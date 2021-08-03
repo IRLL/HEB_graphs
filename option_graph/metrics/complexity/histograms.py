@@ -3,55 +3,53 @@
 
 """ OptionGraph used nodes histograms computation. """
 
-from typing import List, Dict, Union
+from typing import List, Dict, Tuple
 from copy import deepcopy
 
 import numpy as np
 from tqdm import tqdm
 
-from option_graph import OptionGraph, Option, Node
-from option_graph.metrics.complexity.utils import update_sum_dict, init_individual_complexities
+from option_graph import Option, Node
+from option_graph.metrics.complexity.utils import update_sum_dict
 
-def get_used_nodes(options:Dict[str, Option], used_nodes:Dict[str, int]=None,
-        individual_complexities:Union[dict, float]=1., verbose=0):
+def get_used_nodes(options:List[Option], used_nodes:Dict[str, int]=None,
+        default_node_complexity:float=1., verbose=0):
     complexities, used_nodes = {}, {}
 
-    iterator = tqdm(options.items(), total=len(options), desc='Building options histograms') \
-        if verbose > 0 else options.items()
+    iterator = tqdm(options, total=len(options), desc='Building options histograms') \
+        if verbose > 0 else options
 
-    action_nodes, feature_nodes, _ = get_nodes_types_lists(list(options.values()))
-    individual_complexities = init_individual_complexities(
-        action_nodes, feature_nodes, individual_complexities)
-
-    for option_key, option in iterator:
-        if option_key not in complexities:
-            complexity, _used_nodes = get_used_nodes_single_option(option, options,
-                individual_complexities=individual_complexities)
-            complexities[option_key] = complexity
-            used_nodes[option_key] = _used_nodes
+    for option in iterator:
+        complexity, _used_nodes = get_used_nodes_single_option(option, used_nodes,
+            default_node_complexity=default_node_complexity)
+        complexities[str(option)] = complexity
+        used_nodes[str(option)] = _used_nodes
     return complexities, used_nodes
 
-def get_nodes_types_lists(options:List[Option]):
-    action_nodes, feature_nodes, option_nodes = [], [], []
-    for option in options:
+
+def _get_node_complexity(node:Node, used_nodes: Dict[Node, int],
+    options_in_search=None, default_node_complexity:float=1.):
+    if node.type in ('action', 'feature_condition'):
         try:
-            graph = option.graph
-        except NotImplementedError:
-            continue
+            node_complexity = node.complexity
+        except AttributeError:
+            node_complexity = default_node_complexity
+        return node_complexity, {str(node):1}
+    if node.type == 'option':
+        if options_in_search is not None and str(node) in options_in_search:
+            return np.inf, {}
+        return get_used_nodes_single_option(node, used_nodes,
+                    default_node_complexity=default_node_complexity,
+                    _options_in_search=deepcopy(options_in_search))
+    if node.type == 'empty':
+        return 0, {}
+    raise ValueError(f"Unkowned node type {node.type}")
 
-        for node in graph.nodes():
-            node_type = graph.nodes[node]['type']
-            if node_type == 'action' and node not in action_nodes:
-                action_nodes.append(node)
-            elif node_type == 'option' and node not in option_nodes:
-                option_nodes.append(node)
-            elif node_type == 'feature_check' and node not in feature_nodes:
-                feature_nodes.append(node)
-    return action_nodes, feature_nodes, option_nodes
+def get_used_nodes_single_option(option:Option, used_nodes:Dict[str, int]=None,
+        default_node_complexity:float=1., _options_in_search=None) -> Tuple[float, dict]:
 
-def get_used_nodes_single_option(option:Option, options:Dict[str, Option],
-        used_nodes:Dict[str, int]=None, individual_complexities:Union[dict, float]=1.,
-        return_all_nodes=False, _options_in_search=None):
+    if used_nodes is None:
+        used_nodes = {}
 
     try:
         graph = option.graph
@@ -61,35 +59,6 @@ def get_used_nodes_single_option(option:Option, options:Dict[str, Option],
     if _options_in_search is None:
         _options_in_search = []
     _options_in_search.append(str(option))
-
-    if used_nodes is None:
-        used_nodes = {}
-
-    def _get_node_complexity(graph:OptionGraph, node:Node, used_nodes: Dict[Node, int]):
-        node_type = graph.nodes[node]['type']
-
-        if node_type in ('action', 'feature_check'):
-            node_used_nodes = {node:1}
-            node_complexity = individual_complexities[node]
-
-        elif node_type == 'option':
-            _option = options[node]
-            if str(_option) in _options_in_search:
-                node_used_nodes = {}
-                node_complexity = np.inf
-            else:
-                node_complexity, node_used_nodes = \
-                    get_used_nodes_single_option(_option, options, used_nodes,
-                        _options_in_search=deepcopy(_options_in_search))
-
-        elif node_type == 'empty':
-            node_used_nodes = {}
-            node_complexity = 0
-
-        else:
-            raise ValueError(f"Unkowned node type {node_type}")
-
-        return node_complexity, node_used_nodes
 
     nodes_by_level = graph.graph['nodes_by_level']
     depth = graph.graph['depth']
@@ -104,37 +73,38 @@ def get_used_nodes_single_option(option:Option, options:Dict[str, Option],
             node_complexity = 0
             node_used_nodes = {}
 
-            or_complexities = []
-            or_succs = []
+            complexities_by_index = {}
+            succ_by_index = {}
             for succ in graph.successors(node):
-                succ_complexity = complexities[succ]
-                if graph.edges[node, succ]['type'] == 'any':
-                    or_complexities.append(succ_complexity)
-                    or_succs.append(succ)
-                else:
-                    node_complexity += succ_complexity
-                    node_used_nodes = update_sum_dict(node_used_nodes, nodes_used_nodes[succ])
+                succ_complexity = complexities[str(succ)]
+                index = int(graph.edges[node, succ]['index'])
+                try:
+                    complexities_by_index[index].append(succ_complexity)
+                    succ_by_index[index].append(succ)
+                except KeyError:
+                    complexities_by_index[index] = [succ_complexity]
+                    succ_by_index[index] = [succ]
 
-            if len(or_succs) > 0:
-                min_succ_id = np.argmin(or_complexities)
-                min_succ = or_succs[min_succ_id]
-                min_complex = or_complexities[min_succ_id]
-
-                node_complexity += min_complex
-                node_used_nodes = update_sum_dict(node_used_nodes, nodes_used_nodes[min_succ])
+            for index, values in complexities_by_index.items():
+                min_index = np.argmin(values)
+                choosen_succ = succ_by_index[index][min_index]
+                print(str(choosen_succ), nodes_used_nodes[str(choosen_succ)], node_used_nodes)
+                node_complexity += values[min_index]
+                node_used_nodes = update_sum_dict(node_used_nodes,
+                    nodes_used_nodes[str(choosen_succ)])
 
             node_used_nodes = update_sum_dict(node_used_nodes, used_nodes)
-            node_only_complexity, node_only_used_options = \
-                _get_node_complexity(graph, node, node_used_nodes)
 
+            node_only_complexity, node_only_used_options = \
+                _get_node_complexity(node, node_used_nodes,
+                    default_node_complexity=default_node_complexity,
+                    options_in_search=_options_in_search)
             node_complexity += node_only_complexity
             node_used_nodes = update_sum_dict(node_used_nodes, node_only_used_options)
 
-            complexities[node] = node_complexity
-            nodes_used_nodes[node] = node_used_nodes
+            complexities[str(node)] = node_complexity
+            nodes_used_nodes[str(node)] = node_used_nodes
 
     root = nodes_by_level[0][0]
-    nodes_used_nodes[root] = update_sum_dict(nodes_used_nodes[root], {option.option_id: 1})
-    if return_all_nodes:
-        return complexities, nodes_used_nodes
-    return complexities[root], nodes_used_nodes[root]
+    nodes_used_nodes[str(root)] = update_sum_dict(nodes_used_nodes[str(root)], {str(option): 1})
+    return complexities[str(root)], nodes_used_nodes[str(root)]

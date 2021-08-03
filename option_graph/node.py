@@ -26,6 +26,14 @@ class Node():
     def __str__(self) -> str:
         return self.name
 
+    def __eq__(self, o: object) -> bool:
+        return self.name == str(o)
+
+    def __hash__(self) -> int:
+        return self.name.__hash__()
+
+    def __repr__(self) -> str:
+        return self.name
 
 class Action(Node):
 

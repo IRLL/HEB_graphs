@@ -9,8 +9,9 @@ def update_sum_dict(dict1, dict2):
     """ Give the sum of two dictionaries. """
     dict1, dict2 = deepcopy(dict1), deepcopy(dict2)
     for key, val in dict2.items():
-        try:
-            dict1[key] += val
-        except KeyError:
-            dict1[key] = val
+        if not isinstance(val, dict):
+            try:
+                dict1[key] += val
+            except KeyError:
+                dict1[key] = val
     return dict1
