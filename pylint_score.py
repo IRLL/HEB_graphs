@@ -65,7 +65,7 @@ if __name__ == '__main__':
     score_threshold = 8.0
     normalized_score = (score - score_threshold) / abs(10 - score_threshold)
     if normalized_score == 0:
-        raise Exception('Insufisant score with pylint')
+        raise Exception('Insufficient score with pylint')
 
     if sys.argv[1] == '--score':
         print(f"{score:.2f}")

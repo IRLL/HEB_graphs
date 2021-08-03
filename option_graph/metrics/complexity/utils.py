@@ -5,7 +5,7 @@
 
 from copy import deepcopy
 
-def update_sum_dict(dict1, dict2):
+def update_sum_dict(dict1:dict, dict2:dict):
     """ Give the sum of two dictionaries. """
     dict1, dict2 = deepcopy(dict1), deepcopy(dict2)
     for key, val in dict2.items():
