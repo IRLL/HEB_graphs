@@ -4,5 +4,5 @@
 """ Module to get pylint score. """
 
 from pylint.lint import Run
-results = Run(['option_graph'], do_exit=False)
+results = Run(['option_graph'], exit=False)
 print(f"{results.linter.stats['global_note']:.2f}/10.00")

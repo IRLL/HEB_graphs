@@ -21,9 +21,12 @@ jobs:
     - name: Lint with pylint
       run: |
         pip install pylint
-        score=$(python pylint_score.py)
-        echo "PYLINT_SCORE=$score"
-        echo "PYLINT_SCORE=$score" >> $GITHUB_ENV
+        output=$(python pylint_score.py)
+        output="${output//'%'/'%25'}"
+        output="${output//$'\n'/'%0A'}"
+        output="${output//$'\r'/'%0D'}"
+        echo "PYLINT_SCORE=$output"
+        echo "PYLINT_SCORE=$output" >> $GITHUB_ENV
     - name: Create Pylint Badge
       uses: schneegans/dynamic-badges-action@v1.1.0
       with:
