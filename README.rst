@@ -7,6 +7,9 @@ Option Graph - A structure for explainable hierarchical reinforcement learning
 
 
 .. image:: https://github.com/IRLL/options_graphs/actions/workflows/python-tests.yml/badge.svg
-   :alt: Python tests
+   :alt: Pytest badge
    :target: https://github.com/IRLL/options_graphs/actions/workflows/python-tests.yml
 
+
+.. image:: https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/<user>/<gist-ID>/raw/test.json
+   :alt: Pylint badge
