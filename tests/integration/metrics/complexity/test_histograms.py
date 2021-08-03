@@ -63,7 +63,7 @@ class TestHistograms:
         self.options = [Option0(), Option1(), Option2()]
 
     def test_get_used_nodes(self):
-        """'get_used_nodes' should give expected results on the paper handcrafted example. """
+        """'nodes_histograms' should give expected results on the paper handcrafted example. """
 
         expected_used_nodes_all = {
             self.options[0]: {
