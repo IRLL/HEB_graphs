@@ -12,7 +12,6 @@ if __name__ == '__main__':
     coverage = file.getElementsByTagName('coverage')
     coverage = float(coverage[0].attributes['line-rate'].value)
     color = score_to_rgb_color(coverage, 0, 1)
-    print()
     if sys.argv[1] == '--score':
         print(f"{coverage:.1%}")
     elif sys.argv[1] == '--color':
