@@ -22,4 +22,15 @@ jobs:
     - name: Lint with pylint
       run: |
         pip install pylint
-        python3 pylint_score.py
+        score=$(python pylint_score.py)
+        echo "PYLINT_SCORE=$score" >> $GITHUB_ENV
+    - name: Create Pylint Badge
+      uses: schneegans/dynamic-badges-action@v1.1.0
+      with:
+        auth: ${{ secrets.GIST_SECRET }}
+        gistID: 00ce73155619a4544884ca6d251954b3
+        filename: pylint_badge.json
+        label: Pylint
+        message: ${{ env.PYLINT_SCORE }}
+        color: green
+        style: social
