@@ -6,8 +6,8 @@ def interpolate(weight, x, y):
 def score_to_rgb_color(score, score_min, score_max, error_msg=None):
     if error_msg is not None and (score < score_min or score > score_max):
         raise Exception(error_msg)
-    normalized_score = min(0, score - score_min / (score_max - score_min))
-    hsv_color = (interpolate(normalized_score, 1/3, 0), 1, 1)
+    normalized_score = max(0, score - score_min / (score_max - score_min))
+    hsv_color = (interpolate(normalized_score, 0.33, 0), 1, 1)
     rgb_color = hsv_to_rgb(*hsv_color)
     rgb_color = tuple(int(255*value) for value in rgb_color)
     return f"rgb{rgb_color}"
