@@ -1,4 +1,4 @@
-name: Python coverage
+name: Dynamic badge test
 
 on: ["push"]
 
@@ -6,12 +6,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Create Awesome Badge
+    - name: Create Awesome Badge
       uses: schneegans/dynamic-badges-action@v1.1.0
       with:
         auth: ${{ secrets.GIST_SECRET }}
         gistID: 00ce73155619a4544884ca6d251954b3
-        filename: test.json
-        label: Hello
-        message: World
+        filename: pylint_badge.json
+        label: Pylint
+        message: test
         color: orange
