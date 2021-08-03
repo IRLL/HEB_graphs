@@ -19,6 +19,9 @@ def compute_levels(graph:DiGraph):
     Args:
         graph: A networkx DiGraph.
 
+    Returns:
+        Dictionary of nodes by level.
+
     """
 
     def _compute_level_dependencies(graph:DiGraph, node, predecessors):
@@ -63,6 +66,7 @@ def compute_levels(graph:DiGraph):
 
     graph.graph['nodes_by_level'] = nodes_by_level
     graph.graph['depth'] = max(level for level in nodes_by_level)
+    return nodes_by_level
 
 def compute_edges_color(graph:DiGraph):
     """ Compute the edges colors of a leveled graph for readability.

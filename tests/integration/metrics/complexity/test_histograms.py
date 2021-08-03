@@ -6,7 +6,7 @@
 import pytest
 import pytest_check as check
 
-from option_graph.metrics.complexity.histograms import get_used_nodes
+from option_graph.metrics.complexity.histograms import nodes_histograms
 from option_graph import Action, Option, FeatureCondition, OptionGraph
 
 class TestHistograms:
@@ -98,5 +98,5 @@ class TestHistograms:
             },
         }
 
-        _, used_nodes_all = get_used_nodes(self.options)
+        used_nodes_all = nodes_histograms(self.options)
         check.equal(used_nodes_all, expected_used_nodes_all)
