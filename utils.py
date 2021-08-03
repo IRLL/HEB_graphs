@@ -3,7 +3,7 @@ from colorsys import hsv_to_rgb
 def interpolate(weight, x, y):
     return x * weight + (1-weight) * y
 
-def score_to_color(score, score_min, score_max, error_msg=None):
+def score_to_rgb_color(score, score_min, score_max, error_msg=None):
     if error_msg is not None and (score < score_min or score > score_max):
         raise Exception(error_msg)
     normalized_score = min(0, score - score_min / (score_max - score_min))

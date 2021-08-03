@@ -5,13 +5,13 @@
 
 import sys
 from xml.dom import minidom
-from utils import score_to_color
+from utils import score_to_rgb_color
 
 if __name__ == '__main__':
     file = minidom.parse('coverage.xml')
     coverage = file.getElementsByTagName('coverage')
     coverage = float(coverage[0].attributes['line-rate'].value)
-    color = score_to_color(coverage, 0, 1)
+    color = score_to_rgb_color(coverage, 0, 1)
     print()
     if sys.argv[1] == '--score':
         print(f"{coverage:.1%}")
