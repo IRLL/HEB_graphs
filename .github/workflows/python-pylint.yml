@@ -25,7 +25,7 @@ jobs:
         output="${output//'%'/'%25'}"
         output="${output//$'\n'/'%0A'}"
         output="${output//$'\r'/'%0D'}"
-        echo "PYLINT_SCORE=$output"
+        echo output
         echo "PYLINT_SCORE=$output" >> $GITHUB_ENV
     - name: Create Pylint Badge
       uses: schneegans/dynamic-badges-action@v1.1.0
