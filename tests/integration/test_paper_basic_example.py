@@ -6,8 +6,12 @@
 import pytest
 import pytest_check as check
 
+from itertools import permutations
+from networkx.classes.digraph import DiGraph
+
 from option_graph.metrics.complexity.histograms import nodes_histograms
 from option_graph.metrics.complexity.complexities import learning_complexity
+from option_graph.requirements_graph import build_requirement_graph
 from option_graph import Action, Option, FeatureCondition, OptionGraph
 
 class TestPaperBasicExamples:
@@ -156,3 +160,29 @@ class TestPaperBasicExamples:
             check.equal(c_learning, expected_learning_complexities[option])
             check.equal(saved_complexity, expected_saved_complexities[option])
 
+    def test_requirement_graph_edges(self):
+        """should give expected requirement_graph edges. """
+        expected_requirement_graph = DiGraph()
+        for option in self.options:
+            expected_requirement_graph.add_node(option)
+        expected_requirement_graph.add_edge(self.options[0], self.options[1])
+        expected_requirement_graph.add_edge(self.options[0], self.options[2])
+        expected_requirement_graph.add_edge(self.options[1], self.options[2])
+
+        requirements_graph = build_requirement_graph(self.options)
+        for option, other_option in permutations(self.options, 2):
+            print(option, other_option)
+            req_has_edge = requirements_graph.has_edge(option, other_option)
+            expected_req_has_edge = expected_requirement_graph.has_edge(option, other_option)
+            check.equal(req_has_edge, expected_req_has_edge)
+
+    def test_requirement_graph_levels(self):
+        """should give expected requirement_graph node levels (requirement depth). """
+        expected_levels = {
+            self.options[0]: 0,
+            self.options[1]: 1,
+            self.options[2]: 2
+        }
+        requirements_graph = build_requirement_graph(self.options)
+        for option, level in requirements_graph.nodes(data='level'):
+            check.equal(level, expected_levels[option])
