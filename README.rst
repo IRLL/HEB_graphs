@@ -59,6 +59,8 @@ You should also start your commit message with **one** applicable emoji. This do
      - When you refactored / improved a small piece of code.
    * - `:hammer:` ``:hammer:``
      - When you refactored / improved large parts of the code.
+   * - `:sparkles:` ``:sparkles:``
+     - When you improved code quality (pylint, PEP, ...).
    * - `:art:` ``:art:``
      - When you improved / added design assets.
    * - `:rocket:` ``:rocket:``
