@@ -95,7 +95,7 @@ class TestPaperBasicExamples:
             },
         }
 
-    def test_get_used_nodes(self):
+    def test_nodes_histograms(self):
         """should give expected nodes_histograms results. """
 
         expected_used_nodes_all = {
@@ -134,7 +134,7 @@ class TestPaperBasicExamples:
         used_nodes_all = nodes_histograms(self.options)
         check.equal(used_nodes_all, expected_used_nodes_all)
 
-    def test_learning_complexity_example(self):
+    def test_learning_complexity(self):
         """should give expected learning_complexity. """
         expected_learning_complexities = {
             self.options[0]: 3,
