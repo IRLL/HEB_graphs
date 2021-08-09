@@ -25,8 +25,9 @@ def build_requirement_graph(options:List[Option]) -> DiGraph:
 
     try:
         options_graphs = [option.graph for option in options]
-    except NotImplementedError:
-        raise NotImplementedError("All options given must be able to build an OptionGraph")
+    except NotImplementedError as error:
+        user_msg = "All options given must be able to build an OptionGraph"
+        raise NotImplementedError(user_msg) from error
 
     requirements_graph = DiGraph()
     for option, graph in zip(options, options_graphs):
