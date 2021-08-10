@@ -43,26 +43,29 @@ def general_complexity(option:Option, used_nodes_all:Dict[Node, Dict[Node, int]]
     total_complexity = 0
     total_saved_complexity = 0
 
-    if option in used_nodes_all[option]:
-        used_nodes_all[option].pop(option)
-
     for node in used_nodes_all[option]:
         n_used = used_nodes_all[option][node]
         n_previous_used = previous_used_nodes[node] if node in previous_used_nodes else 0
 
-        if isinstance(node, Option):
-            saved = saved_complexity(node, n_used, n_previous_used)
-            if saved > 0:
-                option_complexity, _ = general_complexity(node, used_nodes_all,
+        try:
+            node_complexity = node.complexity
+        except AttributeError:
+
+            if isinstance(node, Option):
+                node_complexity, saved_node_complexity = general_complexity(node, used_nodes_all,
                     saved_complexity=saved_complexity, kcomplexity=kcomplexity,
                     previous_used_nodes=deepcopy(previous_used_nodes))
-                total_saved_complexity += option_complexity * saved
-        else:
-            try:
-                node_complexity = node.complexity
-            except AttributeError:
+                previous_used_nodes = update_sum_dict(previous_used_nodes, used_nodes_all[node])
+                total_complexity += saved_node_complexity * kcomplexity(node, n_used)
+                total_saved_complexity += saved_node_complexity * kcomplexity(node, n_used)
+            else:
                 node_complexity = default_node_complexity
-            total_complexity += node_complexity * kcomplexity(node, n_used)
+
+        total_complexity += node_complexity * kcomplexity(node, n_used)
+
+        if isinstance(node, Option):
+            total_saved_complexity += node_complexity * \
+                saved_complexity(node, n_used, n_previous_used)
 
         previous_used_nodes = update_sum_dict(previous_used_nodes, {node: n_used})
 

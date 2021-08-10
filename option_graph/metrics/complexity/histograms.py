@@ -4,7 +4,6 @@
 """ OptionGraph used nodes histograms computation. """
 
 from typing import List, Dict, Tuple
-from copy import deepcopy
 
 import numpy as np
 from tqdm import tqdm
@@ -83,7 +82,6 @@ def nodes_histogram(option:Option, default_node_complexity:float=1.,
             nodes_used_nodes[node] = node_used_nodes
 
     root = nodes_by_level[0][0]
-    nodes_used_nodes[root] = update_sum_dict(nodes_used_nodes[root], {option: 1})
     return nodes_used_nodes[root], complexities[root]
 
 def _successors_by_index(graph:OptionGraph, node:Node,
@@ -127,18 +125,16 @@ def _get_node_histogram_complexity(node:Node, options_in_search=None,
             and the given node complexity.
 
     """
-    if node.type in ('action', 'feature_condition'):
+
+    if node.type == 'option':
+        if options_in_search is not None and str(node) in options_in_search:
+            return {}, np.inf
+    if node.type in ('action', 'feature_condition', 'option'):
         try:
             node_complexity = node.complexity
         except AttributeError:
             node_complexity = default_node_complexity
         return {str(node):1}, node_complexity
-    if node.type == 'option':
-        if options_in_search is not None and str(node) in options_in_search:
-            return {}, np.inf
-        return nodes_histogram(node,
-                    default_node_complexity=default_node_complexity,
-                    _options_in_search=deepcopy(options_in_search))
     if node.type == 'empty':
         return {}, 0
     raise ValueError(f"Unkowned node type {node.type}")

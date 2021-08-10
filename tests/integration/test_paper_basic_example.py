@@ -66,33 +66,23 @@ class TestPaperBasicExamples:
         self.actions = [Action(i) for i in range(3)]
         self.feature_conditions = [FeatureCondition(f"feature {i}") for i in range(6)]
         self.options = [Option0(), Option1(), Option2()]
-        self.used_nodes_all = {
+        self.expected_used_nodes_all = {
             self.options[0]: {
                 self.actions[0]: 1,
                 self.actions[1]: 1,
-                self.options[0]: 1,
                 self.feature_conditions[0]: 1,
             },
             self.options[1]: {
-                self.actions[0]: 2,
-                self.actions[1]: 1,
+                self.actions[0]: 1,
                 self.actions[2]: 1,
                 self.options[0]: 1,
-                self.options[1]: 1,
-                self.feature_conditions[0]: 1,
                 self.feature_conditions[1]: 1,
                 self.feature_conditions[2]: 1,
             },
             self.options[2]: {
-                self.actions[0]: 6,
-                self.actions[1]: 3,
-                self.actions[2]: 2,
-                self.options[0]: 3,
+                self.actions[0]: 1,
+                self.options[0]: 1,
                 self.options[1]: 2,
-                self.options[2]: 1,
-                self.feature_conditions[0]: 3,
-                self.feature_conditions[1]: 2,
-                self.feature_conditions[2]: 2,
                 self.feature_conditions[3]: 1,
                 self.feature_conditions[4]: 1,
                 self.feature_conditions[5]: 1,
@@ -101,42 +91,8 @@ class TestPaperBasicExamples:
 
     def test_nodes_histograms(self):
         """should give expected nodes_histograms results. """
-
-        expected_used_nodes_all = {
-            self.options[0]: {
-                self.actions[0]: 1,
-                self.actions[1]: 1,
-                self.options[0]: 1,
-                self.feature_conditions[0]: 1,
-            },
-            self.options[1]: {
-                self.actions[0]: 2,
-                self.actions[1]: 1,
-                self.actions[2]: 1,
-                self.options[0]: 1,
-                self.options[1]: 1,
-                self.feature_conditions[0]: 1,
-                self.feature_conditions[1]: 1,
-                self.feature_conditions[2]: 1,
-            },
-            self.options[2]: {
-                self.actions[0]: 6,
-                self.actions[1]: 3,
-                self.actions[2]: 2,
-                self.options[0]: 3,
-                self.options[1]: 2,
-                self.options[2]: 1,
-                self.feature_conditions[0]: 3,
-                self.feature_conditions[1]: 2,
-                self.feature_conditions[2]: 2,
-                self.feature_conditions[3]: 1,
-                self.feature_conditions[4]: 1,
-                self.feature_conditions[5]: 1,
-            },
-        }
-
         used_nodes_all = nodes_histograms(self.options)
-        check.equal(used_nodes_all, expected_used_nodes_all)
+        check.equal(used_nodes_all, self.expected_used_nodes_all)
 
     def test_learning_complexity(self):
         """should give expected learning_complexity. """
@@ -153,7 +109,7 @@ class TestPaperBasicExamples:
 
         for option in self.options:
             c_learning, saved_complexity = learning_complexity(option,
-                used_nodes_all=self.used_nodes_all)
+                used_nodes_all=self.expected_used_nodes_all)
 
             print(f"{option}: {c_learning}|{expected_learning_complexities[option]}"
                   f" {saved_complexity}|{expected_saved_complexities[option]}")
