@@ -33,11 +33,10 @@ def build_requirement_graph(options:List[Option]) -> DiGraph:
     for option, graph in zip(options, options_graphs):
         if option not in requirements_graph.nodes():
             requirements_graph.add_node(option)
+        else:
+            requirements_graph.update(nodes=DiGraph().add_node(option))
         for node in graph.nodes():
             if isinstance(node, Option):
-                if node not in options:
-                    raise ValueError(f"Option {str(node)} was found in {str(option)}"
-                                     f"but not given in the input list of options")
                 if node not in requirements_graph.nodes():
                     requirements_graph.add_node(node)
                 index = len(list(requirements_graph.successors(node))) + 1
