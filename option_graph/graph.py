@@ -24,13 +24,25 @@ def get_roots(graph:DiGraph):
             roots.append(node)
     return roots
 
-def compute_levels(graph:DiGraph, verbose=0):
+def get_nodes_by_level(graph:DiGraph):
+    nodes_by_level = {}
+    for node in graph.nodes():
+        level = graph.nodes[node]['level']
+        try:
+            nodes_by_level[level].append(node)
+        except KeyError:
+            nodes_by_level[level] = [node]
+
+    graph.graph['nodes_by_level'] = nodes_by_level
+    graph.graph['depth'] = max(level for level in nodes_by_level)
+    return nodes_by_level
+
+def compute_levels(graph:DiGraph):
     """ Compute the hierachical levels of all DiGraph nodes.
 
     Adds the attribute 'level' to each node in the given graph.
     Adds the attribute 'nodes_by_level' to the given graph.
     Adds the attribute 'depth' to the given graph.
-    The DiGraph must not have any circuit.
 
     Args:
         graph: A networkx DiGraph.
@@ -40,49 +52,39 @@ def compute_levels(graph:DiGraph, verbose=0):
 
     """
 
-    def _compute_level_dependencies(graph:DiGraph, node, predecessors):
+    def _compute_level_dependencies(graph:DiGraph, node):
+        predecessors = list(graph.predecessors(node))
+        if len(predecessors) == 0:
+            graph.nodes[node]['level'] = 0
+            return True
+
         pred_level_by_index = {}
-        incomplete = False
         for pred in predecessors:
             index = graph.edges[pred, node]['index']
             try:
                 pred_level = graph.nodes[pred]['level']
-                if index in pred_level_by_index:
-                    pred_level_by_index[index].append(pred_level)
-                else:
-                    pred_level_by_index[index] = [pred_level]
             except KeyError:
-                incomplete = True
+                return False
+
+            if index in pred_level_by_index:
+                pred_level_by_index[index].append(pred_level)
+            else:
+                pred_level_by_index[index] = [pred_level]
+
         min_level_by_index = [min(level_list) for _, level_list in pred_level_by_index.items()]
-        return 1 + max(min_level_by_index), incomplete
+        level =  1 + max(min_level_by_index)
+        graph.nodes[node]['level'] = level
+        return True
 
     all_nodes_have_level = False
     while not all_nodes_have_level:
         all_nodes_have_level = True
         for node in graph.nodes():
-            predecessors = list(graph.predecessors(node))
-
-            if len(predecessors) == 0:
-                level = 0
-            else:
-                level, incomplete = _compute_level_dependencies(graph, node, predecessors)
-                if incomplete:
-                    all_nodes_have_level = False
-            if 'level' in graph.nodes[node] and graph.nodes[node]['level'] != level:
+            incomplete = not _compute_level_dependencies(graph, node)
+            if incomplete:
                 all_nodes_have_level = False
 
-            graph.nodes[node]['level'] = level
-
-    nodes_by_level = {}
-    for node, level in graph.nodes(data='level'):
-        try:
-            nodes_by_level[level].append(node)
-        except KeyError:
-            nodes_by_level[level] = [node]
-
-    graph.graph['nodes_by_level'] = nodes_by_level
-    graph.graph['depth'] = max(level for level in nodes_by_level)
-    return nodes_by_level
+    return get_nodes_by_level(graph)
 
 def compute_edges_color(graph:DiGraph):
     """ Compute the edges colors of a leveled graph for readability.
