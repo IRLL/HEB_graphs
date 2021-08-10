@@ -8,7 +8,23 @@ from networkx import DiGraph
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.axes import Axes
 
-def compute_levels(graph:DiGraph):
+def get_roots(graph:DiGraph):
+    """ Finds roots in a DiGraph.
+
+    Args:
+        graph: A networkx DiGraph.
+
+    Returns:
+        List of root nodes.
+
+    """
+    roots = []
+    for node in graph.nodes():
+        if len(list(graph.predecessors(node))) == 0:
+            roots.append(node)
+    return roots
+
+def compute_levels(graph:DiGraph, verbose=0):
     """ Compute the hierachical levels of all DiGraph nodes.
 
     Adds the attribute 'level' to each node in the given graph.

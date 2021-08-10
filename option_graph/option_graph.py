@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.legend_handler import HandlerPatch
 
-from option_graph.graph import draw_networkx_nodes_images
+from option_graph.graph import draw_networkx_nodes_images, get_roots
 from option_graph.layouts import option_graph_default_layout
 
 from option_graph.node import Node
@@ -140,11 +140,7 @@ class OptionGraph(DiGraph):
     @property
     def roots(self):
         """ Roots of the option graph (nodes without predecessors). """
-        roots = []
-        for node in self.nodes():
-            if len(list(self.predecessors(node))) == 0:
-                roots.append(node)
-        return roots
+        return get_roots(self)
 
     def draw(self, ax:Axes, **kwargs) -> Axes:
         """ Draw the OptionGraph on the given Axis.
