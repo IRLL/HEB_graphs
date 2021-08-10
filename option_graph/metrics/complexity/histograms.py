@@ -128,7 +128,7 @@ def _get_node_histogram_complexity(node:Node, options_in_search=None,
             node_complexity = node.complexity
         except AttributeError:
             node_complexity = default_node_complexity
-        return {str(node):1}, node_complexity
+        return {node:1}, node_complexity
     if node.type == 'empty':
         return {}, 0
     raise ValueError(f"Unkowned node type {node.type}")
