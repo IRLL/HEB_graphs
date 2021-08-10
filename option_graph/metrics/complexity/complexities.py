@@ -3,10 +3,12 @@
 
 """ General complexity. """
 
+
 from typing import Dict, Tuple
 from copy import deepcopy
 
-from option_graph import Option, Node
+from option_graph.option import Option
+from option_graph.node import Action, FeatureCondition, Node
 from option_graph.metrics.complexity.utils import update_sum_dict
 
 def general_complexity(option:Option, used_nodes_all:Dict[Node, Dict[Node, int]],
@@ -49,7 +51,7 @@ def general_complexity(option:Option, used_nodes_all:Dict[Node, Dict[Node, int]]
 
         try:
             node_complexity = node.complexity
-        except AttributeError:
+        except AttributeError as no_attribute:
 
             if isinstance(node, Option):
                 node_complexity, saved_node_complexity = general_complexity(node, used_nodes_all,
@@ -58,8 +60,10 @@ def general_complexity(option:Option, used_nodes_all:Dict[Node, Dict[Node, int]]
                 previous_used_nodes = update_sum_dict(previous_used_nodes, used_nodes_all[node])
                 total_complexity += saved_node_complexity * kcomplexity(node, n_used)
                 total_saved_complexity += saved_node_complexity * kcomplexity(node, n_used)
-            else:
+            elif isinstance(node, (Action, FeatureCondition)):
                 node_complexity = default_node_complexity
+            else:
+                raise ValueError from no_attribute
 
         total_complexity += node_complexity * kcomplexity(node, n_used)
 
