@@ -6,35 +6,29 @@
 from typing import List, Dict, Tuple
 
 import numpy as np
-from tqdm import tqdm
 
 from option_graph import Option, OptionGraph, Node
 from option_graph.metrics.complexity.utils import update_sum_dict
 
-def nodes_histograms(options:List[Option], default_node_complexity:float=1.,
-    verbose=0) -> Dict[Option, Dict[Node, int]]:
+def nodes_histograms(options:List[Option], default_node_complexity:float=1.
+    ) -> Dict[Option, Dict[Node, int]]:
     """ Compute the used nodes histograms for a list of Option.
 
     Args:
         options: List of Option to compute histograms of.
         default_node_complexity: Default node complexity if Node has no attribute complexity.
-        verbose: If > 0, display a progress bar.
 
     Return:
         Dictionary of dictionaries of the number of use for each used node, for each option.
 
     """
-    iterator = tqdm(options, total=len(options), desc='Building options histograms') \
-        if verbose > 0 else options
-
-    used_nodes = {}
-    for option in iterator:
-        used_nodes[option] = nodes_histogram(option,
-            default_node_complexity=default_node_complexity)[0]
-    return used_nodes
+    return {
+        option: nodes_histogram(option, default_node_complexity=default_node_complexity)[0]
+        for option in options
+    }
 
 def nodes_histogram(option:Option, default_node_complexity:float=1.,
-    _options_in_search=None) -> Tuple[float, dict]:
+    _options_in_search=None) -> Tuple[Dict[Node, int], float]:
     """ Compute the used nodes histogram for an Option.
 
     Args:
