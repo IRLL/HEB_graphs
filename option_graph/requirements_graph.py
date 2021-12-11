@@ -6,14 +6,17 @@
 
 from __future__ import annotations
 from typing import List
+from copy import deepcopy
 
-from networkx import DiGraph
+from networkx import DiGraph, descendants
 
+from option_graph.node import EmptyNode
 from option_graph.option import Option
 from option_graph.graph import compute_levels
 
-def build_requirement_graph(options:List[Option]) -> DiGraph:
-    """ Builds a DiGraph of the requirements induced by a list of options.
+
+def build_requirement_graph(options: List[Option]) -> DiGraph:
+    """Builds a DiGraph of the requirements induced by a list of options.
 
     Args:
         options_graphs: List of Option to build the requirement graph from.
@@ -30,17 +33,56 @@ def build_requirement_graph(options:List[Option]) -> DiGraph:
         raise NotImplementedError(user_msg) from error
 
     requirements_graph = DiGraph()
+    for option in options:
+        requirements_graph.add_node(option)
+
+    requirement_degree = {}
+
     for option, graph in zip(options, options_graphs):
-        if option not in requirements_graph.nodes():
-            requirements_graph.add_node(option)
-        else:
-            requirements_graph.update(nodes=DiGraph().add_node(option))
+        requirement_degree[option] = {}
+        for node in graph.nodes():
+            if isinstance(node, EmptyNode):
+                successor = list(graph.successors(node))[0]
+                empty_index = graph.edges[node, successor]["index"]
+                alternatives = graph.predecessors(successor)
+                alternatives = [
+                    alt_node
+                    for alt_node in alternatives
+                    if graph.edges[alt_node, successor]["index"] == empty_index
+                ]
+                cut_graph = deepcopy(graph)
+                for alternative in alternatives:
+                    cut_graph.remove_edge(alternative, successor)
+                for alternative in alternatives:
+                    following_options = [
+                        following_node
+                        for following_node in descendants(cut_graph, alternative)
+                        if isinstance(following_node, Option)
+                    ]
+                    for following_option in following_options:
+                        try:
+                            requirement_degree[option][following_option] -= 1
+                        except KeyError:
+                            requirement_degree[option][following_option] = -1
+
+    for option, graph in zip(options, options_graphs):
         for node in graph.nodes():
             if isinstance(node, Option):
+                try:
+                    requirement_degree[option][node] += 1
+                except KeyError:
+                    requirement_degree[option][node] = 1
+
+    index = 0
+    for option, graph in zip(options, options_graphs):
+        for node in graph.nodes():
+            if isinstance(node, Option) and requirement_degree[option][node] > 0:
                 if node not in requirements_graph.nodes():
                     requirements_graph.add_node(node)
                 index = len(list(requirements_graph.successors(node))) + 1
                 requirements_graph.add_edge(node, option, index=index)
 
+    for edge in requirements_graph.edges():
+        print(edge)
     compute_levels(requirements_graph)
     return requirements_graph
