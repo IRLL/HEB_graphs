@@ -4,6 +4,7 @@
 
 """ Additional utility functions for networkx graphs. """
 
+from typing import Any, Dict
 from networkx import DiGraph
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.axes import Axes
@@ -26,7 +27,16 @@ def get_roots(graph: DiGraph):
     return roots
 
 
-def get_nodes_by_level(graph: DiGraph):
+def get_nodes_by_level(graph: DiGraph) -> Dict[int, Any]:
+    """Get the dictionary of nodes by level.
+
+    Args:
+        graph: A networkx DiGraph.
+
+    Returns:
+        Dictionary of nodes by level.
+
+    """
     nodes_by_level = {}
     for node in graph.nodes():
         level = graph.nodes[node]["level"]
