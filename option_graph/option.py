@@ -16,14 +16,14 @@ if TYPE_CHECKING:
 
 class Option(Node):
 
-    """ Abstract class for options """
+    """Abstract class for options"""
 
-    def __init__(self, name:str, image=None) -> None:
-        super().__init__(name, 'option', image=image)
+    def __init__(self, name: str, image=None) -> None:
+        super().__init__(name, "option", image=image)
         self._graph = None
 
     def __call__(self, observation, *args, **kwargs):
-        """ Use the option to get next actions.
+        """Use the option to get next actions.
 
         By default, uses the OptionGraph if it can be built.
 
@@ -39,7 +39,7 @@ class Option(Node):
         return self.graph.__call__(observation, *args, **kwargs)
 
     def build_graph(self) -> OptionGraph:
-        """ Build the OptionGraph of this Option.
+        """Build the OptionGraph of this Option.
 
         Returns:
             The built OptionGraph.
@@ -49,7 +49,7 @@ class Option(Node):
 
     @property
     def graph(self) -> OptionGraph:
-        """ Access to the Option's graph.
+        """Access to the Option's graph.
 
         Only build's the graph the first time called for efficiency.
 

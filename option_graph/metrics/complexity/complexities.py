@@ -11,10 +11,16 @@ from option_graph.option import Option
 from option_graph.node import Action, FeatureCondition, Node
 from option_graph.metrics.complexity.utils import update_sum_dict
 
-def general_complexity(option:Option, used_nodes_all:Dict[Node, Dict[Node, int]],
-        saved_complexity, kcomplexity, previous_used_nodes=None,
-        default_node_complexity:float=1.) -> Tuple[float]:
-    """ Compute the general complexity of an Option with used nodes.
+
+def general_complexity(
+    option: Option,
+    used_nodes_all: Dict[Node, Dict[Node, int]],
+    saved_complexity,
+    kcomplexity,
+    previous_used_nodes=None,
+    default_node_complexity: float = 1.0,
+) -> Tuple[float]:
+    """Compute the general complexity of an Option with used nodes.
 
     Using the number of time each node is used in its OptionGraph and based on the increase of
     complexity given by 'kcomplexity', and the saved complexity using options given by
@@ -47,19 +53,29 @@ def general_complexity(option:Option, used_nodes_all:Dict[Node, Dict[Node, int]]
 
     for node in used_nodes_all[option]:
         n_used = used_nodes_all[option][node]
-        n_previous_used = previous_used_nodes[node] if node in previous_used_nodes else 0
+        n_previous_used = (
+            previous_used_nodes[node] if node in previous_used_nodes else 0
+        )
 
         try:
             node_complexity = node.complexity
         except AttributeError as no_attribute:
 
             if isinstance(node, Option):
-                node_complexity, saved_node_complexity = general_complexity(node, used_nodes_all,
-                    saved_complexity=saved_complexity, kcomplexity=kcomplexity,
-                    previous_used_nodes=deepcopy(previous_used_nodes))
-                previous_used_nodes = update_sum_dict(previous_used_nodes, used_nodes_all[node])
+                node_complexity, saved_node_complexity = general_complexity(
+                    node,
+                    used_nodes_all,
+                    saved_complexity=saved_complexity,
+                    kcomplexity=kcomplexity,
+                    previous_used_nodes=deepcopy(previous_used_nodes),
+                )
+                previous_used_nodes = update_sum_dict(
+                    previous_used_nodes, used_nodes_all[node]
+                )
                 total_complexity += saved_node_complexity * kcomplexity(node, n_used)
-                total_saved_complexity += saved_node_complexity * kcomplexity(node, n_used)
+                total_saved_complexity += saved_node_complexity * kcomplexity(
+                    node, n_used
+                )
             elif isinstance(node, (Action, FeatureCondition)):
                 node_complexity = default_node_complexity
             else:
@@ -68,17 +84,22 @@ def general_complexity(option:Option, used_nodes_all:Dict[Node, Dict[Node, int]]
         total_complexity += node_complexity * kcomplexity(node, n_used)
 
         if isinstance(node, Option):
-            total_saved_complexity += node_complexity * \
-                saved_complexity(node, n_used, n_previous_used)
+            total_saved_complexity += node_complexity * saved_complexity(
+                node, n_used, n_previous_used
+            )
 
         previous_used_nodes = update_sum_dict(previous_used_nodes, {node: n_used})
 
     return total_complexity - total_saved_complexity, total_saved_complexity
 
 
-def learning_complexity(option:Option, used_nodes_all:Dict[Node, Dict[Node, int]],
-        previous_used_nodes=None, default_node_complexity:float=1.):
-    """ Compute the learning complexity of an Option with used nodes.
+def learning_complexity(
+    option: Option,
+    used_nodes_all: Dict[Node, Dict[Node, int]],
+    previous_used_nodes=None,
+    default_node_complexity: float = 1.0,
+):
+    """Compute the learning complexity of an Option with used nodes.
 
     Using the number of time each node is used in its OptionGraph we compute the learning
     complexity of an option and the total saved complexity.

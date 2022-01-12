@@ -6,8 +6,9 @@
 
 import networkx as nx
 
-def option_graph_default_layout(graph:nx.DiGraph, center=None):
-    """ Compute default positions for an OptionGraph.
+
+def option_graph_default_layout(graph: nx.DiGraph, center=None):
+    """Compute default positions for an OptionGraph.
 
     Can be used for other DiGraph.
     Requires graph to have a 'nodes_by_level' attribute.
@@ -21,14 +22,14 @@ def option_graph_default_layout(graph:nx.DiGraph, center=None):
 
     """
     graph, _ = nx.drawing.layout._process_params(graph, center, dim=2)
-    nodes_by_level = graph.graph['nodes_by_level']
+    nodes_by_level = graph.graph["nodes_by_level"]
     pos = {}
     for level in range(max(nodes_by_level.keys()) + 1):
         for i, node in enumerate(nodes_by_level[level]):
             preds = list(graph.predecessors(node))
             if len(preds) == 0:
                 x_pos = i
-            elif len(preds) == 1 and graph.edges[preds[0], node]['color'] == 'red':
+            elif len(preds) == 1 and graph.edges[preds[0], node]["color"] == "red":
                 x_pos = pos[preds[0]][0]
             else:
                 other_nodes_x = [pos[n][0] for n in nodes_by_level[level] if n in pos]

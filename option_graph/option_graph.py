@@ -26,7 +26,7 @@ from option_graph.option import Option
 
 class OptionGraph(DiGraph):
 
-    """ Base class for option graphs.
+    """Base class for option graphs.
 
     An OptionGraph is a DiGraph, and as such stores nodes and directed edges with
     optional data, or attributes.
@@ -52,12 +52,26 @@ class OptionGraph(DiGraph):
 
     """
 
-    NODES_COLORS = {'feature_condition': 'blue', 'action': 'red', 'option': 'orange'}
-    EDGES_COLORS = {0:'red', 1:'green', 2:'blue', 3:'yellow', 4:'purple', 5:'cyan', 6:'gray'}
-    ANY_MODES = ('first', 'last', 'random')
+    NODES_COLORS = {"feature_condition": "blue", "action": "red", "option": "orange"}
+    EDGES_COLORS = {
+        0: "red",
+        1: "green",
+        2: "blue",
+        3: "yellow",
+        4: "purple",
+        5: "cyan",
+        6: "gray",
+    }
+    ANY_MODES = ("first", "last", "random")
 
-    def __init__(self, option:Option, all_options:Dict[str, Option]=None, incoming_graph_data=None,
-            any_mode:str='first', **attr):
+    def __init__(
+        self,
+        option: Option,
+        all_options: Dict[str, Option] = None,
+        incoming_graph_data=None,
+        any_mode: str = "first",
+        **attr,
+    ):
         self.option = option
         self.all_options = all_options if all_options is not None else {}
 
@@ -66,7 +80,7 @@ class OptionGraph(DiGraph):
 
         super().__init__(incoming_graph_data=incoming_graph_data, **attr)
 
-    def add_node(self, node_for_adding:Node, **attr):
+    def add_node(self, node_for_adding: Node, **attr):
         node = node_for_adding
         try:
             color = self.NODES_COLORS[node.type]
@@ -74,17 +88,17 @@ class OptionGraph(DiGraph):
             color = None
         super().add_node(node, type=node.type, color=color, image=node.image, **attr)
 
-    def add_edge(self, u_of_edge:Node, v_of_edge:Node, index:int=1, **attr):
+    def add_edge(self, u_of_edge: Node, v_of_edge: Node, index: int = 1, **attr):
         for node in (u_of_edge, v_of_edge):
             if node not in self.nodes():
                 self.add_node(node)
         try:
             color = self.EDGES_COLORS[index]
         except KeyError:
-            color = 'black'
+            color = "black"
         super().add_edge(u_of_edge, v_of_edge, index=index, color=color, **attr)
 
-    def _get_any_action(self, nodes:List[Node], observation, options_in_search:list):
+    def _get_any_action(self, nodes: List[Node], observation, options_in_search: list):
         actions = []
         for node in nodes:
             action = self._get_action(node, observation, options_in_search)
@@ -94,16 +108,16 @@ class OptionGraph(DiGraph):
         actions = [action for action in actions if action != "Impossible"]
         if len(actions) == 0:
             return "Impossible"
-        if self.any_mode == 'first':
+        if self.any_mode == "first":
             return actions[0]
-        if self.any_mode == 'last':
+        if self.any_mode == "last":
             return actions[-1]
-        if self.any_mode == 'random':
+        if self.any_mode == "random":
             return np.random.choice(actions)
 
-    def _get_action(self, node:Node, observation, options_in_search:list):
+    def _get_action(self, node: Node, observation, options_in_search: list):
         # Option
-        if node.type == 'option':
+        if node.type == "option":
             if str(node) in options_in_search:
                 return "Impossible"
             try:
@@ -112,38 +126,42 @@ class OptionGraph(DiGraph):
                 # Search in all_options, used to avoid cycling definitions
                 return self.all_options[str(node)](observation, options_in_search)
         # Action
-        if node.type == 'action':
+        if node.type == "action":
             return node(observation)
         # Feature Condition
-        if node.type == 'feature_condition':
+        if node.type == "feature_condition":
             next_edge_index = int(node(observation))
             succs = self.successors(node)
             next_nodes = []
             for next_node in succs:
-                if int(self.edges[node, next_node]['index']) == next_edge_index:
+                if int(self.edges[node, next_node]["index"]) == next_edge_index:
                     next_nodes.append(next_node)
             if len(next_nodes) == 0:
-                raise ValueError(f'FeatureCondition {node} returned index {next_edge_index}'
-                                 f' but {next_edge_index} was not found as an edge index')
+                raise ValueError(
+                    f"FeatureCondition {node} returned index {next_edge_index}"
+                    f" but {next_edge_index} was not found as an edge index"
+                )
             return self._get_any_action(next_nodes, observation, options_in_search)
         # Empty
-        if node.type == 'empty':
+        if node.type == "empty":
             next_node = self.successors(node).__next__()
             return self._get_action(next_node, observation, options_in_search)
-        raise ValueError(f'Unknowed value {node.type} for node.type with node: {node}.')
+        raise ValueError(f"Unknowed value {node.type} for node.type with node: {node}.")
 
     def __call__(self, observation, options_in_search=None) -> Any:
-        options_in_search = [] if options_in_search is None else deepcopy(options_in_search)
+        options_in_search = (
+            [] if options_in_search is None else deepcopy(options_in_search)
+        )
         options_in_search.append(self.option.name)
         return self._get_any_action(self.roots, observation, options_in_search)
 
     @property
     def roots(self):
-        """ Roots of the option graph (nodes without predecessors). """
+        """Roots of the option graph (nodes without predecessors)."""
         return get_roots(self)
 
-    def draw(self, ax:Axes, **kwargs) -> Axes:
-        """ Draw the OptionGraph on the given Axis.
+    def draw(self, ax: Axes, **kwargs) -> Axes:
+        """Draw the OptionGraph on the given Axis.
 
         Args:
             ax: The matplotlib ax to draw on.
@@ -155,32 +173,44 @@ class OptionGraph(DiGraph):
             The resulting matplotlib Axis drawn on.
 
         """
-        fontcolor = kwargs.get('fontcolor', 'black')
+        fontcolor = kwargs.get("fontcolor", "black")
         if len(list(self.nodes())) > 0:
             pos = option_graph_default_layout(self)
             draw_networkx_nodes_images(self, pos, ax=ax, img_zoom=0.5)
 
             draw_networkx_edges(
-                self, pos,
+                self,
+                pos,
                 ax=ax,
                 arrowsize=20,
                 arrowstyle="-|>",
-                min_source_margin=0, min_target_margin=10,
-                node_shape='s', node_size=1500,
-                edge_color=[color for _, _, color in self.edges(data='color')]
+                min_source_margin=0,
+                min_target_margin=10,
+                node_shape="s",
+                node_size=1500,
+                edge_color=[color for _, _, color in self.edges(data="color")],
             )
 
-            used_node_types = [node_type for _, node_type in self.nodes(data='type')]
+            used_node_types = [node_type for _, node_type in self.nodes(data="type")]
             legend_patches = [
-                mpatches.Patch(facecolor='none', edgecolor=color, label=node_type.capitalize()
-                ) for node_type, color in self.NODES_COLORS.items()
+                mpatches.Patch(
+                    facecolor="none", edgecolor=color, label=node_type.capitalize()
+                )
+                for node_type, color in self.NODES_COLORS.items()
                 if node_type in used_node_types and node_type in self.NODES_COLORS
             ]
-            used_edge_indexes = [index for _, _, index in self.edges(data='index')]
+            used_edge_indexes = [index for _, _, index in self.edges(data="index")]
             legend_arrows = [
-                mpatches.FancyArrow(0, 0, 1, 0, facecolor=color, edgecolor='none',
-                    label=str(index) if index > 1 else f'{str(bool(index))} ({index})'
-                ) for index, color in self.EDGES_COLORS.items()
+                mpatches.FancyArrow(
+                    0,
+                    0,
+                    1,
+                    0,
+                    facecolor=color,
+                    edgecolor="none",
+                    label=str(index) if index > 1 else f"{str(bool(index))} ({index})",
+                )
+                for index, color in self.EDGES_COLORS.items()
                 if index in used_edge_indexes and index in self.EDGES_COLORS
             ]
 
@@ -188,18 +218,24 @@ class OptionGraph(DiGraph):
             legend = ax.legend(
                 fancybox=True,
                 framealpha=0,
-                fontsize='x-large',
-                loc='upper right',
+                fontsize="x-large",
+                loc="upper right",
                 handles=legend_patches + legend_arrows,
                 handler_map={
                     # Patch arrows with fancy arrows in legend
-                    mpatches.FancyArrow : HandlerPatch(
-                        patch_func=lambda width, height, **kwargs:mpatches.FancyArrow(
-                            0, 0.5*height, width, 0, width=0.2*height,
-                            length_includes_head=True, head_width=height, overhang=0.5
+                    mpatches.FancyArrow: HandlerPatch(
+                        patch_func=lambda width, height, **kwargs: mpatches.FancyArrow(
+                            0,
+                            0.5 * height,
+                            width,
+                            0,
+                            width=0.2 * height,
+                            length_includes_head=True,
+                            head_width=height,
+                            overhang=0.5,
                         )
                     ),
-                }
+                },
             )
             plt.setp(legend.get_texts(), color=fontcolor)
 
