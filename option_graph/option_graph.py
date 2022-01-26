@@ -82,20 +82,25 @@ class OptionGraph(DiGraph):
 
     def add_node(self, node_for_adding: Node, **attr):
         node = node_for_adding
-        try:
-            color = self.NODES_COLORS[node.type]
-        except KeyError:
-            color = None
+        color = attr.pop("color", None)
+        if color is None:
+            try:
+                color = self.NODES_COLORS[node.type]
+            except KeyError:
+                color = None
         super().add_node(node, type=node.type, color=color, image=node.image, **attr)
 
     def add_edge(self, u_of_edge: Node, v_of_edge: Node, index: int = 1, **attr):
         for node in (u_of_edge, v_of_edge):
             if node not in self.nodes():
                 self.add_node(node)
-        try:
-            color = self.EDGES_COLORS[index]
-        except KeyError:
-            color = "black"
+
+        color = attr.pop("color", None)
+        if color is None:
+            try:
+                color = self.EDGES_COLORS[index]
+            except KeyError:
+                color = "black"
         super().add_edge(u_of_edge, v_of_edge, index=index, color=color, **attr)
 
     def _get_any_action(self, nodes: List[Node], observation, options_in_search: list):
