@@ -14,32 +14,37 @@ from option_graph.metrics.complexity.complexities import learning_complexity
 from option_graph.requirements_graph import build_requirement_graph
 from option_graph import Action, Option, FeatureCondition, OptionGraph
 
+
 class TestPaperBasicExamples:
     """Basic examples from the initial paper"""
 
     @pytest.fixture(autouse=True)
     def setup(self):
-        """ Initialize variables. """
+        """Initialize variables."""
 
         class Option0(Option):
             """Option 0"""
+
             def __init__(self) -> None:
-                super().__init__('option 0')
+                super().__init__("option 0")
+
             def build_graph(self) -> OptionGraph:
                 graph = OptionGraph(self)
-                feature = FeatureCondition('feature 0')
+                feature = FeatureCondition("feature 0")
                 graph.add_edge(feature, Action(0), index=False)
                 graph.add_edge(feature, Action(1), index=True)
                 return graph
 
         class Option1(Option):
             """Option 1"""
+
             def __init__(self) -> None:
-                super().__init__('option 1')
+                super().__init__("option 1")
+
             def build_graph(self) -> OptionGraph:
                 graph = OptionGraph(self)
-                feature_1 = FeatureCondition('feature 1')
-                feature_2 = FeatureCondition('feature 2')
+                feature_1 = FeatureCondition("feature 1")
+                feature_2 = FeatureCondition("feature 2")
                 graph.add_edge(feature_1, Option0(), index=False)
                 graph.add_edge(feature_1, feature_2, index=True)
                 graph.add_edge(feature_2, Action(0), index=False)
@@ -48,13 +53,15 @@ class TestPaperBasicExamples:
 
         class Option2(Option):
             """Option 2"""
+
             def __init__(self) -> None:
-                super().__init__('option 2')
+                super().__init__("option 2")
+
             def build_graph(self) -> OptionGraph:
                 graph = OptionGraph(self)
-                feature_3 = FeatureCondition('feature 3')
-                feature_4 = FeatureCondition('feature 4')
-                feature_5 = FeatureCondition('feature 5')
+                feature_3 = FeatureCondition("feature 3")
+                feature_4 = FeatureCondition("feature 4")
+                feature_5 = FeatureCondition("feature 5")
                 graph.add_edge(feature_3, feature_4, index=False)
                 graph.add_edge(feature_3, feature_5, index=True)
                 graph.add_edge(feature_4, Action(0), index=False)
@@ -90,12 +97,12 @@ class TestPaperBasicExamples:
         }
 
     def test_nodes_histograms(self):
-        """should give expected nodes_histograms results. """
+        """should give expected nodes_histograms results."""
         used_nodes_all = nodes_histograms(self.options)
         check.equal(used_nodes_all, self.expected_used_nodes_all)
 
     def test_learning_complexity(self):
-        """should give expected learning_complexity. """
+        """should give expected learning_complexity."""
         expected_learning_complexities = {
             self.options[0]: 3,
             self.options[1]: 7,
@@ -108,16 +115,19 @@ class TestPaperBasicExamples:
         }
 
         for option in self.options:
-            c_learning, saved_complexity = learning_complexity(option,
-                used_nodes_all=self.expected_used_nodes_all)
+            c_learning, saved_complexity = learning_complexity(
+                option, used_nodes_all=self.expected_used_nodes_all
+            )
 
-            print(f"{option}: {c_learning}|{expected_learning_complexities[option]}"
-                  f" {saved_complexity}|{expected_saved_complexities[option]}")
+            print(
+                f"{option}: {c_learning}|{expected_learning_complexities[option]}"
+                f" {saved_complexity}|{expected_saved_complexities[option]}"
+            )
             check.equal(c_learning, expected_learning_complexities[option])
             check.equal(saved_complexity, expected_saved_complexities[option])
 
     def test_requirement_graph_edges(self):
-        """should give expected requirement_graph edges. """
+        """should give expected requirement_graph edges."""
         expected_requirement_graph = DiGraph()
         for option in self.options:
             expected_requirement_graph.add_node(option)
@@ -129,16 +139,14 @@ class TestPaperBasicExamples:
         for option, other_option in permutations(self.options, 2):
             print(option, other_option)
             req_has_edge = requirements_graph.has_edge(option, other_option)
-            expected_req_has_edge = expected_requirement_graph.has_edge(option, other_option)
+            expected_req_has_edge = expected_requirement_graph.has_edge(
+                option, other_option
+            )
             check.equal(req_has_edge, expected_req_has_edge)
 
     def test_requirement_graph_levels(self):
-        """should give expected requirement_graph node levels (requirement depth). """
-        expected_levels = {
-            self.options[0]: 0,
-            self.options[1]: 1,
-            self.options[2]: 2
-        }
+        """should give expected requirement_graph node levels (requirement depth)."""
+        expected_levels = {self.options[0]: 0, self.options[1]: 1, self.options[2]: 2}
         requirements_graph = build_requirement_graph(self.options)
-        for option, level in requirements_graph.nodes(data='level'):
+        for option, level in requirements_graph.nodes(data="level"):
             check.equal(level, expected_levels[option])
