@@ -30,6 +30,8 @@ def get_roots(graph: DiGraph):
 def get_nodes_by_level(graph: DiGraph) -> Dict[int, Any]:
     """Get the dictionary of nodes by level.
 
+    Requires nodes to have a 'level' attribute.
+
     Args:
         graph: A networkx DiGraph.
 
@@ -117,10 +119,10 @@ def compute_levels(graph: DiGraph):
 def compute_edges_color(graph: DiGraph):
     """Compute the edges colors of a leveled graph for readability.
 
+    Requires nodes to have a 'level' attribute.
     Adds the attribute 'color' and 'linestyle' to each edge in the given graph.
     Nodes with a lot of successors will have more transparent edges.
     Edges going from high to low level will be dashed.
-    Requires nodes to have a 'level' attribute.
 
     Args:
         graph: A networkx DiGraph.
@@ -142,6 +144,8 @@ def compute_edges_color(graph: DiGraph):
 
 def draw_networkx_nodes_images(graph: DiGraph, pos, ax: Axes, img_zoom: float = 1):
     """Draw nodes images of a networkx DiGraph on a given matplotlib ax.
+
+    Requires nodes to have attributes 'image' for the node image and 'color' for the border color.
 
     Args:
         graph: A networkx DiGraph.
