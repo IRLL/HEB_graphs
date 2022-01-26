@@ -75,6 +75,8 @@ class OptionGraph(DiGraph):
         self.option = option
         self.all_options = all_options if all_options is not None else {}
 
+        self._unrolled_graph = None
+
         assert any_mode in self.ANY_MODES, f"Unknowed any_mode: {any_mode}"
         self.any_mode = any_mode
 
@@ -120,6 +122,58 @@ class OptionGraph(DiGraph):
         if self.any_mode == "random":
             return np.random.choice(actions)
 
+    @property
+    def unrolled_graph(self) -> OptionGraph:
+        """Access to the unrolled option graph.
+
+        The unrolled option graph as the same behavior but every option node is recursively replaced
+        by it's option graph if it can be computed.
+
+        Only build's the graph the first time called for efficiency.
+
+        Returns:
+            This OptionGraph's unrolled OptionGraph.
+
+        """
+        if self._unrolled_graph is None:
+            self._unrolled_graph = self.build_unrolled_graph()
+        return self._unrolled_graph
+
+    def build_unrolled_graph(self) -> OptionGraph:
+        """Build the the unrolled option graph.
+
+        The unrolled option graph as the same behavior but every option node is recursively replaced
+        by it's option graph if it can be computed.
+
+        Returns:
+            This OptionGraph's unrolled OptionGraph.
+
+        """
+        unrolled_graph: OptionGraph = deepcopy(self)
+        for node in unrolled_graph.nodes():
+            node: Node = node  # Add typechecking
+            node_graph: OptionGraph = None
+
+            if node.type == "option":
+                node: Option = node  # Add typechecking
+                try:
+                    node_graph = node.graph.unrolled_graph
+
+                    # Replace the option node by the unrolled option's graph
+                    unrolled_graph = compose_option_graphs(unrolled_graph, node_graph)
+                    for edge_u, _, data in unrolled_graph.in_edges(node, data=True):
+                        for root in node_graph.roots:
+                            unrolled_graph.add_edge(edge_u, root, **data)
+                    for _, edge_v, data in unrolled_graph.out_edges(node):
+                        for root in node_graph.roots:
+                            unrolled_graph.add_edge(root, edge_v, **data)
+
+                    unrolled_graph.remove_node(node)
+                except NotImplementedError:
+                    pass
+
+        return unrolled_graph
+
     def _get_action(self, node: Node, observation, options_in_search: list):
         # Option
         if node.type == "option":
@@ -161,7 +215,7 @@ class OptionGraph(DiGraph):
         return self._get_any_action(self.roots, observation, options_in_search)
 
     @property
-    def roots(self):
+    def roots(self) -> List[Node]:
         """Roots of the option graph (nodes without predecessors)."""
         return get_roots(self)
 
@@ -245,3 +299,35 @@ class OptionGraph(DiGraph):
             plt.setp(legend.get_texts(), color=fontcolor)
 
         return ax
+
+
+def compose_option_graphs(G: OptionGraph, H: OptionGraph):
+    """Returns a new graph of G composed with H.
+
+    Composition is the simple union of the node sets and edge sets.
+    The node sets of G and H do not need to be disjoint.
+
+    Args:
+        G, H : Option graphs to compose.
+
+    Returns:
+        R: A new option graph  with the same type as G
+
+    """
+    R = OptionGraph(G.option, all_options=G.all_options, any_mode=G.any_mode)
+    # add graph attributes, H attributes take precedent over G attributes
+    R.graph.update(G.graph)
+    R.graph.update(H.graph)
+
+    R.add_nodes_from(G.nodes(data=True))
+    R.add_nodes_from(H.nodes(data=True))
+
+    if G.is_multigraph():
+        R.add_edges_from(G.edges(keys=True, data=True))
+    else:
+        R.add_edges_from(G.edges(data=True))
+    if H.is_multigraph():
+        R.add_edges_from(H.edges(keys=True, data=True))
+    else:
+        R.add_edges_from(H.edges(data=True))
+    return R
