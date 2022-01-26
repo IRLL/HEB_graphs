@@ -3,6 +3,8 @@
 
 """ Integration tests for the initial paper examples. """
 
+from typing import Dict, List
+
 import pytest
 import pytest_check as check
 
@@ -70,10 +72,12 @@ class TestPaperBasicExamples:
                 graph.add_edge(feature_5, Option0(), index=True)
                 return graph
 
-        self.actions = [Action(i) for i in range(3)]
-        self.feature_conditions = [FeatureCondition(f"feature {i}") for i in range(6)]
-        self.options = [Option0(), Option1(), Option2()]
-        self.expected_used_nodes_all = {
+        self.actions: List[Action] = [Action(i) for i in range(3)]
+        self.feature_conditions: List[FeatureCondition] = [
+            FeatureCondition(f"feature {i}") for i in range(6)
+        ]
+        self.options: List[Option] = [Option0(), Option1(), Option2()]
+        self.expected_used_nodes_all: Dict[Option, Dict[Action, int]] = {
             self.options[0]: {
                 self.actions[0]: 1,
                 self.actions[1]: 1,
