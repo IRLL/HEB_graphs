@@ -4,16 +4,21 @@
 """ Integration tests for the initial paper examples. """
 
 from typing import Dict, List
+from copy import deepcopy
+
+# import matplotlib.pyplot as plt
 
 import pytest
 import pytest_check as check
 
 from itertools import permutations
 from networkx.classes.digraph import DiGraph
+from networkx import is_isomorphic
 
 from option_graph.metrics.complexity.histograms import nodes_histograms
 from option_graph.metrics.complexity.complexities import learning_complexity
 from option_graph.requirements_graph import build_requirement_graph
+# from option_graph.graph import compute_levels
 from option_graph import Action, Option, FeatureCondition, OptionGraph
 
 
@@ -154,3 +159,60 @@ class TestPaperBasicExamples:
         requirements_graph = build_requirement_graph(self.options)
         for option, level in requirements_graph.nodes(data="level"):
             check.equal(level, expected_levels[option])
+
+    def test_unrolled_options_graphs(self):
+        """should give expected unrolled_options_graphs for each example options."""
+
+        expected_graph_0 = deepcopy(self.options[0].graph)
+
+        expected_graph_1 = OptionGraph(self.options[1])
+        feature_0 = FeatureCondition("feature 0")
+        expected_graph_1.add_edge(feature_0, Action(0), index=False)
+        expected_graph_1.add_edge(feature_0, Action(1), index=True)
+        feature_1 = FeatureCondition("feature 1")
+        feature_2 = FeatureCondition("feature 2")
+        expected_graph_1.add_edge(feature_1, feature_0, index=False)
+        expected_graph_1.add_edge(feature_1, feature_2, index=True)
+        expected_graph_1.add_edge(feature_2, Action(0), index=False)
+        expected_graph_1.add_edge(feature_2, Action(2), index=True)
+
+        expected_graph_2 = OptionGraph(self.options[2])
+        feature_3 = FeatureCondition("feature 3")
+        feature_4 = FeatureCondition("feature 4")
+        feature_5 = FeatureCondition("feature 5")
+        expected_graph_2.add_edge(feature_3, feature_4, index=False)
+        expected_graph_2.add_edge(feature_3, feature_5, index=True)
+        expected_graph_2.add_edge(feature_4, Action(0), index=False)
+
+        feature_0 = FeatureCondition("feature 0")
+        expected_graph_2.add_edge(feature_0, Action(0), index=False)
+        expected_graph_2.add_edge(feature_0, Action(1), index=True)
+        feature_1 = FeatureCondition("feature 1")
+        feature_2 = FeatureCondition("feature 2")
+        expected_graph_2.add_edge(feature_1, feature_0, index=False)
+        expected_graph_2.add_edge(feature_1, feature_2, index=True)
+        expected_graph_2.add_edge(feature_2, Action(0), index=False)
+        expected_graph_2.add_edge(feature_2, Action(2), index=True)
+
+        expected_graph_2.add_edge(feature_4, feature_1, index=True)
+        expected_graph_2.add_edge(feature_5, feature_1, index=False)
+        expected_graph_2.add_edge(feature_5, feature_0, index=True)
+
+        expected_graph = {
+            self.options[0]: expected_graph_0,
+            self.options[1]: expected_graph_1,
+            self.options[2]: expected_graph_2,
+        }
+        for option in self.options:
+
+            check.is_true(
+                is_isomorphic(option.graph.unrolled_graph, expected_graph[option])
+            )
+
+            # fig, axes = plt.subplots(1, 2)
+            # unrolled_graph = option.graph.unrolled_graph
+            # compute_levels(unrolled_graph)
+            # unrolled_graph.draw(axes[0])
+            # compute_levels(expected_graph[option])
+            # expected_graph[option].draw(axes[1])
+            # plt.show()
