@@ -157,7 +157,10 @@ class OptionGraph(DiGraph):
             if node.type == "option":
                 node: Option = node  # Add typechecking
                 try:
-                    node_graph = node.graph.unrolled_graph
+                    try:
+                        node_graph = node.graph.unrolled_graph
+                    except NotImplementedError:
+                        node_graph = self.all_options[str(node)].graph.unrolled_graph
 
                     # Replace the option node by the unrolled option's graph
                     unrolled_graph = compose_option_graphs(unrolled_graph, node_graph)
