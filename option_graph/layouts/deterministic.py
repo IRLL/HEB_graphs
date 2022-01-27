@@ -8,9 +8,8 @@ import networkx as nx
 
 
 def option_graph_default_layout(graph: nx.DiGraph, center=None):
-    """Compute default positions for an OptionGraph.
+    """Compute specific default positions for an DiGraph.
 
-    Can be used for other DiGraph.
     Requires graph to have a 'nodes_by_level' attribute.
 
     Args:
