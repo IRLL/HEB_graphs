@@ -1,5 +1,5 @@
 # OptionGraph for explainable hierarchical reinforcement learning
-# Copyright (C) 2021 Mathïs FEDERICO <https://www.gnu.org/licenses/>
+# Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
 """ OptionGraph used nodes histograms computation. """
 
@@ -10,9 +10,11 @@ import numpy as np
 from option_graph import Option, OptionGraph, Node
 from option_graph.metrics.complexity.utils import update_sum_dict
 
-def nodes_histograms(options:List[Option], default_node_complexity:float=1.
-    ) -> Dict[Option, Dict[Node, int]]:
-    """ Compute the used nodes histograms for a list of Option.
+
+def nodes_histograms(
+    options: List[Option], default_node_complexity: float = 1.0
+) -> Dict[Option, Dict[Node, int]]:
+    """Compute the used nodes histograms for a list of Option.
 
     Args:
         options: List of Option to compute histograms of.
@@ -23,13 +25,17 @@ def nodes_histograms(options:List[Option], default_node_complexity:float=1.
 
     """
     return {
-        option: nodes_histogram(option, default_node_complexity=default_node_complexity)[0]
+        option: nodes_histogram(
+            option, default_node_complexity=default_node_complexity
+        )[0]
         for option in options
     }
 
-def nodes_histogram(option:Option, default_node_complexity:float=1.,
-    _options_in_search=None) -> Tuple[Dict[Node, int], float]:
-    """ Compute the used nodes histogram for an Option.
+
+def nodes_histogram(
+    option: Option, default_node_complexity: float = 1.0, _options_in_search=None
+) -> Tuple[Dict[Node, int], float]:
+    """Compute the used nodes histogram for an Option.
 
     Args:
         option: Option to compute histogram of.
@@ -43,8 +49,8 @@ def nodes_histogram(option:Option, default_node_complexity:float=1.,
     """
 
     graph = option.graph
-    nodes_by_level = graph.graph['nodes_by_level']
-    depth = graph.graph['depth']
+    nodes_by_level = graph.graph["nodes_by_level"]
+    depth = graph.graph["depth"]
 
     _options_in_search = [] if _options_in_search is None else _options_in_search
     _options_in_search.append(str(option))
@@ -52,23 +58,32 @@ def nodes_histogram(option:Option, default_node_complexity:float=1.,
     complexities = {}
     nodes_used_nodes = {}
 
-    for level in range(depth+1)[::-1]:
+    for level in range(depth + 1)[::-1]:
         for node in nodes_by_level[level]:
             node_complexity = 0
             node_used_nodes = {}
 
             # Best successors accumulated histograms and complexity
-            succ_by_index, complexities_by_index = _successors_by_index(graph, node, complexities)
+            succ_by_index, complexities_by_index = _successors_by_index(
+                graph, node, complexities
+            )
             for index, values in complexities_by_index.items():
                 min_index = np.argmin(values)
                 choosen_succ = succ_by_index[index][min_index]
-                node_used_nodes = update_sum_dict(node_used_nodes, nodes_used_nodes[choosen_succ])
+                node_used_nodes = update_sum_dict(
+                    node_used_nodes, nodes_used_nodes[choosen_succ]
+                )
                 node_complexity += values[min_index]
 
             # Node only histogram and complexity
-            node_only_used_options, node_only_complexity = _get_node_histogram_complexity(node,
+            (
+                node_only_used_options,
+                node_only_complexity,
+            ) = _get_node_histogram_complexity(
+                node,
                 default_node_complexity=default_node_complexity,
-                options_in_search=_options_in_search)
+                options_in_search=_options_in_search,
+            )
             node_used_nodes = update_sum_dict(node_used_nodes, node_only_used_options)
             node_complexity += node_only_complexity
 
@@ -78,9 +93,11 @@ def nodes_histogram(option:Option, default_node_complexity:float=1.,
     root = nodes_by_level[0][0]
     return nodes_used_nodes[root], complexities[root]
 
-def _successors_by_index(graph:OptionGraph, node:Node,
-        complexities:Dict[Node, float]) -> Tuple[Dict[int, List[Node]], Dict[int, List[float]]]:
-    """ Group successors and their complexities by index.
+
+def _successors_by_index(
+    graph: OptionGraph, node: Node, complexities: Dict[Node, float]
+) -> Tuple[Dict[int, List[Node]], Dict[int, List[float]]]:
+    """Group successors and their complexities by index.
 
     Args:
         graph: The OptionGraph to use.
@@ -96,7 +113,7 @@ def _successors_by_index(graph:OptionGraph, node:Node,
     succ_by_index = {}
     for succ in graph.successors(node):
         succ_complexity = complexities[succ]
-        index = int(graph.edges[node, succ]['index'])
+        index = int(graph.edges[node, succ]["index"])
         try:
             complexities_by_index[index].append(succ_complexity)
             succ_by_index[index].append(succ)
@@ -105,9 +122,11 @@ def _successors_by_index(graph:OptionGraph, node:Node,
             succ_by_index[index] = [succ]
     return succ_by_index, complexities_by_index
 
-def _get_node_histogram_complexity(node:Node, options_in_search=None,
-    default_node_complexity:float=1.) -> Tuple[Dict[Node, int], float]:
-    """ Compute the used nodes histogram and complexity of a single node.
+
+def _get_node_histogram_complexity(
+    node: Node, options_in_search=None, default_node_complexity: float = 1.0
+) -> Tuple[Dict[Node, int], float]:
+    """Compute the used nodes histogram and complexity of a single node.
 
     Args:
         node: The Node from which we want to compute the complexity.
@@ -120,15 +139,15 @@ def _get_node_histogram_complexity(node:Node, options_in_search=None,
 
     """
 
-    if node.type == 'option':
+    if node.type == "option":
         if options_in_search is not None and str(node) in options_in_search:
             return {}, np.inf
-    if node.type in ('action', 'feature_condition', 'option'):
+    if node.type in ("action", "feature_condition", "option"):
         try:
             node_complexity = node.complexity
         except AttributeError:
             node_complexity = default_node_complexity
-        return {node:1}, node_complexity
-    if node.type == 'empty':
+        return {node: 1}, node_complexity
+    if node.type == "empty":
         return {}, 0
     raise ValueError(f"Unkowned node type {node.type}")

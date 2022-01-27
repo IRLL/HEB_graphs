@@ -1,5 +1,5 @@
 # OptionGraph for explainable hierarchical reinforcement learning
-# Copyright (C) 2021 Mathïs FEDERICO <https://www.gnu.org/licenses/>
+# Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
 """ Integration tests for the initial paper examples. """
 
@@ -18,6 +18,7 @@ from networkx import is_isomorphic
 from option_graph.metrics.complexity.histograms import nodes_histograms
 from option_graph.metrics.complexity.complexities import learning_complexity
 from option_graph.requirements_graph import build_requirement_graph
+
 # from option_graph.graph import compute_levels
 from option_graph import Action, Option, FeatureCondition, OptionGraph
 
