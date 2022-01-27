@@ -142,7 +142,9 @@ def compute_edges_color(graph: DiGraph):
                 graph.edges[node, succ]["color"][3] = alpha
 
 
-def draw_networkx_nodes_images(graph: DiGraph, pos, ax: Axes, img_zoom: float = 1):
+def draw_networkx_nodes_images(
+    graph: DiGraph, pos, ax: Axes, img_zoom: float = 1, **kwargs
+):
     """Draw nodes images of a networkx DiGraph on a given matplotlib ax.
 
     Requires nodes to have attributes 'image' for the node image and 'color' for the border color.
@@ -171,3 +173,22 @@ def draw_networkx_nodes_images(graph: DiGraph, pos, ax: Axes, img_zoom: float = 
             imagebox.patch.set_linewidth(3)
             imagebox.patch.set_boxstyle("round", pad=0.15)
             ax.add_artist(imagebox)
+        else:
+            # If no image is found, draw label instead
+            (x, y) = pos[n]
+            label = str(n)
+            ax.text(
+                x,
+                y,
+                label,
+                size=kwargs.get("font_size", 12),
+                color=kwargs.get("font_color", "k"),
+                family=kwargs.get("font_family", "sans-serif"),
+                weight=kwargs.get("font_weight", "normal"),
+                alpha=kwargs.get("alpha"),
+                horizontalalignment=kwargs.get("horizontalalignment", "center"),
+                verticalalignment=kwargs.get("verticalalignment", "center"),
+                transform=ax.transData,
+                bbox=kwargs.get("bbox"),
+                clip_on=True,
+            )

@@ -10,6 +10,7 @@ from pylint.reporters import *
 from pylint.lint import Run
 from utils import score_to_rgb_color
 
+
 class MyReporterClass(BaseReporter):
     """Report messages and layouts."""
 
@@ -51,18 +52,17 @@ def register(linter):
     """Register the reporter classes with the linter."""
     linter.register_reporter(MyReporterClass)
 
-if __name__ == '__main__':
-    options = [
-        'option_graph',
-        "--output-format=pylint_score.MyReporterClass"
-    ]
+
+if __name__ == "__main__":
+    options = ["option_graph", "--output-format=pylint_score.MyReporterClass"]
     results = Run(options, exit=False)
-    score = results.linter.stats['global_note']
-    color = score_to_rgb_color(score, score_min=8.0, score_max=10,
-        error_msg='Insufficient score with pylint')
-    if sys.argv[1] == '--score':
+    score = results.linter.stats.global_note
+    color = score_to_rgb_color(
+        score, score_min=8.0, score_max=10, error_msg="Insufficient score with pylint"
+    )
+    if sys.argv[1] == "--score":
         print(f"{score:.2f}")
-    elif sys.argv[1] == '--color':
+    elif sys.argv[1] == "--color":
         print(color)
     else:
         raise ValueError(f"Unknowed argument: {sys.argv[1]}")
