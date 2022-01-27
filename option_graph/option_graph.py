@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.legend_handler import HandlerPatch
 
-from option_graph.graph import draw_networkx_nodes_images, get_roots
+from option_graph.graph import draw_networkx_nodes_images, get_roots, compute_levels
 from option_graph.layouts import option_graph_default_layout
 
 from option_graph.node import Node
@@ -137,6 +137,7 @@ class OptionGraph(DiGraph):
         """
         if self._unrolled_graph is None:
             self._unrolled_graph = self.build_unrolled_graph()
+            compute_levels(self._unrolled_graph)
         return self._unrolled_graph
 
     def build_unrolled_graph(self) -> OptionGraph:
@@ -157,7 +158,10 @@ class OptionGraph(DiGraph):
             if node.type == "option":
                 node: Option = node  # Add typechecking
                 try:
-                    node_graph = node.graph.unrolled_graph
+                    try:
+                        node_graph = node.graph.unrolled_graph
+                    except NotImplementedError:
+                        node_graph = self.all_options[str(node)].graph.unrolled_graph
 
                     # Replace the option node by the unrolled option's graph
                     unrolled_graph = compose_option_graphs(unrolled_graph, node_graph)
