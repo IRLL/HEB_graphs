@@ -5,14 +5,15 @@
 """ Module for building underlying requirement graphs based on a set of options. """
 
 from __future__ import annotations
-from typing import List
+from typing import Dict, List
 from copy import deepcopy
 
 from networkx import DiGraph, descendants
 
-from option_graph.node import EmptyNode
+from option_graph.node import EmptyNode, Node
 from option_graph.option import Option
 from option_graph.graph import compute_levels
+from option_graph.option_graph import OptionGraph
 
 
 def build_requirement_graph(options: List[Option]) -> DiGraph:
@@ -26,6 +27,32 @@ def build_requirement_graph(options: List[Option]) -> DiGraph:
 
     """
 
+    def resolve_empty(
+        graph: OptionGraph, node: Node, requirement_degree: Dict[Node, int]
+    ):
+        successor = list(graph.successors(node))[0]
+        empty_index = graph.edges[node, successor]["index"]
+        alternatives = graph.predecessors(successor)
+        alternatives = [
+            alt_node
+            for alt_node in alternatives
+            if graph.edges[alt_node, successor]["index"] == empty_index
+        ]
+        cut_graph = deepcopy(graph)
+        for alternative in alternatives:
+            cut_graph.remove_edge(alternative, successor)
+        for alternative in alternatives:
+            following_options = [
+                following_node
+                for following_node in descendants(cut_graph, alternative)
+                if isinstance(following_node, Option)
+            ]
+            for following_option in following_options:
+                try:
+                    requirement_degree[following_option] -= 1
+                except KeyError:
+                    requirement_degree[following_option] = -1
+
     try:
         options_graphs = [option.graph for option in options]
     except NotImplementedError as error:
@@ -37,33 +64,11 @@ def build_requirement_graph(options: List[Option]) -> DiGraph:
         requirements_graph.add_node(option)
 
     requirement_degree = {}
-
     for option, graph in zip(options, options_graphs):
         requirement_degree[option] = {}
         for node in graph.nodes():
             if isinstance(node, EmptyNode):
-                successor = list(graph.successors(node))[0]
-                empty_index = graph.edges[node, successor]["index"]
-                alternatives = graph.predecessors(successor)
-                alternatives = [
-                    alt_node
-                    for alt_node in alternatives
-                    if graph.edges[alt_node, successor]["index"] == empty_index
-                ]
-                cut_graph = deepcopy(graph)
-                for alternative in alternatives:
-                    cut_graph.remove_edge(alternative, successor)
-                for alternative in alternatives:
-                    following_options = [
-                        following_node
-                        for following_node in descendants(cut_graph, alternative)
-                        if isinstance(following_node, Option)
-                    ]
-                    for following_option in following_options:
-                        try:
-                            requirement_degree[option][following_option] -= 1
-                        except KeyError:
-                            requirement_degree[option][following_option] = -1
+                resolve_empty(graph, node, requirement_degree[option])
 
     for option, graph in zip(options, options_graphs):
         for node in graph.nodes():
@@ -77,8 +82,6 @@ def build_requirement_graph(options: List[Option]) -> DiGraph:
     for option, graph in zip(options, options_graphs):
         for node in graph.nodes():
             if isinstance(node, Option) and requirement_degree[option][node] > 0:
-                if node not in requirements_graph.nodes():
-                    requirements_graph.add_node(node)
                 index = len(list(requirements_graph.successors(node))) + 1
                 requirements_graph.add_edge(node, option, index=index)
 
