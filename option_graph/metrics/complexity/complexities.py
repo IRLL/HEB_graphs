@@ -57,8 +57,7 @@ def general_complexity(
         )
 
         if isinstance(node, Option):
-            try:
-                node.graph
+            if node in used_nodes_all:
                 node_complexity, saved_node_complexity = general_complexity(
                     node,
                     used_nodes_all,
@@ -73,7 +72,7 @@ def general_complexity(
                 total_saved_complexity += saved_node_complexity * kcomplexity(
                     node, n_used
                 )
-            except NotImplementedError:
+            else:
                 node_complexity = node.complexity
         else:
             node_complexity = node.complexity
