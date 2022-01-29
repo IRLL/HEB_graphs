@@ -114,14 +114,14 @@ class TestPaperBasicExamples:
     def test_learning_complexity(self):
         """should give expected learning_complexity."""
         expected_learning_complexities = {
-            self.options[0]: 3,
-            self.options[1]: 7,
-            self.options[2]: 11,
+            self.options[0]: 3.4941634241245136,
+            self.options[1]: 8.443579766536965,
+            self.options[2]: 13.828793774319063,
         }
         expected_saved_complexities = {
             self.options[0]: 0,
             self.options[1]: 0,
-            self.options[2]: 10,
+            self.options[2]: 11.937743190661479,
         }
 
         for option in self.options:
@@ -133,8 +133,10 @@ class TestPaperBasicExamples:
                 f"{option}: {c_learning}|{expected_learning_complexities[option]}"
                 f" {saved_complexity}|{expected_saved_complexities[option]}"
             )
-            check.equal(c_learning, expected_learning_complexities[option])
-            check.equal(saved_complexity, expected_saved_complexities[option])
+            diff_complexity = abs(c_learning - expected_learning_complexities[option])
+            diff_saved = abs(saved_complexity - expected_saved_complexities[option])
+            check.less(diff_complexity, 1e-14)
+            check.less(diff_saved, 1e-14)
 
     def test_requirement_graph_edges(self):
         """should give expected requirement_graph edges."""

@@ -18,7 +18,6 @@ def general_complexity(
     saved_complexity,
     kcomplexity,
     previous_used_nodes=None,
-    default_node_complexity: float = 1.0,
 ) -> Tuple[float]:
     """Compute the general complexity of an Option with used nodes.
 
@@ -38,8 +37,6 @@ def general_complexity(
             n_used is the number of time this node is used, returning the accumulated complexity.
         previous_used_nodes: Dictionary of the number of times each nodes was used in the past,
             not being in the dictionary is counted as 0.
-        default_node_complexity: Default individual complexity (if not given by Node).
-            Default is 1.
 
     Returns:
         Tuple composed of the general complexity and the total saved complexity.
@@ -57,11 +54,9 @@ def general_complexity(
             previous_used_nodes[node] if node in previous_used_nodes else 0
         )
 
-        try:
-            node_complexity = node.complexity
-        except AttributeError as no_attribute:
-
-            if isinstance(node, Option):
+        if isinstance(node, Option):
+            try:
+                node.graph
                 node_complexity, saved_node_complexity = general_complexity(
                     node,
                     used_nodes_all,
@@ -76,10 +71,10 @@ def general_complexity(
                 total_saved_complexity += saved_node_complexity * kcomplexity(
                     node, n_used
                 )
-            elif isinstance(node, (Action, FeatureCondition)):
-                node_complexity = default_node_complexity
-            else:
-                raise ValueError from no_attribute
+            except NotImplementedError:
+                node_complexity = node.complexity
+        else:
+            node_complexity = node.complexity
 
         total_complexity += node_complexity * kcomplexity(node, n_used)
 
@@ -97,7 +92,6 @@ def learning_complexity(
     option: Option,
     used_nodes_all: Dict[Node, Dict[Node, int]],
     previous_used_nodes=None,
-    default_node_complexity: float = 1.0,
 ):
     """Compute the learning complexity of an Option with used nodes.
 
@@ -110,8 +104,6 @@ def learning_complexity(
             past, and thus for each node. Not being in a dictionary is counted as not being used.
         previous_used_nodes: Dictionary of the number of times each nodes was used in the past,
             not being in the dictionary is counted as not being used.
-        default_node_complexity: Default individual complexity (if not given by Node).
-            Default is 1.
 
     Returns:
         Tuple composed of the learning complexity and the total saved complexity.
@@ -121,7 +113,6 @@ def learning_complexity(
         option=option,
         used_nodes_all=used_nodes_all,
         previous_used_nodes=previous_used_nodes,
-        default_node_complexity=default_node_complexity,
         saved_complexity=lambda node, k, p: max(0, min(k, p + k - 1)),
         kcomplexity=lambda node, k: k,
     )

@@ -5,6 +5,14 @@
 
 from typing import Any, List
 import numpy as np
+import dis
+
+
+def hello_world():
+    print("Hello world!")
+
+
+HELLO_COMPLEXITY = len(dis.Bytecode(hello_world).dis())
 
 
 class Node:
@@ -22,6 +30,9 @@ class Node:
                 f"not in authorised node_types ({self.NODE_TYPES})."
             )
         self.type = node_type
+        compiled_call = dis.Bytecode(self.__call__).dis()
+        compiled_init = dis.Bytecode(self.__call__).dis()
+        self.complexity = (len(compiled_call) + len(compiled_init)) / HELLO_COMPLEXITY
 
     def __call__(self, observation: Any) -> Any:
         raise NotImplementedError
