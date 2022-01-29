@@ -4,17 +4,19 @@
 """ General complexity. """
 
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, TYPE_CHECKING
 from copy import deepcopy
 
 from option_graph.option import Option
-from option_graph.node import Action, FeatureCondition, Node
 from option_graph.metrics.complexity.utils import update_sum_dict
+
+if TYPE_CHECKING:
+    from option_graph.node import Node
 
 
 def general_complexity(
     option: Option,
-    used_nodes_all: Dict[Node, Dict[Node, int]],
+    used_nodes_all: Dict["Node", Dict["Node", int]],
     saved_complexity,
     kcomplexity,
     previous_used_nodes=None,
@@ -90,7 +92,7 @@ def general_complexity(
 
 def learning_complexity(
     option: Option,
-    used_nodes_all: Dict[Node, Dict[Node, int]],
+    used_nodes_all: Dict["Node", Dict["Node", int]],
     previous_used_nodes=None,
 ):
     """Compute the learning complexity of an Option with used nodes.

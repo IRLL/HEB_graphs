@@ -4,11 +4,13 @@
 """ Module for base Node classes. """
 
 from typing import Any, List
-import numpy as np
 import dis
+
+import numpy as np
 
 
 def hello_world():
+    """Used for complexity normalisation."""
     print("Hello world!")
 
 
