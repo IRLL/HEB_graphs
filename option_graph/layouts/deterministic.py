@@ -23,7 +23,9 @@ def option_graph_default_layout(graph: nx.DiGraph, center=None):
     graph, _ = nx.drawing.layout._process_params(graph, center, dim=2)
     nodes_by_level = graph.graph["nodes_by_level"]
     pos = {}
-    for level in range(max(nodes_by_level.keys()) + 1):
+    levels = list(nodes_by_level.keys())
+    levels.sort()
+    for level in levels:
         for i, node in enumerate(nodes_by_level[level]):
             preds = list(graph.predecessors(node))
             if len(preds) == 0:
