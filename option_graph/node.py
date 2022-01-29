@@ -14,7 +14,15 @@ def hello_world():
     print("Hello world!")
 
 
-HELLO_COMPLEXITY = len(dis.Bytecode(hello_world).dis())
+def bytecode_complexity(obj):
+    return len(list(dis.get_instructions(obj)))
+
+
+HELLO_COMPLEXITY = bytecode_complexity(hello_world)
+
+
+def complexity(obj):
+    return bytecode_complexity(obj) / 3 / HELLO_COMPLEXITY
 
 
 class Node:
@@ -32,9 +40,7 @@ class Node:
                 f"not in authorised node_types ({self.NODE_TYPES})."
             )
         self.type = node_type
-        compiled_call = dis.Bytecode(self.__call__).dis()
-        compiled_init = dis.Bytecode(self.__call__).dis()
-        self.complexity = (len(compiled_call) + len(compiled_init)) / HELLO_COMPLEXITY
+        self.complexity = complexity(self.__init__) + complexity(self.__call__)
 
     def __call__(self, observation: Any) -> Any:
         raise NotImplementedError
@@ -58,8 +64,10 @@ class Action(Node):
 
     def __init__(self, action: Any, name: str = None, image=None) -> None:
         self.action = action
-        name = name if name is not None else f"action {action}"
-        super().__init__(name, "action", image=image)
+        super().__init__(self.get_name(name), "action", image=image)
+
+    def get_name(self, name):
+        return f"action {self.action}" if name is None else name
 
     def __call__(self, observation: Any) -> Any:
         return self.action
