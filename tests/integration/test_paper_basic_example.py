@@ -19,7 +19,6 @@ from option_graph.metrics.complexity.histograms import nodes_histograms
 from option_graph.metrics.complexity.complexities import learning_complexity
 from option_graph.requirements_graph import build_requirement_graph
 
-# from option_graph.graph import compute_levels
 from option_graph import Action, Option, FeatureCondition, OptionGraph
 
 
@@ -169,9 +168,13 @@ class TestPaperBasicExamples:
         expected_graph_0 = deepcopy(self.options[0].graph)
 
         expected_graph_1 = OptionGraph(self.options[1])
-        feature_0 = FeatureCondition("feature 0")
-        expected_graph_1.add_edge(feature_0, Action(0), index=False)
-        expected_graph_1.add_edge(feature_0, Action(1), index=True)
+        feature_0 = FeatureCondition(f"{self.options[0]}\n>feature 0")
+        expected_graph_1.add_edge(
+            feature_0, Action(0, f"{self.options[0]}\n>action 0"), index=False
+        )
+        expected_graph_1.add_edge(
+            feature_0, Action(1, f"{self.options[0]}\n>action 1"), index=True
+        )
         feature_1 = FeatureCondition("feature 1")
         feature_2 = FeatureCondition("feature 2")
         expected_graph_1.add_edge(feature_1, feature_0, index=False)
@@ -187,19 +190,46 @@ class TestPaperBasicExamples:
         expected_graph_2.add_edge(feature_3, feature_5, index=True)
         expected_graph_2.add_edge(feature_4, Action(0), index=False)
 
-        feature_0 = FeatureCondition("feature 0")
-        expected_graph_2.add_edge(feature_0, Action(0), index=False)
-        expected_graph_2.add_edge(feature_0, Action(1), index=True)
-        feature_1 = FeatureCondition("feature 1")
-        feature_2 = FeatureCondition("feature 2")
+        feature_0 = FeatureCondition(
+            f"{self.options[1]}\n>{self.options[0]}\n>feature 0"
+        )
+        expected_graph_2.add_edge(
+            feature_0,
+            Action(0, f"{self.options[1]}\n>{self.options[0]}\n>action 0"),
+            index=False,
+        )
+        expected_graph_2.add_edge(
+            feature_0,
+            Action(1, f"{self.options[1]}\n>{self.options[0]}\n>action 1"),
+            index=True,
+        )
+        feature_1 = FeatureCondition(f"{self.options[1]}\n>feature 1")
+        feature_2 = FeatureCondition(f"{self.options[1]}\n>feature 2")
         expected_graph_2.add_edge(feature_1, feature_0, index=False)
         expected_graph_2.add_edge(feature_1, feature_2, index=True)
-        expected_graph_2.add_edge(feature_2, Action(0), index=False)
-        expected_graph_2.add_edge(feature_2, Action(2), index=True)
+        expected_graph_2.add_edge(
+            feature_2, Action(0, f"{self.options[1]}\n>action 0"), index=False
+        )
+        expected_graph_2.add_edge(
+            feature_2, Action(2, f"{self.options[1]}\n>action 2"), index=True
+        )
 
         expected_graph_2.add_edge(feature_4, feature_1, index=True)
+
+        feature_0_0 = FeatureCondition(f"{self.options[0]}\n>feature 0")
+        expected_graph_2.add_edge(
+            feature_0_0,
+            Action(0, f"{self.options[0]}\n>action 0"),
+            index=False,
+        )
+        expected_graph_2.add_edge(
+            feature_0_0,
+            Action(1, f"{self.options[0]}\n>action 1"),
+            index=True,
+        )
+
         expected_graph_2.add_edge(feature_5, feature_1, index=False)
-        expected_graph_2.add_edge(feature_5, feature_0, index=True)
+        expected_graph_2.add_edge(feature_5, feature_0_0, index=True)
 
         expected_graph = {
             self.options[0]: expected_graph_0,
@@ -214,8 +244,6 @@ class TestPaperBasicExamples:
 
             # fig, axes = plt.subplots(1, 2)
             # unrolled_graph = option.graph.unrolled_graph
-            # compute_levels(unrolled_graph)
             # unrolled_graph.draw(axes[0])
-            # compute_levels(expected_graph[option])
             # expected_graph[option].draw(axes[1])
             # plt.show()

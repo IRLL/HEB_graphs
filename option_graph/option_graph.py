@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any, Dict, List
 from copy import deepcopy
 
-from networkx import DiGraph, draw_networkx_edges
+from networkx import DiGraph, draw_networkx_edges, relabel_nodes
 import numpy as np
 
 from matplotlib.axes import Axes
@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.legend_handler import HandlerPatch
 
-from option_graph.graph import draw_networkx_nodes_images, get_roots, compute_levels
+from option_graph.graph import draw_networkx_nodes_images, get_roots
 from option_graph.layouts import staircase_layout
 
 from option_graph.node import Node
@@ -85,6 +85,8 @@ class OptionGraph(DiGraph):
     def add_node(self, node_for_adding: Node, **attr):
         node = node_for_adding
         color = attr.pop("color", None)
+        attr.pop("type", None)
+        attr.pop("image", None)
         if color is None:
             try:
                 color = self.NODES_COLORS[node.type]
@@ -137,7 +139,6 @@ class OptionGraph(DiGraph):
         """
         if self._unrolled_graph is None:
             self._unrolled_graph = self.build_unrolled_graph()
-            compute_levels(self._unrolled_graph)
         return self._unrolled_graph
 
     def build_unrolled_graph(self) -> OptionGraph:
@@ -150,6 +151,19 @@ class OptionGraph(DiGraph):
             This OptionGraph's unrolled OptionGraph.
 
         """
+
+        def add_prefix(graph, prefix: str) -> None:
+            """Rename graph to obtain disjoint node labels."""
+            if prefix is None:
+                return graph
+
+            def rename(x: Node):
+                x_new = deepcopy(x)
+                x_new.name = prefix + x.name
+                return x_new
+
+            return relabel_nodes(graph, rename, copy=False)
+
         unrolled_graph: OptionGraph = deepcopy(self)
         for node in unrolled_graph.nodes():
             node: Node = node  # Add typechecking
@@ -162,6 +176,9 @@ class OptionGraph(DiGraph):
                         node_graph = node.graph.unrolled_graph
                     except NotImplementedError:
                         node_graph = self.all_options[str(node)].graph.unrolled_graph
+
+                    # Relabel graph nodes to obtain disjoint node labels.
+                    add_prefix(node_graph, str(node) + "\n>")
 
                     # Replace the option node by the unrolled option's graph
                     unrolled_graph = compose_option_graphs(unrolled_graph, node_graph)
