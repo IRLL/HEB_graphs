@@ -21,7 +21,7 @@ def bytecode_complexity(obj):
 HELLO_COMPLEXITY = bytecode_complexity(hello_world)
 
 
-def complexity(obj):
+def compute_complexity(obj):
     return bytecode_complexity(obj) / 3 / HELLO_COMPLEXITY
 
 
@@ -31,7 +31,9 @@ class Node:
 
     NODE_TYPES = ("action", "feature_condition", "option", "empty")
 
-    def __init__(self, name: str, node_type: str, image=None) -> None:
+    def __init__(
+        self, name: str, node_type: str, complexity: float = None, image=None
+    ) -> None:
         self.name = name
         self.image = image
         if node_type not in self.NODE_TYPES:
@@ -40,7 +42,11 @@ class Node:
                 f"not in authorised node_types ({self.NODE_TYPES})."
             )
         self.type = node_type
-        self.complexity = complexity(self.__init__) + complexity(self.__call__)
+        if complexity is not None:
+            self.complexity = complexity
+        else:
+            self.complexity = compute_complexity(self.__init__)
+            self.complexity += compute_complexity(self.__call__)
 
     def __call__(self, observation: Any) -> Any:
         raise NotImplementedError
