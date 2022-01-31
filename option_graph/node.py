@@ -15,6 +15,7 @@ def hello_world():
 
 
 def bytecode_complexity(obj):
+    """Compute the number of instructions in the bytecode of a given obj."""
     return len(list(dis.get_instructions(obj)))
 
 
@@ -22,6 +23,7 @@ HELLO_COMPLEXITY = bytecode_complexity(hello_world)
 
 
 def compute_complexity(obj):
+    """Normalise the number of instructions using HELLO WORLD."""
     return bytecode_complexity(obj) / 3 / HELLO_COMPLEXITY
 
 
@@ -70,9 +72,10 @@ class Action(Node):
 
     def __init__(self, action: Any, name: str = None, image=None) -> None:
         self.action = action
-        super().__init__(self.get_name(name), "action", image=image)
+        super().__init__(self._get_name(name), "action", image=image)
 
-    def get_name(self, name):
+    def _get_name(self, name):
+        """Get the default name of the action if None is given."""
         return f"action {self.action}" if name is None else name
 
     def __call__(self, observation: Any) -> Any:
