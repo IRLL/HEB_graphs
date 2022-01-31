@@ -145,7 +145,7 @@ class TestOptionGraph:
     def test_draw(self, mocker: MockerFixture):
         """should draw itself on a matplotlib Axes."""
         patches = [
-            mocker.patch("option_graph.option_graph.option_graph_default_layout"),
+            mocker.patch("option_graph.option_graph.staircase_layout"),
             mocker.patch("option_graph.option_graph.draw_networkx_nodes_images"),
             mocker.patch("option_graph.option_graph.draw_networkx_edges"),
             mocker.patch(

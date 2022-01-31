@@ -5,9 +5,12 @@
 """ Deterministic layouts """
 
 import networkx as nx
+import numpy as np
+
+from option_graph.graph import get_roots
 
 
-def option_graph_default_layout(graph: nx.DiGraph, center=None):
+def staircase_layout(graph: nx.DiGraph, center=None):
     """Compute specific default positions for an DiGraph.
 
     Requires graph to have a 'nodes_by_level' attribute.
@@ -20,20 +23,28 @@ def option_graph_default_layout(graph: nx.DiGraph, center=None):
         pos: Positions of each node.
 
     """
+
+    def place_successors(pos, pos_by_level, node, level) -> int:
+        if not level in pos_by_level:
+            pos_by_level[level] = pos_by_level[level - 1]
+        pos_by_level[level] = max(pos[node][0], pos_by_level[level])
+        succs = list(graph.successors(node))
+        if len(succs) == 0:
+            return 1
+        succs_order = np.argsort([graph.edges[node, succ]["index"] for succ in succs])
+        for succ_id in succs_order:
+            succ = succs[succ_id]
+            if succ in pos:
+                continue
+            pos[succ] = [pos_by_level[level], -level]
+            n_succs = place_successors(pos, pos_by_level, succ, level + 1)
+            pos_by_level[level] += n_succs
+        return len(succs)
+
     graph, _ = nx.drawing.layout._process_params(graph, center, dim=2)
-    nodes_by_level = graph.graph["nodes_by_level"]
     pos = {}
-    levels = list(nodes_by_level.keys())
-    levels.sort()
-    for level in levels:
-        for i, node in enumerate(nodes_by_level[level]):
-            preds = list(graph.predecessors(node))
-            if len(preds) == 0:
-                x_pos = i
-            elif len(preds) == 1 and graph.edges[preds[0], node]["color"] == "red":
-                x_pos = pos[preds[0]][0]
-            else:
-                other_nodes_x = [pos[n][0] for n in nodes_by_level[level] if n in pos]
-                x_pos = 1 + max(other_nodes_x + [0])
-            pos[node] = [x_pos, -level]
+    pos_by_level = {0: 0}
+    for node in get_roots(graph):
+        pos[node] = [pos_by_level[0], 0]
+        pos_by_level[0] += place_successors(pos, pos_by_level, node, 1)
     return pos

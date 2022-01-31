@@ -4,4 +4,4 @@
 """ Module containing layouts to draw graphs. """
 
 from option_graph.layouts.metabased import leveled_layout_energy
-from option_graph.layouts.deterministic import option_graph_default_layout
+from option_graph.layouts.deterministic import staircase_layout
