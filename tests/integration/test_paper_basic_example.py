@@ -8,6 +8,7 @@ from copy import deepcopy
 
 # import matplotlib.pyplot as plt
 
+
 import pytest
 import pytest_check as check
 
@@ -15,11 +16,11 @@ from itertools import permutations
 from networkx.classes.digraph import DiGraph
 from networkx import is_isomorphic
 
+from option_graph import Action, Option, FeatureCondition, OptionGraph
 from option_graph.metrics.complexity.histograms import nodes_histograms
 from option_graph.metrics.complexity.complexities import learning_complexity
 from option_graph.requirements_graph import build_requirement_graph
-
-from option_graph import Action, Option, FeatureCondition, OptionGraph
+from option_graph.option_graph import OPTIONS_SEPARATOR
 
 
 class TestPaperBasicExamples:
@@ -165,15 +166,18 @@ class TestPaperBasicExamples:
     def test_unrolled_options_graphs(self):
         """should give expected unrolled_options_graphs for each example options."""
 
+        def lname(*args):
+            return OPTIONS_SEPARATOR.join([str(arg) for arg in args])
+
         expected_graph_0 = deepcopy(self.options[0].graph)
 
         expected_graph_1 = OptionGraph(self.options[1])
-        feature_0 = FeatureCondition(f"{self.options[0]}\n>feature 0")
+        feature_0 = FeatureCondition(lname(self.options[0], "feature 0"))
         expected_graph_1.add_edge(
-            feature_0, Action(0, f"{self.options[0]}\n>action 0"), index=False
+            feature_0, Action(0, lname(self.options[0], "action 0")), index=False
         )
         expected_graph_1.add_edge(
-            feature_0, Action(1, f"{self.options[0]}\n>action 1"), index=True
+            feature_0, Action(1, lname(self.options[0], "action 1")), index=True
         )
         feature_1 = FeatureCondition("feature 1")
         feature_2 = FeatureCondition("feature 2")
@@ -191,40 +195,40 @@ class TestPaperBasicExamples:
         expected_graph_2.add_edge(feature_4, Action(0), index=False)
 
         feature_0 = FeatureCondition(
-            f"{self.options[1]}\n>{self.options[0]}\n>feature 0"
+            lname(self.options[1], self.options[0], "feature 0")
         )
         expected_graph_2.add_edge(
             feature_0,
-            Action(0, f"{self.options[1]}\n>{self.options[0]}\n>action 0"),
+            Action(0, lname(self.options[1], self.options[0], "action 0")),
             index=False,
         )
         expected_graph_2.add_edge(
             feature_0,
-            Action(1, f"{self.options[1]}\n>{self.options[0]}\n>action 1"),
+            Action(1, lname(self.options[1], self.options[0], "action 1")),
             index=True,
         )
-        feature_1 = FeatureCondition(f"{self.options[1]}\n>feature 1")
-        feature_2 = FeatureCondition(f"{self.options[1]}\n>feature 2")
+        feature_1 = FeatureCondition(lname(self.options[1], "feature 1"))
+        feature_2 = FeatureCondition(lname(self.options[1], "feature 2"))
         expected_graph_2.add_edge(feature_1, feature_0, index=False)
         expected_graph_2.add_edge(feature_1, feature_2, index=True)
         expected_graph_2.add_edge(
-            feature_2, Action(0, f"{self.options[1]}\n>action 0"), index=False
+            feature_2, Action(0, lname(self.options[1], "action 0")), index=False
         )
         expected_graph_2.add_edge(
-            feature_2, Action(2, f"{self.options[1]}\n>action 2"), index=True
+            feature_2, Action(2, lname(self.options[1], "action 2")), index=True
         )
 
         expected_graph_2.add_edge(feature_4, feature_1, index=True)
 
-        feature_0_0 = FeatureCondition(f"{self.options[0]}\n>feature 0")
+        feature_0_0 = FeatureCondition(lname(self.options[0], "feature 0"))
         expected_graph_2.add_edge(
             feature_0_0,
-            Action(0, f"{self.options[0]}\n>action 0"),
+            Action(0, lname(self.options[0], "action 0")),
             index=False,
         )
         expected_graph_2.add_edge(
             feature_0_0,
-            Action(1, f"{self.options[0]}\n>action 1"),
+            Action(1, lname(self.options[0], "action 1")),
             index=True,
         )
 
@@ -244,6 +248,6 @@ class TestPaperBasicExamples:
 
             # fig, axes = plt.subplots(1, 2)
             # unrolled_graph = option.graph.unrolled_graph
-            # unrolled_graph.draw(axes[0])
-            # expected_graph[option].draw(axes[1])
+            # unrolled_graph.draw(axes[0], draw_options_hulls=True)
+            # expected_graph[option].draw(axes[1], draw_options_hulls=True)
             # plt.show()

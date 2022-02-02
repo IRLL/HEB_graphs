@@ -154,6 +154,7 @@ class TestOptionGraph:
             ),
             mocker.patch("option_graph.option_graph.OptionGraph.edges"),
             mocker.patch("option_graph.option_graph.plt.setp"),
+            mocker.patch("option_graph.option_graph.draw_convex_hull"),
         ]
 
         class DummyLegend:
@@ -169,7 +170,7 @@ class TestOptionGraph:
                 return DummyLegend()
 
         self.option_graph.draw(DummyAxes())
-        for patch in patches:
+        for patch in patches[:-1]:
             check.is_true(patch.called)
 
 
