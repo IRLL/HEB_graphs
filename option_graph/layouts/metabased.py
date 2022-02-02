@@ -79,9 +79,10 @@ def leveled_layout_energy(
 
         return energy
 
-    def neighbor(pos):
+    def neighbor(pos: dict):
         pos_copy = deepcopy(pos)
-        choosen_node = np.random.choice(list(pos_copy.keys()))
+        nodes_list = list(pos.keys())
+        choosen_node = nodes_list[np.random.randint(len(nodes_list))]
         choosen_level = graph.nodes(data="level")[choosen_node]
         new_pos = [pos_copy[choosen_node][0], np.random.choice(spacing)]
         for n in nodes_by_level[choosen_level]:
