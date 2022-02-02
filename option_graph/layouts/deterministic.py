@@ -32,11 +32,14 @@ def staircase_layout(graph: nx.DiGraph, center=None):
         if len(succs) == 0:
             return 1
         succs_order = np.argsort([graph.edges[node, succ]["index"] for succ in succs])
-        for succ_id in succs_order:
+        for index, succ_id in enumerate(succs_order):
             succ = succs[succ_id]
             if succ in pos:
                 continue
             pos[succ] = [pos_by_level[level], -level]
+            if index == 0:
+                pos[node][0] = max(pos[node][0], pos[succ][0])
+                pos_by_level[level - 1] = max(pos_by_level[level - 1], pos[node][0])
             n_succs = place_successors(pos, pos_by_level, succ, level + 1)
             pos_by_level[level] += n_succs
         return len(succs)
