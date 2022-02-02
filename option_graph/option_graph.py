@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 from copy import deepcopy
 
 from networkx import DiGraph, draw_networkx_edges, relabel_nodes
@@ -16,12 +16,15 @@ from matplotlib.axes import Axes
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.legend_handler import HandlerPatch
+from option_graph.draw_utils import draw_convex_hull
 
 from option_graph.graph import draw_networkx_nodes_images, get_roots
 from option_graph.layouts import staircase_layout
 
 from option_graph.node import Node
 from option_graph.option import Option
+
+OPTIONS_SEPARATOR = "\n>"
 
 
 class OptionGraph(DiGraph):
@@ -177,8 +180,9 @@ class OptionGraph(DiGraph):
                     except NotImplementedError:
                         node_graph = self.all_options[str(node)].graph.unrolled_graph
 
-                    # Relabel graph nodes to obtain disjoint node labels.
-                    add_prefix(node_graph, str(node) + "\n>")
+                    # Relabel graph nodes to obtain disjoint node labels (if more that one node).
+                    if len(node_graph.nodes()) > 1:
+                        add_prefix(node_graph, str(node) + OPTIONS_SEPARATOR)
 
                     # Replace the option node by the unrolled option's graph
                     unrolled_graph = compose_option_graphs(unrolled_graph, node_graph)
@@ -240,7 +244,7 @@ class OptionGraph(DiGraph):
         """Roots of the option graph (nodes without predecessors)."""
         return get_roots(self)
 
-    def draw(self, ax: Axes, **kwargs) -> Axes:
+    def draw(self, ax: Axes, **kwargs) -> Tuple[Axes, Dict[Node, Tuple[float, float]]]:
         """Draw the OptionGraph on the given Axis.
 
         Args:
@@ -250,7 +254,7 @@ class OptionGraph(DiGraph):
             fontcolor: Font color to use for all texts.
 
         Returns:
-            The resulting matplotlib Axis drawn on.
+            The resulting matplotlib Axis drawn on and a dictionary of each node position.
 
         """
         fontcolor = kwargs.get("fontcolor", "black")
@@ -284,10 +288,7 @@ class OptionGraph(DiGraph):
             used_edge_indexes = [index for _, _, index in self.edges(data="index")]
             legend_arrows = [
                 mpatches.FancyArrow(
-                    0,
-                    0,
-                    1,
-                    0,
+                    *(0, 0, 1, 0),
                     facecolor=color,
                     edgecolor="none",
                     label=str(index) if index > 1 else f"{str(bool(index))} ({index})",
@@ -307,10 +308,7 @@ class OptionGraph(DiGraph):
                     # Patch arrows with fancy arrows in legend
                     mpatches.FancyArrow: HandlerPatch(
                         patch_func=lambda width, height, **kwargs: mpatches.FancyArrow(
-                            0,
-                            0.5 * height,
-                            width,
-                            0,
+                            *(0, 0.5 * height, width, 0),
                             width=0.2 * height,
                             length_includes_head=True,
                             head_width=height,
@@ -321,7 +319,27 @@ class OptionGraph(DiGraph):
             )
             plt.setp(legend.get_texts(), color=fontcolor)
 
-        return ax
+            if kwargs.get("draw_options_hulls", False):
+                grouped_points = group_options_points(pos, self)
+                if not kwargs.get("show_all_hulls", False):
+                    key_count = {key[-1]: 0 for key in grouped_points}
+                    for key in grouped_points:
+                        key_count[key[-1]] += 1
+                    grouped_points = {
+                        key: grouped_points[key]
+                        for key in grouped_points
+                        if key_count[key[-1]] > 1
+                        and (len(key) == 1 or key[-1] != key[-2])
+                    }
+
+                for group_key, points in grouped_points.items():
+                    stretch = 0.5 - 0.05 * (len(group_key) - 1)
+                    if len(points) >= 3:
+                        draw_convex_hull(
+                            points, ax, stretch=stretch, lw=3, color="orange"
+                        )
+
+        return ax, pos
 
 
 def compose_option_graphs(G: OptionGraph, H: OptionGraph):
@@ -354,3 +372,29 @@ def compose_option_graphs(G: OptionGraph, H: OptionGraph):
     else:
         R.add_edges_from(H.edges(data=True))
     return R
+
+
+def group_options_points(
+    pos: Dict[Node, tuple], graph: OptionGraph
+) -> Dict[tuple, list]:
+    """Group nodes positions of an OptionGraph in options.
+
+    Args:
+        pos (Dict[Node, tuple]): Positions of nodes.
+        graph (OptionGraph): Graph.
+
+    Returns:
+        Dict[tuple, list]: A dictionary of nodes grouped by their option hierarchy.
+    """
+    points_grouped_by_option: Dict[tuple, list] = {}
+    for node in graph.nodes():
+        groups = str(node).split(OPTIONS_SEPARATOR)
+        if len(groups) > 1:
+            for i in range(len(groups[:-1])):
+                key = tuple(groups[: -1 - i])
+                point = pos[node]
+                try:
+                    points_grouped_by_option[key].append(point)
+                except KeyError:
+                    points_grouped_by_option[key] = [point]
+    return points_grouped_by_option
