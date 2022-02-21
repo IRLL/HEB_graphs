@@ -144,7 +144,7 @@ class OptionGraph(DiGraph):
             self._unrolled_graph = self.build_unrolled_graph()
         return self._unrolled_graph
 
-    def build_unrolled_graph(self) -> OptionGraph:
+    def build_unrolled_graph(self, options_in_search: set = None) -> OptionGraph:
         """Build the the unrolled option graph.
 
         The unrolled option graph as the same behavior but every option node is recursively replaced
@@ -168,17 +168,27 @@ class OptionGraph(DiGraph):
             return relabel_nodes(graph, rename, copy=False)
 
         unrolled_graph: OptionGraph = deepcopy(self)
-        for node in unrolled_graph.nodes():
-            node: Node = node  # Add typechecking
-            node_graph: OptionGraph = None
+        option_nodes: List[Node] = [
+            node for node in unrolled_graph.nodes() if node.type == "option"
+        ]
 
-            if node.type == "option":
-                node: Option = node  # Add typechecking
+        node_graph: OptionGraph = None
+        for node in option_nodes:
+
+            if options_in_search is None:
+                options_in_search = set()
+            else:
+                options_in_search = deepcopy(options_in_search)
+            options_in_search.add(self.option)
+
+            node: Option = node  # Add typechecking
+            if node not in options_in_search:
                 try:
                     try:
-                        node_graph = node.graph.unrolled_graph
+                        node_graph = node.graph
                     except NotImplementedError:
-                        node_graph = self.all_options[str(node)].graph.unrolled_graph
+                        node_graph = self.all_options[str(node)].graph
+                    node_graph = node_graph.build_unrolled_graph(options_in_search)
 
                     # Relabel graph nodes to obtain disjoint node labels (if more that one node).
                     if len(node_graph.nodes()) > 1:
