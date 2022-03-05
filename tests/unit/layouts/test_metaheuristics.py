@@ -14,7 +14,7 @@ def test_simulated_annealing():
     """Simulated annealing must work on the simple x**2 case."""
 
     def energy(x):
-        return x ** 2
+        return x**2
 
     step_size = 0.05
 
