@@ -9,22 +9,9 @@ import dis
 import numpy as np
 
 
-def hello_world():
-    """Used for complexity normalisation."""
-    print("Hello world!")
-
-
 def bytecode_complexity(obj):
     """Compute the number of instructions in the bytecode of a given obj."""
     return len(list(dis.get_instructions(obj)))
-
-
-HELLO_COMPLEXITY = bytecode_complexity(hello_world)
-
-
-def compute_complexity(obj):
-    """Normalise the number of instructions using HELLO WORLD."""
-    return bytecode_complexity(obj) / 3 / HELLO_COMPLEXITY
 
 
 class Node:
@@ -47,8 +34,8 @@ class Node:
         if complexity is not None:
             self.complexity = complexity
         else:
-            self.complexity = compute_complexity(self.__init__)
-            self.complexity += compute_complexity(self.__call__)
+            self.complexity = bytecode_complexity(self.__init__)
+            self.complexity += bytecode_complexity(self.__call__)
 
     def __call__(self, observation: Any) -> Any:
         raise NotImplementedError

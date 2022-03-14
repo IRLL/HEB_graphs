@@ -114,14 +114,14 @@ class TestPaperBasicExamples:
     def test_learning_complexity(self):
         """should give expected learning_complexity."""
         expected_learning_complexities = {
-            self.options[0]: 3.0555555555555554,
-            self.options[1]: 6.944444444444444,
-            self.options[2]: 10.55555555555555,
+            self.options[0]: 55,
+            self.options[1]: 125,
+            self.options[2]: 190,
         }
         expected_saved_complexities = {
-            self.options[0]: 0.0,
-            self.options[1]: 0.0,
-            self.options[2]: 10.0,
+            self.options[0]: 0,
+            self.options[1]: 0,
+            self.options[2]: 180,
         }
 
         for option in self.options:
