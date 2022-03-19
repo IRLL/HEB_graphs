@@ -241,10 +241,8 @@ class TestPaperBasicExamples:
             self.options[2]: expected_graph_2,
         }
         for option in self.options:
-
-            check.is_true(
-                is_isomorphic(option.graph.unrolled_graph, expected_graph[option])
-            )
+            unrolled_graph = option.graph.unrolled_graph
+            check.is_true(is_isomorphic(unrolled_graph, expected_graph[option]))
 
             # fig, axes = plt.subplots(1, 2)
             # unrolled_graph = option.graph.unrolled_graph

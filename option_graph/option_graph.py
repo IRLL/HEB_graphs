@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Tuple
-from copy import deepcopy
+from copy import copy, deepcopy
 
 from networkx import DiGraph, draw_networkx_edges, relabel_nodes
 import numpy as np
@@ -161,13 +161,13 @@ class OptionGraph(DiGraph):
                 return graph
 
             def rename(x: Node):
-                x_new = deepcopy(x)
+                x_new = copy(x)
                 x_new.name = prefix + x.name
                 return x_new
 
             return relabel_nodes(graph, rename, copy=False)
 
-        unrolled_graph: OptionGraph = deepcopy(self)
+        unrolled_graph: OptionGraph = copy(self)
         for node in unrolled_graph.nodes():
             node: Node = node  # Add typechecking
             node_graph: OptionGraph = None

@@ -21,7 +21,11 @@ class Node:
     NODE_TYPES = ("action", "feature_condition", "option", "empty")
 
     def __init__(
-        self, name: str, node_type: str, complexity: float = None, image=None
+        self,
+        name: str,
+        node_type: str,
+        complexity: float = None,
+        image=None,
     ) -> None:
         self.name = name
         self.image = image
