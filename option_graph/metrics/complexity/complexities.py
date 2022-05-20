@@ -5,7 +5,6 @@
 
 
 from typing import Dict, Tuple, TYPE_CHECKING
-from copy import deepcopy
 
 from option_graph.option import Option
 from option_graph.metrics.complexity.utils import update_sum_dict
@@ -17,9 +16,9 @@ if TYPE_CHECKING:
 def general_complexity(
     option: Option,
     used_nodes_all: Dict["Node", Dict["Node", int]],
-    saved_complexity,
+    scomplexity,
     kcomplexity,
-    previous_used_nodes=None,
+    previous_used_nodes: Dict["Node", int] = None,
 ) -> Tuple[float]:
     """Compute the general complexity of an Option with used nodes.
 
@@ -48,10 +47,9 @@ def general_complexity(
     previous_used_nodes = previous_used_nodes if previous_used_nodes else {}
 
     total_complexity = 0
-    total_saved_complexity = 0
+    saved_complexity = 0
 
-    for node in used_nodes_all[option]:
-        n_used = used_nodes_all[option][node]
+    for node, n_used in used_nodes_all[option].items():
         n_previous_used = (
             previous_used_nodes[node] if node in previous_used_nodes else 0
         )
@@ -61,17 +59,15 @@ def general_complexity(
                 node_complexity, saved_node_complexity = general_complexity(
                     node,
                     used_nodes_all,
-                    saved_complexity=saved_complexity,
+                    scomplexity=scomplexity,
                     kcomplexity=kcomplexity,
-                    previous_used_nodes=deepcopy(previous_used_nodes),
+                    previous_used_nodes=previous_used_nodes.copy(),
                 )
                 previous_used_nodes = update_sum_dict(
                     previous_used_nodes, used_nodes_all[node]
                 )
                 total_complexity += saved_node_complexity * kcomplexity(node, n_used)
-                total_saved_complexity += saved_node_complexity * kcomplexity(
-                    node, n_used
-                )
+                saved_complexity += saved_node_complexity * kcomplexity(node, n_used)
             else:
                 node_complexity = node.complexity
         else:
@@ -80,13 +76,13 @@ def general_complexity(
         total_complexity += node_complexity * kcomplexity(node, n_used)
 
         if isinstance(node, Option):
-            total_saved_complexity += node_complexity * saved_complexity(
+            saved_complexity += node_complexity * scomplexity(
                 node, n_used, n_previous_used
             )
 
         previous_used_nodes = update_sum_dict(previous_used_nodes, {node: n_used})
 
-    return total_complexity - total_saved_complexity, total_saved_complexity
+    return total_complexity - saved_complexity, saved_complexity
 
 
 def learning_complexity(
@@ -114,6 +110,6 @@ def learning_complexity(
         option=option,
         used_nodes_all=used_nodes_all,
         previous_used_nodes=previous_used_nodes,
-        saved_complexity=lambda node, k, p: max(0, min(k, p + k - 1)),
+        scomplexity=lambda node, k, p: max(0, min(k, p + k - 1)),
         kcomplexity=lambda node, k: k,
     )
