@@ -69,12 +69,12 @@ class TestFeatureCondition:
 
     def test_node_type(self):
         """should have 'feature_condition' as node_type."""
-        node = FeatureCondition("", "")
+        node = FeatureCondition("")
         check.equal(node.type, "feature_condition")
 
     def test_node_call(self):
         """should raise NotImplementedError on call."""
-        node = FeatureCondition("", "")
+        node = FeatureCondition("")
         with pytest.raises(NotImplementedError):
             node(None)
 

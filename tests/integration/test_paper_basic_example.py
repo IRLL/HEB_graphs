@@ -38,9 +38,9 @@ class TestPaperBasicExamples:
 
             def build_graph(self) -> OptionGraph:
                 graph = OptionGraph(self)
-                feature = FeatureCondition("feature 0")
-                graph.add_edge(feature, Action(0), index=False)
-                graph.add_edge(feature, Action(1), index=True)
+                feature = FeatureCondition("feature 0", complexity=1)
+                graph.add_edge(feature, Action(0, complexity=1), index=False)
+                graph.add_edge(feature, Action(1, complexity=1), index=True)
                 return graph
 
         class Option1(Option):
@@ -51,12 +51,12 @@ class TestPaperBasicExamples:
 
             def build_graph(self) -> OptionGraph:
                 graph = OptionGraph(self)
-                feature_1 = FeatureCondition("feature 1")
-                feature_2 = FeatureCondition("feature 2")
+                feature_1 = FeatureCondition("feature 1", complexity=1)
+                feature_2 = FeatureCondition("feature 2", complexity=1)
                 graph.add_edge(feature_1, Option0(), index=False)
                 graph.add_edge(feature_1, feature_2, index=True)
-                graph.add_edge(feature_2, Action(0), index=False)
-                graph.add_edge(feature_2, Action(2), index=True)
+                graph.add_edge(feature_2, Action(0, complexity=1), index=False)
+                graph.add_edge(feature_2, Action(2, complexity=1), index=True)
                 return graph
 
         class Option2(Option):
@@ -67,20 +67,20 @@ class TestPaperBasicExamples:
 
             def build_graph(self) -> OptionGraph:
                 graph = OptionGraph(self)
-                feature_3 = FeatureCondition("feature 3")
-                feature_4 = FeatureCondition("feature 4")
-                feature_5 = FeatureCondition("feature 5")
+                feature_3 = FeatureCondition("feature 3", complexity=1)
+                feature_4 = FeatureCondition("feature 4", complexity=1)
+                feature_5 = FeatureCondition("feature 5", complexity=1)
                 graph.add_edge(feature_3, feature_4, index=False)
                 graph.add_edge(feature_3, feature_5, index=True)
-                graph.add_edge(feature_4, Action(0), index=False)
+                graph.add_edge(feature_4, Action(0, complexity=1), index=False)
                 graph.add_edge(feature_4, Option1(), index=True)
                 graph.add_edge(feature_5, Option1(), index=False)
                 graph.add_edge(feature_5, Option0(), index=True)
                 return graph
 
-        self.actions: List[Action] = [Action(i) for i in range(3)]
+        self.actions: List[Action] = [Action(i, complexity=1) for i in range(3)]
         self.feature_conditions: List[FeatureCondition] = [
-            FeatureCondition(f"feature {i}") for i in range(6)
+            FeatureCondition(f"feature {i}", complexity=1) for i in range(6)
         ]
         self.options: List[Option] = [Option0(), Option1(), Option2()]
         self.expected_used_nodes_all: Dict[Option, Dict[Action, int]] = {
@@ -114,14 +114,14 @@ class TestPaperBasicExamples:
     def test_learning_complexity(self):
         """should give expected learning_complexity."""
         expected_learning_complexities = {
-            self.options[0]: 55,
-            self.options[1]: 125,
-            self.options[2]: 190,
+            self.options[0]: 3,
+            self.options[1]: 6,
+            self.options[2]: 9,
         }
         expected_saved_complexities = {
             self.options[0]: 0,
-            self.options[1]: 0,
-            self.options[2]: 180,
+            self.options[1]: 1,
+            self.options[2]: 12,
         }
 
         for option in self.options:

@@ -24,7 +24,7 @@ class Node:
         self,
         name: str,
         node_type: str,
-        complexity: float = None,
+        complexity: int = None,
         image=None,
     ) -> None:
         self.name = name
@@ -61,9 +61,9 @@ class Action(Node):
 
     """Node representing an action in an OptionGraph."""
 
-    def __init__(self, action: Any, name: str = None, image=None) -> None:
+    def __init__(self, action: Any, name: str = None, **kwargs) -> None:
         self.action = action
-        super().__init__(self._get_name(name), "action", image=image)
+        super().__init__(self._get_name(name), "action", **kwargs)
 
     def _get_name(self, name):
         """Get the default name of the action if None is given."""
@@ -92,8 +92,8 @@ class FeatureCondition(Node):
 
     """Node representing a feature condition in an OptionGraph."""
 
-    def __init__(self, name: str = None, image=None) -> None:
-        super().__init__(name, "feature_condition", image=image)
+    def __init__(self, name: str = None, **kwargs) -> None:
+        super().__init__(name, "feature_condition", **kwargs)
 
     def __call__(self, observation: Any) -> int:
         raise NotImplementedError
