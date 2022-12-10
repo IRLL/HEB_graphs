@@ -324,8 +324,8 @@ class HEBGraph(DiGraph):
                     for key in grouped_points:
                         key_count[key[-1]] += 1
                     grouped_points = {
-                        key: grouped_points[key]
-                        for key in grouped_points
+                        key: points
+                        for key, points in grouped_points.items()
                         if key_count[key[-1]] > 1
                         and (len(key) == 1 or key[-1] != key[-2])
                     }
