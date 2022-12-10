@@ -1,10 +1,10 @@
-# OptionGraph for explainable hierarchical reinforcement learning
+# HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
 """ A structure for explainable hierarchical reinforcement learning """
 
 from hebg.option import Option
-from hebg.option_graph import OptionGraph
+from hebg.option_graph import HEBGraph
 from hebg.node import (
     Node,
     FeatureCondition,

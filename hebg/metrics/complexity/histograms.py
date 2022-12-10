@@ -1,13 +1,13 @@
-# OptionGraph for explainable hierarchical reinforcement learning
+# HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" OptionGraph used nodes histograms computation. """
+""" HEBGraph used nodes histograms computation. """
 
 from typing import List, Dict, Tuple
 
 import numpy as np
 
-from hebg import Option, OptionGraph, Node
+from hebg import Option, HEBGraph, Node
 from hebg.metrics.complexity.utils import update_sum_dict
 
 
@@ -95,12 +95,12 @@ def nodes_histogram(
 
 
 def _successors_by_index(
-    graph: OptionGraph, node: Node, complexities: Dict[Node, float]
+    graph: HEBGraph, node: Node, complexities: Dict[Node, float]
 ) -> Tuple[Dict[int, List[Node]], Dict[int, List[float]]]:
     """Group successors and their complexities by index.
 
     Args:
-        graph: The OptionGraph to use.
+        graph: The HEBGraph to use.
         node: The Node from which we want to group successors.
         complexities: Dictionary of complexities for each potential successor node.
 

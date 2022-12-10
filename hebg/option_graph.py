@@ -1,8 +1,8 @@
-# OptionGraph for explainable hierarchical reinforcement learning
+# HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 # pylint: disable=arguments-differ
 
-""" Module containing the OptionGraph base class. """
+""" Module containing the HEBGraph base class. """
 
 from __future__ import annotations
 
@@ -27,21 +27,21 @@ from hebg.option import Option
 OPTIONS_SEPARATOR = "\n>"
 
 
-class OptionGraph(DiGraph):
+class HEBGraph(DiGraph):
 
     """Base class for option graphs.
 
-    An OptionGraph is a DiGraph, and as such stores nodes and directed edges with
+    An HEBGraph is a DiGraph, and as such stores nodes and directed edges with
     optional data, or attributes.
 
     But nodes of an option graph are not arbitrary.
     Leaf nodes can either be an Action or an Option.
     Other nodes can either be a FeatureCondition or an EmptyNode.
 
-    An OptionGraph determines the behavior of an option, it can be called with an observation
+    An HEBGraph determines the behavior of an option, it can be called with an observation
     to return the action given by this option.
 
-    An OptionGraph edges are directed and indexed,
+    An HEBGraph edges are directed and indexed,
     this indexing for path making when calling the graph.
 
     As in a DiGraph loops are allowed but multiple (parallel) edges are not.
@@ -128,7 +128,7 @@ class OptionGraph(DiGraph):
             return np.random.choice(actions)
 
     @property
-    def unrolled_graph(self) -> OptionGraph:
+    def unrolled_graph(self) -> HEBGraph:
         """Access to the unrolled option graph.
 
         The unrolled option graph as the same behavior but every option node is recursively replaced
@@ -137,21 +137,21 @@ class OptionGraph(DiGraph):
         Only build's the graph the first time called for efficiency.
 
         Returns:
-            This OptionGraph's unrolled OptionGraph.
+            This HEBGraph's unrolled HEBGraph.
 
         """
         if self._unrolled_graph is None:
             self._unrolled_graph = self.build_unrolled_graph()
         return self._unrolled_graph
 
-    def build_unrolled_graph(self) -> OptionGraph:
+    def build_unrolled_graph(self) -> HEBGraph:
         """Build the the unrolled option graph.
 
         The unrolled option graph as the same behavior but every option node is recursively replaced
         by it's option graph if it can be computed.
 
         Returns:
-            This OptionGraph's unrolled OptionGraph.
+            This HEBGraph's unrolled HEBGraph.
 
         """
 
@@ -167,10 +167,10 @@ class OptionGraph(DiGraph):
 
             return relabel_nodes(graph, rename, copy=False)
 
-        unrolled_graph: OptionGraph = copy(self)
+        unrolled_graph: HEBGraph = copy(self)
         for node in unrolled_graph.nodes():
             node: Node = node  # Add typechecking
-            node_graph: OptionGraph = None
+            node_graph: HEBGraph = None
 
             if node.type == "option":
                 node: Option = node  # Add typechecking
@@ -245,7 +245,7 @@ class OptionGraph(DiGraph):
         return get_roots(self)
 
     def draw(self, ax: Axes, **kwargs) -> Tuple[Axes, Dict[Node, Tuple[float, float]]]:
-        """Draw the OptionGraph on the given Axis.
+        """Draw the HEBGraph on the given Axis.
 
         Args:
             ax: The matplotlib ax to draw on.
@@ -342,7 +342,7 @@ class OptionGraph(DiGraph):
         return ax, pos
 
 
-def compose_option_graphs(G: OptionGraph, H: OptionGraph):
+def compose_option_graphs(G: HEBGraph, H: HEBGraph):
     """Returns a new graph of G composed with H.
 
     Composition is the simple union of the node sets and edge sets.
@@ -355,7 +355,7 @@ def compose_option_graphs(G: OptionGraph, H: OptionGraph):
         R: A new option graph  with the same type as G
 
     """
-    R = OptionGraph(G.option, all_options=G.all_options, any_mode=G.any_mode)
+    R = HEBGraph(G.option, all_options=G.all_options, any_mode=G.any_mode)
     # add graph attributes, H attributes take precedent over G attributes
     R.graph.update(G.graph)
     R.graph.update(H.graph)
@@ -374,14 +374,12 @@ def compose_option_graphs(G: OptionGraph, H: OptionGraph):
     return R
 
 
-def group_options_points(
-    pos: Dict[Node, tuple], graph: OptionGraph
-) -> Dict[tuple, list]:
-    """Group nodes positions of an OptionGraph in options.
+def group_options_points(pos: Dict[Node, tuple], graph: HEBGraph) -> Dict[tuple, list]:
+    """Group nodes positions of an HEBGraph in options.
 
     Args:
         pos (Dict[Node, tuple]): Positions of nodes.
-        graph (OptionGraph): Graph.
+        graph (HEBGraph): Graph.
 
     Returns:
         Dict[tuple, list]: A dictionary of nodes grouped by their option hierarchy.

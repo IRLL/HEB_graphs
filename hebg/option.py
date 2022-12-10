@@ -1,4 +1,4 @@
-# OptionGraph for explainable hierarchical reinforcement learning
+# HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
 """ Module for base Option. """
@@ -11,7 +11,7 @@ from hebg.graph import compute_levels
 from hebg.node import Node
 
 if TYPE_CHECKING:
-    from hebg.option_graph import OptionGraph
+    from hebg.option_graph import HEBGraph
 
 
 class Option(Node):
@@ -25,7 +25,7 @@ class Option(Node):
     def __call__(self, observation, *args, **kwargs):
         """Use the option to get next actions.
 
-        By default, uses the OptionGraph if it can be built.
+        By default, uses the HEBGraph if it can be built.
 
         Args:
             observation: Observations of the environment.
@@ -38,23 +38,23 @@ class Option(Node):
         """
         return self.graph.__call__(observation, *args, **kwargs)
 
-    def build_graph(self) -> OptionGraph:
-        """Build the OptionGraph of this Option.
+    def build_graph(self) -> HEBGraph:
+        """Build the HEBGraph of this Option.
 
         Returns:
-            The built OptionGraph.
+            The built HEBGraph.
 
         """
         raise NotImplementedError
 
     @property
-    def graph(self) -> OptionGraph:
+    def graph(self) -> HEBGraph:
         """Access to the Option's graph.
 
         Only build's the graph the first time called for efficiency.
 
         Returns:
-            This Option's OptionGraph.
+            This Option's HEBGraph.
 
         """
         if self._graph is None:

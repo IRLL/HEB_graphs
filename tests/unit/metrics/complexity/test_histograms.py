@@ -1,4 +1,4 @@
-# OptionGraph for explainable hierarchical reinforcement learning
+# HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
 """ Integration tests for the hebg.metrics.complexity.histograms module. """
@@ -12,7 +12,7 @@ from hebg.metrics.complexity.histograms import (
     _get_node_histogram_complexity,
     _successors_by_index,
 )
-from hebg import Action, Option, FeatureCondition, OptionGraph
+from hebg import Action, Option, FeatureCondition, HEBGraph
 
 
 class TestHistograms:

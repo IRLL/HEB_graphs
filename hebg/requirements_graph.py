@@ -1,4 +1,4 @@
-# OptionGraph for explainable hierarchical reinforcement learning
+# HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 # pylint: disable=arguments-differ
 
@@ -29,7 +29,7 @@ def build_requirement_graph(options: List[Option]) -> DiGraph:
     try:
         options_graphs = [option.graph for option in options]
     except NotImplementedError as error:
-        user_msg = "All options given must be able to build an OptionGraph"
+        user_msg = "All options given must be able to build an HEBGraph"
         raise NotImplementedError(user_msg) from error
 
     requirements_graph = DiGraph()
