@@ -6,8 +6,8 @@
 import pytest
 import pytest_check as check
 
-from option_graph.metrics.complexity.complexities import learning_complexity
-from option_graph import Action, Option, FeatureCondition
+from hebg.metrics.complexity.complexities import learning_complexity
+from hebg import Action, Option, FeatureCondition
 
 
 class TestComplexities:

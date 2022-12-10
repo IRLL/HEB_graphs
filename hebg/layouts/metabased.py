@@ -9,7 +9,7 @@ from copy import deepcopy
 import numpy as np
 import networkx as nx
 
-from option_graph.layouts.metaheuristics import simulated_annealing
+from hebg.layouts.metaheuristics import simulated_annealing
 
 
 def leveled_layout_energy(

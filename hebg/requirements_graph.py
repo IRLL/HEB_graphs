@@ -10,9 +10,9 @@ from copy import deepcopy
 
 from networkx import DiGraph, descendants
 
-from option_graph.node import EmptyNode
-from option_graph.option import Option
-from option_graph.graph import compute_levels
+from hebg.node import EmptyNode
+from hebg.option import Option
+from hebg.graph import compute_levels
 
 
 def build_requirement_graph(options: List[Option]) -> DiGraph:

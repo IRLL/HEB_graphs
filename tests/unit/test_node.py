@@ -6,7 +6,7 @@
 import pytest
 import pytest_check as check
 
-from option_graph.node import Node, Action, FeatureCondition, EmptyNode
+from hebg.node import Node, Action, FeatureCondition, EmptyNode
 
 
 class TestNode:

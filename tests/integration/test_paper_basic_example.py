@@ -16,11 +16,11 @@ from itertools import permutations
 from networkx.classes.digraph import DiGraph
 from networkx import is_isomorphic
 
-from option_graph import Action, Option, FeatureCondition, OptionGraph
-from option_graph.metrics.complexity.histograms import nodes_histograms
-from option_graph.metrics.complexity.complexities import learning_complexity
-from option_graph.requirements_graph import build_requirement_graph
-from option_graph.option_graph import OPTIONS_SEPARATOR
+from hebg import Action, Option, FeatureCondition, OptionGraph
+from hebg.metrics.complexity.histograms import nodes_histograms
+from hebg.metrics.complexity.complexities import learning_complexity
+from hebg.requirements_graph import build_requirement_graph
+from hebg.option_graph import OPTIONS_SEPARATOR
 
 
 class TestPaperBasicExamples:

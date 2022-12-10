@@ -4,7 +4,7 @@
 """ Simplest binary utility for OptionGraph. """
 
 from typing import List, Dict
-from option_graph import Option
+from hebg import Option
 
 
 def binary_graphbased_utility(

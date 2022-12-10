@@ -7,7 +7,7 @@
 import networkx as nx
 import numpy as np
 
-from option_graph.graph import get_roots
+from hebg.graph import get_roots
 
 
 def staircase_layout(graph: nx.DiGraph, center=None):

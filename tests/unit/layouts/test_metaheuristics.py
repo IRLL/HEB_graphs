@@ -7,7 +7,7 @@ import numpy as np
 
 import pytest_check as check
 
-from option_graph.layouts.metaheuristics import simulated_annealing
+from hebg.layouts.metaheuristics import simulated_annealing
 
 
 def test_simulated_annealing():

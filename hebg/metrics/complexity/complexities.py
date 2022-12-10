@@ -6,12 +6,12 @@
 
 from typing import Dict, Tuple, TYPE_CHECKING
 
-from option_graph.option import Option
-from option_graph.node import Action
-from option_graph.metrics.complexity.utils import update_sum_dict
+from hebg.option import Option
+from hebg.node import Action
+from hebg.metrics.complexity.utils import update_sum_dict
 
 if TYPE_CHECKING:
-    from option_graph.node import Node
+    from hebg.node import Node
 
 
 def general_complexity(

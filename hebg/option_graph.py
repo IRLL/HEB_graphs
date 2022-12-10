@@ -16,13 +16,13 @@ from matplotlib.axes import Axes
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.legend_handler import HandlerPatch
-from option_graph.draw_utils import draw_convex_hull
+from hebg.draw_utils import draw_convex_hull
 
-from option_graph.graph import draw_networkx_nodes_images, get_roots
-from option_graph.layouts import staircase_layout
+from hebg.graph import draw_networkx_nodes_images, get_roots
+from hebg.layouts import staircase_layout
 
-from option_graph.node import Node
-from option_graph.option import Option
+from hebg.node import Node
+from hebg.option import Option
 
 OPTIONS_SEPARATOR = "\n>"
 

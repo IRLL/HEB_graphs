@@ -3,13 +3,13 @@
 
 """ A structure for explainable hierarchical reinforcement learning """
 
-from option_graph.option import Option
-from option_graph.option_graph import OptionGraph
-from option_graph.node import (
+from hebg.option import Option
+from hebg.option_graph import OptionGraph
+from hebg.node import (
     Node,
     FeatureCondition,
     Action,
     EmptyNode,
     StochasticAction,
 )
-from option_graph.requirements_graph import build_requirement_graph
+from hebg.requirements_graph import build_requirement_graph

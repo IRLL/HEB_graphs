@@ -3,7 +3,7 @@
 
 """ Module for complexity computation methods. """
 
-from option_graph.metrics.complexity.complexities import (
+from hebg.metrics.complexity.complexities import (
     general_complexity,
     learning_complexity,
 )

@@ -5,9 +5,9 @@
 
 import pytest_check as check
 
-from option_graph.node import Action, EmptyNode, FeatureCondition
-from option_graph.option import Option
-from option_graph.option_graph import OptionGraph
+from hebg.node import Action, EmptyNode, FeatureCondition
+from hebg.option import Option
+from hebg.option_graph import OptionGraph
 
 
 class FundamentalOption(Option):

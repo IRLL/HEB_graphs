@@ -7,11 +7,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from option_graph.graph import compute_levels
-from option_graph.node import Node
+from hebg.graph import compute_levels
+from hebg.node import Node
 
 if TYPE_CHECKING:
-    from option_graph.option_graph import OptionGraph
+    from hebg.option_graph import OptionGraph
 
 
 class Option(Node):

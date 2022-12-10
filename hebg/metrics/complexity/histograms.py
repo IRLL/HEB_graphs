@@ -7,8 +7,8 @@ from typing import List, Dict, Tuple
 
 import numpy as np
 
-from option_graph import Option, OptionGraph, Node
-from option_graph.metrics.complexity.utils import update_sum_dict
+from hebg import Option, OptionGraph, Node
+from hebg.metrics.complexity.utils import update_sum_dict
 
 
 def nodes_histograms(

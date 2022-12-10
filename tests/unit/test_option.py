@@ -7,7 +7,7 @@ import pytest
 import pytest_check as check
 from pytest_mock import MockerFixture
 
-from option_graph.option import Option
+from hebg.option import Option
 
 
 class TestOption:
