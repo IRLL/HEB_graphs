@@ -3,5 +3,5 @@
 
 """ Module containing layouts to draw graphs. """
 
-from hebg.layouts.metabased import leveled_layout_energy
 from hebg.layouts.deterministic import staircase_layout
+from hebg.layouts.metabased import leveled_layout_energy

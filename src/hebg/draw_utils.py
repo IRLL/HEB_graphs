@@ -1,8 +1,8 @@
-from typing import TYPE_CHECKING
-from scipy.spatial import ConvexHull
-import matplotlib.pyplot as plt
-import numpy as np
 import math
+from typing import TYPE_CHECKING
+
+import numpy as np
+from scipy.spatial import ConvexHull
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes

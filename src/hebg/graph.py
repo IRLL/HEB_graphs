@@ -5,9 +5,10 @@
 """ Additional utility functions for networkx graphs. """
 
 from typing import Any, Dict
-from networkx import DiGraph
-from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+
 from matplotlib.axes import Axes
+from matplotlib.offsetbox import AnnotationBbox, OffsetImage
+from networkx import DiGraph
 
 
 def get_roots(graph: DiGraph):

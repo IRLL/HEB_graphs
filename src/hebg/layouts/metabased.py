@@ -6,8 +6,8 @@
 
 from copy import deepcopy
 
-import numpy as np
 import networkx as nx
+import numpy as np
 
 from hebg.layouts.metaheuristics import simulated_annealing
 

@@ -3,8 +3,8 @@
 
 """ Module for base Node classes. """
 
-from typing import Any, List
 import dis
+from typing import Any, List
 
 import numpy as np
 

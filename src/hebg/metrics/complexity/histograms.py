@@ -3,11 +3,11 @@
 
 """ HEBGraph used nodes histograms computation. """
 
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 
-from hebg import Option, HEBGraph, Node
+from hebg import HEBGraph, Node, Option
 from hebg.metrics.complexity.utils import update_sum_dict
 
 

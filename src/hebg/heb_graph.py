@@ -6,21 +6,19 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
 from copy import copy, deepcopy
+from typing import Any, Dict, List, Tuple
 
-from networkx import DiGraph, draw_networkx_edges, relabel_nodes
-import numpy as np
-
-from matplotlib.axes import Axes
-import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.axes import Axes
 from matplotlib.legend_handler import HandlerPatch
-from hebg.draw_utils import draw_convex_hull
+from networkx import DiGraph, draw_networkx_edges, relabel_nodes
 
+from hebg.draw_utils import draw_convex_hull
 from hebg.graph import draw_networkx_nodes_images, get_roots
 from hebg.layouts import staircase_layout
-
 from hebg.node import Node
 from hebg.option import Option
 

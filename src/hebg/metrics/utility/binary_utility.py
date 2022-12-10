@@ -3,7 +3,8 @@
 
 """ Simplest binary utility for HEBGraph. """
 
-from typing import List, Dict
+from typing import Dict, List
+
 from hebg import Option
 
 

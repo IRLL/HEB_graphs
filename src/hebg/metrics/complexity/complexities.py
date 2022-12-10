@@ -4,11 +4,11 @@
 """ General complexity. """
 
 
-from typing import Dict, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Tuple
 
-from hebg.option import Option
-from hebg.node import Action
 from hebg.metrics.complexity.utils import update_sum_dict
+from hebg.node import Action
+from hebg.option import Option
 
 if TYPE_CHECKING:
     from hebg.node import Node
