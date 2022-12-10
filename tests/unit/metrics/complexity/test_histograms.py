@@ -1,7 +1,7 @@
 # OptionGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" Integration tests for the option_graph.metrics.complexity.histograms module. """
+""" Integration tests for the hebg.metrics.complexity.histograms module. """
 
 import pytest
 import pytest_check as check
