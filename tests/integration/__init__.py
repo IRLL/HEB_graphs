@@ -1,4 +1,4 @@
 # HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" Integration tests for the option_graph package. """
+""" Integration tests for the heb_graph package. """

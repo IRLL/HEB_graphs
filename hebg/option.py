@@ -11,7 +11,7 @@ from hebg.graph import compute_levels
 from hebg.node import Node
 
 if TYPE_CHECKING:
-    from hebg.option_graph import HEBGraph
+    from hebg.heb_graph import HEBGraph
 
 
 class Option(Node):

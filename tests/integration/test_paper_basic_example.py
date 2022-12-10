@@ -20,7 +20,7 @@ from hebg import Action, Option, FeatureCondition, HEBGraph
 from hebg.metrics.complexity.histograms import nodes_histograms
 from hebg.metrics.complexity.complexities import learning_complexity
 from hebg.requirements_graph import build_requirement_graph
-from hebg.option_graph import OPTIONS_SEPARATOR
+from hebg.heb_graph import OPTIONS_SEPARATOR
 
 
 class TestPaperBasicExamples:

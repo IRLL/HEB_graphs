@@ -7,7 +7,7 @@ import pytest_check as check
 
 from hebg.node import Action, EmptyNode, FeatureCondition
 from hebg.option import Option
-from hebg.option_graph import HEBGraph
+from hebg.heb_graph import HEBGraph
 
 
 class FundamentalOption(Option):

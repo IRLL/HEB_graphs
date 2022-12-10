@@ -4,7 +4,7 @@
 """ A structure for explainable hierarchical reinforcement learning """
 
 from hebg.option import Option
-from hebg.option_graph import HEBGraph
+from hebg.heb_graph import HEBGraph
 from hebg.node import (
     Node,
     FeatureCondition,

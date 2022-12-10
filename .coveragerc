@@ -1,4 +1,4 @@
 [report]
 show_missing = True
 omit =
-    option_graph/layouts/*
+    heb_graph/layouts/*

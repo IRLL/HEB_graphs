@@ -185,7 +185,7 @@ class HEBGraph(DiGraph):
                         add_prefix(node_graph, str(node) + OPTIONS_SEPARATOR)
 
                     # Replace the option node by the unrolled option's graph
-                    unrolled_graph = compose_option_graphs(unrolled_graph, node_graph)
+                    unrolled_graph = compose_heb_graphs(unrolled_graph, node_graph)
                     for edge_u, _, data in unrolled_graph.in_edges(node, data=True):
                         for root in node_graph.roots:
                             unrolled_graph.add_edge(edge_u, root, **data)
@@ -342,7 +342,7 @@ class HEBGraph(DiGraph):
         return ax, pos
 
 
-def compose_option_graphs(G: HEBGraph, H: HEBGraph):
+def compose_heb_graphs(G: HEBGraph, H: HEBGraph):
     """Returns a new graph of G composed with H.
 
     Composition is the simple union of the node sets and edge sets.
