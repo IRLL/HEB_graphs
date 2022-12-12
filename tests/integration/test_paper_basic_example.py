@@ -1,4 +1,4 @@
-# OptionGraph for explainable hierarchical reinforcement learning
+# HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
 """ Integration tests for the initial paper examples. """
@@ -16,11 +16,11 @@ from itertools import permutations
 from networkx.classes.digraph import DiGraph
 from networkx import is_isomorphic
 
-from option_graph import Action, Option, FeatureCondition, OptionGraph
-from option_graph.metrics.complexity.histograms import nodes_histograms
-from option_graph.metrics.complexity.complexities import learning_complexity
-from option_graph.requirements_graph import build_requirement_graph
-from option_graph.option_graph import OPTIONS_SEPARATOR
+from hebg import Action, Option, FeatureCondition, HEBGraph
+from hebg.metrics.complexity.histograms import nodes_histograms
+from hebg.metrics.complexity.complexities import learning_complexity
+from hebg.requirements_graph import build_requirement_graph
+from hebg.heb_graph import OPTIONS_SEPARATOR
 
 
 class TestPaperBasicExamples:
@@ -36,8 +36,8 @@ class TestPaperBasicExamples:
             def __init__(self) -> None:
                 super().__init__("option 0")
 
-            def build_graph(self) -> OptionGraph:
-                graph = OptionGraph(self)
+            def build_graph(self) -> HEBGraph:
+                graph = HEBGraph(self)
                 feature = FeatureCondition("feature 0", complexity=1)
                 graph.add_edge(feature, Action(0, complexity=1), index=False)
                 graph.add_edge(feature, Action(1, complexity=1), index=True)
@@ -49,8 +49,8 @@ class TestPaperBasicExamples:
             def __init__(self) -> None:
                 super().__init__("option 1")
 
-            def build_graph(self) -> OptionGraph:
-                graph = OptionGraph(self)
+            def build_graph(self) -> HEBGraph:
+                graph = HEBGraph(self)
                 feature_1 = FeatureCondition("feature 1", complexity=1)
                 feature_2 = FeatureCondition("feature 2", complexity=1)
                 graph.add_edge(feature_1, Option0(), index=False)
@@ -65,8 +65,8 @@ class TestPaperBasicExamples:
             def __init__(self) -> None:
                 super().__init__("option 2")
 
-            def build_graph(self) -> OptionGraph:
-                graph = OptionGraph(self)
+            def build_graph(self) -> HEBGraph:
+                graph = HEBGraph(self)
                 feature_3 = FeatureCondition("feature 3", complexity=1)
                 feature_4 = FeatureCondition("feature 4", complexity=1)
                 feature_5 = FeatureCondition("feature 5", complexity=1)
@@ -171,7 +171,7 @@ class TestPaperBasicExamples:
 
         expected_graph_0 = deepcopy(self.options[0].graph)
 
-        expected_graph_1 = OptionGraph(self.options[1])
+        expected_graph_1 = HEBGraph(self.options[1])
         feature_0 = FeatureCondition(lname(self.options[0], "feature 0"))
         expected_graph_1.add_edge(
             feature_0, Action(0, lname(self.options[0], "action 0")), index=False
@@ -186,7 +186,7 @@ class TestPaperBasicExamples:
         expected_graph_1.add_edge(feature_2, Action(0), index=False)
         expected_graph_1.add_edge(feature_2, Action(2), index=True)
 
-        expected_graph_2 = OptionGraph(self.options[2])
+        expected_graph_2 = HEBGraph(self.options[2])
         feature_3 = FeatureCondition("feature 3")
         feature_4 = FeatureCondition("feature 4")
         feature_5 = FeatureCondition("feature 5")

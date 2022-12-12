@@ -1,4 +1,4 @@
-# OptionGraph for explainable hierarchical reinforcement learning
+# HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 # pylint: disable=protected-access
 
@@ -6,10 +6,10 @@
 
 from copy import deepcopy
 
-import numpy as np
 import networkx as nx
+import numpy as np
 
-from option_graph.layouts.metaheuristics import simulated_annealing
+from hebg.layouts.metaheuristics import simulated_annealing
 
 
 def leveled_layout_energy(
@@ -82,7 +82,8 @@ def leveled_layout_energy(
     def neighbor(pos: dict):
         pos_copy = deepcopy(pos)
         nodes_list = list(pos.keys())
-        choosen_node = nodes_list[np.random.randint(len(nodes_list))]
+        choosen_node_id = int(np.random.randint(len(nodes_list)))
+        choosen_node = nodes_list[choosen_node_id]
         choosen_level = graph.nodes(data="level")[choosen_node]
         new_pos = [pos_copy[choosen_node][0], np.random.choice(spacing)]
         for n in nodes_by_level[choosen_level]:

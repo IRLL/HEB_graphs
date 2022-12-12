@@ -1,10 +1,10 @@
-# OptionGraph for explainable hierarchical reinforcement learning
+# HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
 """ Module for base Node classes. """
 
-from typing import Any, List
 import dis
+from typing import Any, List
 
 import numpy as np
 
@@ -16,7 +16,7 @@ def bytecode_complexity(obj):
 
 class Node:
 
-    """Base Node class for any OptionGraph."""
+    """Base Node class for any HEBGraph."""
 
     NODE_TYPES = ("action", "feature_condition", "option", "empty")
 
@@ -59,7 +59,7 @@ class Node:
 
 class Action(Node):
 
-    """Node representing an action in an OptionGraph."""
+    """Node representing an action in an HEBGraph."""
 
     def __init__(self, action: Any, name: str = None, **kwargs) -> None:
         self.action = action
@@ -75,7 +75,7 @@ class Action(Node):
 
 class StochasticAction(Action):
 
-    """Node representing a stochastic choice between actions in an OptionGraph."""
+    """Node representing a stochastic choice between actions in an HEBGraph."""
 
     def __init__(
         self, actions: List[Action], probs: list, name: str, image=None
@@ -90,7 +90,7 @@ class StochasticAction(Action):
 
 class FeatureCondition(Node):
 
-    """Node representing a feature condition in an OptionGraph."""
+    """Node representing a feature condition in an HEBGraph."""
 
     def __init__(self, name: str = None, **kwargs) -> None:
         super().__init__(name, "feature_condition", **kwargs)
@@ -101,7 +101,7 @@ class FeatureCondition(Node):
 
 class EmptyNode(Node):
 
-    """Node representing an empty node in an OptionGraph."""
+    """Node representing an empty node in an HEBGraph."""
 
     def __init__(self, name: str) -> None:
         super().__init__(name, "empty")

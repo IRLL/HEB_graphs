@@ -1,17 +1,17 @@
-# OptionGraph for explainable hierarchical reinforcement learning
+# HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
 """ General complexity. """
 
 
-from typing import Dict, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Tuple
 
-from option_graph.option import Option
-from option_graph.node import Action
-from option_graph.metrics.complexity.utils import update_sum_dict
+from hebg.metrics.complexity.utils import update_sum_dict
+from hebg.node import Action
+from hebg.option import Option
 
 if TYPE_CHECKING:
-    from option_graph.node import Node
+    from hebg.node import Node
 
 
 def general_complexity(
@@ -23,7 +23,7 @@ def general_complexity(
 ) -> Tuple[float]:
     """Compute the general complexity of an Option with used nodes.
 
-    Using the number of time each node is used in its OptionGraph and based on the increase of
+    Using the number of time each node is used in its HEBGraph and based on the increase of
     complexity given by 'kcomplexity', and the saved complexity using options given by
     'saved_complexity', we sum the general complexity of an option and the total saved complexity.
 
@@ -90,7 +90,7 @@ def learning_complexity(
 ):
     """Compute the learning complexity of an Option with used nodes.
 
-    Using the number of time each node is used in its OptionGraph we compute the learning
+    Using the number of time each node is used in its HEBGraph we compute the learning
     complexity of an option and the total saved complexity.
 
     Args:

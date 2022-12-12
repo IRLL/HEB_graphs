@@ -1,4 +1,4 @@
-# OptionGraph for explainable hierarchical reinforcement learning
+# HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
 """ Module to get pylint score. """
@@ -54,7 +54,7 @@ def register(linter):
 
 
 if __name__ == "__main__":
-    options = ["option_graph", "--output-format=pylint_score.MyReporterClass"]
+    options = ["hebg", "--output-format=pylint_score.MyReporterClass"]
     results = Run(options, exit=False)
     score = results.linter.stats.global_note
     color = score_to_rgb_color(

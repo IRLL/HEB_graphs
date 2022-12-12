@@ -1,13 +1,14 @@
-# OptionGraph for explainable hierarchical reinforcement learning
+# HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 # pylint: disable=protected-access
 
 """ Additional utility functions for networkx graphs. """
 
 from typing import Any, Dict
-from networkx import DiGraph
-from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+
 from matplotlib.axes import Axes
+from matplotlib.offsetbox import AnnotationBbox, OffsetImage
+from networkx import DiGraph
 
 
 def get_roots(graph: DiGraph):

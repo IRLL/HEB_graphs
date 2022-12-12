@@ -1,12 +1,12 @@
-# OptionGraph for explainable hierarchical reinforcement learning
+# HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" Unit tests for the option_graph.node module. """
+""" Unit tests for the hebg.node module. """
 
 import pytest
 import pytest_check as check
 
-from option_graph.node import Node, Action, FeatureCondition, EmptyNode
+from hebg.node import Node, Action, FeatureCondition, EmptyNode
 
 
 class TestNode:

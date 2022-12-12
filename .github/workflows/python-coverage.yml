@@ -17,11 +17,11 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install .
     - name: Build unit coverage using pytest-cov
       run: |
         pip install -r requirements-dev.txt
-        pytest --cov=option_graph --cov-report=xml tests/unit
+        pytest --cov=hebg --cov-report=xml tests/unit
         score=$(python coverage_score.py --score)
         color=$(python coverage_score.py --color)
         echo "COVERAGE_UNIT_SCORE=$score"
@@ -41,7 +41,7 @@ jobs:
     - name: Build integration coverage using pytest-cov
       run: |
         pip install -r requirements-dev.txt
-        pytest --cov=option_graph --cov-report=xml tests/integration
+        pytest --cov=hebg --cov-report=xml tests/integration
         score=$(python coverage_score.py --score)
         color=$(python coverage_score.py --color)
         echo "COVERAGE_INTEGRATION_SCORE=$score"

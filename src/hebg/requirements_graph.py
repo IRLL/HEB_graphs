@@ -1,18 +1,19 @@
-# OptionGraph for explainable hierarchical reinforcement learning
+# HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 # pylint: disable=arguments-differ
 
 """ Module for building underlying requirement graphs based on a set of options. """
 
 from __future__ import annotations
-from typing import List
+
 from copy import deepcopy
+from typing import List
 
 from networkx import DiGraph, descendants
 
-from option_graph.node import EmptyNode
-from option_graph.option import Option
-from option_graph.graph import compute_levels
+from hebg.graph import compute_levels
+from hebg.node import EmptyNode
+from hebg.option import Option
 
 
 def build_requirement_graph(options: List[Option]) -> DiGraph:
@@ -29,7 +30,7 @@ def build_requirement_graph(options: List[Option]) -> DiGraph:
     try:
         options_graphs = [option.graph for option in options]
     except NotImplementedError as error:
-        user_msg = "All options given must be able to build an OptionGraph"
+        user_msg = "All options given must be able to build an HEBGraph"
         raise NotImplementedError(user_msg) from error
 
     requirements_graph = DiGraph()

@@ -1,13 +1,13 @@
-# OptionGraph for explainable hierarchical reinforcement learning
+# HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
 """ Intergration tests for basic options graphs. """
 
 import pytest_check as check
 
-from option_graph.node import Action, EmptyNode, FeatureCondition
-from option_graph.option import Option
-from option_graph.option_graph import OptionGraph
+from hebg.node import Action, EmptyNode, FeatureCondition
+from hebg.option import Option
+from hebg.heb_graph import HEBGraph
 
 
 class FundamentalOption(Option):
@@ -19,8 +19,8 @@ class FundamentalOption(Option):
         name = action.name + "_option"
         super().__init__(name, image=action.image)
 
-    def build_graph(self) -> OptionGraph:
-        graph = OptionGraph(self)
+    def build_graph(self) -> HEBGraph:
+        graph = HEBGraph(self)
         graph.add_node(self.action)
         return graph
 
@@ -57,8 +57,8 @@ def test_f_a_graph():
 
         """Single feature condition option"""
 
-        def build_graph(self) -> OptionGraph:
-            graph = OptionGraph(self)
+        def build_graph(self) -> HEBGraph:
+            graph = HEBGraph(self)
             feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
             for i in range(2):
                 graph.add_edge(feature_condition, Action(i), index=i)
@@ -78,8 +78,8 @@ def test_e_a_graph():
 
         """Empty option"""
 
-        def build_graph(self) -> OptionGraph:
-            graph = OptionGraph(self)
+        def build_graph(self) -> HEBGraph:
+            graph = HEBGraph(self)
             graph.add_edge(EmptyNode("empty"), Action(action_id))
             return graph
 
@@ -94,8 +94,8 @@ def test_f_f_a_graph():
 
         """Double layer feature conditions option"""
 
-        def build_graph(self) -> OptionGraph:
-            graph = OptionGraph(self)
+        def build_graph(self) -> HEBGraph:
+            graph = HEBGraph(self)
 
             feature_condition_1 = ThresholdFeatureCondition(relation=">=", threshold=0)
             feature_condition_2 = ThresholdFeatureCondition(relation="<=", threshold=1)
@@ -126,8 +126,8 @@ def test_e_f_a_graph():
 
         """Double layer empty then feature conditions option"""
 
-        def build_graph(self) -> OptionGraph:
-            graph = OptionGraph(self)
+        def build_graph(self) -> HEBGraph:
+            graph = HEBGraph(self)
             empty = EmptyNode("empty")
             feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
 
@@ -150,8 +150,8 @@ def test_f_e_a_graph():
 
         """Double layer feature conditions then empty option"""
 
-        def build_graph(self) -> OptionGraph:
-            graph = OptionGraph(self)
+        def build_graph(self) -> HEBGraph:
+            graph = HEBGraph(self)
 
             feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
             empty_0 = EmptyNode("empty_0")
@@ -177,8 +177,8 @@ def test_e_e_a_graph():
 
         """Double layer empty option"""
 
-        def build_graph(self) -> OptionGraph:
-            graph = OptionGraph(self)
+        def build_graph(self) -> HEBGraph:
+            graph = HEBGraph(self)
 
             empty_0 = EmptyNode("empty_0")
             empty_1 = EmptyNode("empty_1")
@@ -203,8 +203,8 @@ def test_aa_graph():
             super().__init__(name, image=None)
             self.any_mode = any_mode
 
-        def build_graph(self) -> OptionGraph:
-            graph = OptionGraph(self, any_mode=self.any_mode)
+        def build_graph(self) -> HEBGraph:
+            graph = HEBGraph(self, any_mode=self.any_mode)
 
             graph.add_node(Action(0))
             graph.add_node(Action(1))
@@ -229,8 +229,8 @@ def test_af_a_graph():
             super().__init__(name, image=None)
             self.any_mode = any_mode
 
-        def build_graph(self) -> OptionGraph:
-            graph = OptionGraph(self, any_mode=self.any_mode)
+        def build_graph(self) -> HEBGraph:
+            graph = HEBGraph(self, any_mode=self.any_mode)
 
             graph.add_node(Action(0))
             feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
@@ -260,8 +260,8 @@ def test_f_af_a_graph():
             super().__init__(name, image=None)
             self.any_mode = any_mode
 
-        def build_graph(self) -> OptionGraph:
-            graph = OptionGraph(self, any_mode=self.any_mode)
+        def build_graph(self) -> HEBGraph:
+            graph = HEBGraph(self, any_mode=self.any_mode)
             feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
 
             graph.add_edge(feature_condition, Action(0), index=int(True))

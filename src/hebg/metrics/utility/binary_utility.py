@@ -1,10 +1,11 @@
-# OptionGraph for explainable hierarchical reinforcement learning
+# HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" Simplest binary utility for OptionGraph. """
+""" Simplest binary utility for HEBGraph. """
 
-from typing import List, Dict
-from option_graph import Option
+from typing import Dict, List
+
+from hebg import Option
 
 
 def binary_graphbased_utility(

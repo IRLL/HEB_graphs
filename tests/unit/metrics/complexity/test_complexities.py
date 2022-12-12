@@ -1,13 +1,13 @@
-# OptionGraph for explainable hierarchical reinforcement learning
+# HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" Integration tests for the option_graph.metrics.complexity.complexities module. """
+""" Integration tests for the hebg.metrics.complexity.complexities module. """
 
 import pytest
 import pytest_check as check
 
-from option_graph.metrics.complexity.complexities import learning_complexity
-from option_graph import Action, Option, FeatureCondition
+from hebg.metrics.complexity.complexities import learning_complexity
+from hebg import Action, Option, FeatureCondition
 
 
 class TestComplexities:

@@ -1,8 +1,8 @@
-# OptionGraph for explainable hierarchical reinforcement learning
+# HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 # pylint: disable=protected-access, unused-argument, missing-function-docstring
 
-""" Unit tests for the option_graph.option module. """
+""" Unit tests for the hebg.option module. """
 
 from copy import deepcopy
 from networkx.algorithms.shortest_paths.unweighted import predecessor
@@ -11,22 +11,22 @@ import pytest
 import pytest_check as check
 from pytest_mock import MockerFixture
 
-from option_graph.option_graph import OptionGraph, DiGraph, Option
+from hebg.heb_graph import HEBGraph, DiGraph, Option
 
 
-class TestOptionGraph:
+class TestHEBGraph:
 
-    """OptionGraph"""
+    """HEBGraph"""
 
     @pytest.fixture(autouse=True)
     def setup(self):
         """Initialize variables."""
         self.option = Option("base_option_name")
-        self.option_graph = OptionGraph(self.option)
+        self.heb_graph = HEBGraph(self.option)
 
     def test_init(self):
         """should instanciate correctly."""
-        graph = self.option_graph
+        graph = self.heb_graph
         check.equal(graph.option, self.option)
         check.equal(graph.all_options, {})
         check.equal(graph.any_mode, "first")
@@ -34,7 +34,7 @@ class TestOptionGraph:
 
     def test_add_node(self, mocker: MockerFixture):
         """should add Node to the graph correctly."""
-        mocker.patch("option_graph.option_graph.DiGraph.add_node")
+        mocker.patch("hebg.heb_graph.DiGraph.add_node")
 
         class DummyNode:
             """DummyNode"""
@@ -50,14 +50,14 @@ class TestOptionGraph:
         expected_kwargs = {"type": "node_type", "image": "node_image", "color": None}
         expected_args = (node,)
 
-        self.option_graph.add_node(node)
+        self.heb_graph.add_node(node)
         args, kwargs = DiGraph.add_node.call_args
         check.equal(kwargs, expected_kwargs)
         check.equal(args, expected_args)
 
     def test_add_edge_only(self, mocker: MockerFixture):
         """should add edges to the graph correctly if nodes already exists."""
-        mocker.patch("option_graph.option_graph.DiGraph.add_edge")
+        mocker.patch("hebg.heb_graph.DiGraph.add_edge")
 
         class DummyNode:
             """DummyNode"""
@@ -72,14 +72,14 @@ class TestOptionGraph:
                 return self.name
 
         node_0, node_1 = DummyNode(0), DummyNode(1)
-        self.option_graph.add_node(node_0)
-        self.option_graph.add_node(node_1)
+        self.heb_graph.add_node(node_0)
+        self.heb_graph.add_node(node_1)
 
-        mocker.patch("option_graph.option_graph.DiGraph.add_node")
+        mocker.patch("hebg.heb_graph.DiGraph.add_node")
         expected_kwargs = {"index": 42, "color": "black"}
         expected_args = (node_0, node_1)
 
-        self.option_graph.add_edge(node_0, node_1, index=42)
+        self.heb_graph.add_edge(node_0, node_1, index=42)
         args, kwargs = DiGraph.add_edge.call_args
         check.equal(kwargs, expected_kwargs)
         check.equal(args, expected_args)
@@ -87,8 +87,8 @@ class TestOptionGraph:
 
     def test_add_edge_and_nodes(self, mocker: MockerFixture):
         """should add edges and nodes to the graph correctly if nodes are not in the graph yet."""
-        mocker.patch("option_graph.option_graph.DiGraph.add_edge")
-        mocker.patch("option_graph.option_graph.DiGraph.add_node")
+        mocker.patch("hebg.heb_graph.DiGraph.add_edge")
+        mocker.patch("hebg.heb_graph.DiGraph.add_node")
 
         class DummyNode:
             """DummyNode"""
@@ -108,7 +108,7 @@ class TestOptionGraph:
         expected_edge_kwargs = {"index": 42, "color": "black"}
         expected_edge_args = (node_0, node_1)
 
-        self.option_graph.add_edge(node_0, node_1, index=42)
+        self.heb_graph.add_edge(node_0, node_1, index=42)
         args, kwargs = DiGraph.add_edge.call_args
         check.equal(kwargs, expected_edge_kwargs)
         check.equal(args, expected_edge_args)
@@ -120,10 +120,10 @@ class TestOptionGraph:
         """should return roots action on call."""
         roots = "roots"
         observation = "obs"
-        mocker.patch("option_graph.option_graph.OptionGraph._get_any_action")
-        mocker.patch("option_graph.option_graph.OptionGraph.roots", roots)
-        self.option_graph(observation)
-        args, _ = OptionGraph._get_any_action.call_args
+        mocker.patch("hebg.heb_graph.HEBGraph._get_any_action")
+        mocker.patch("hebg.heb_graph.HEBGraph.roots", roots)
+        self.heb_graph(observation)
+        args, _ = HEBGraph._get_any_action.call_args
         check.equal(args[0], roots)
         check.equal(args[1], observation)
         check.equal(args[2], [self.option.name])
@@ -134,27 +134,27 @@ class TestOptionGraph:
         nodes = ["A", "B", "C", "AA", "AB"]
         predecessors = {"A": [], "B": [], "C": [], "AA": ["A"], "AB": ["A", "B"]}
 
-        mocker.patch("option_graph.option_graph.OptionGraph.nodes", lambda self: nodes)
+        mocker.patch("hebg.heb_graph.HEBGraph.nodes", lambda self: nodes)
         mocker.patch(
-            "option_graph.option_graph.OptionGraph.predecessors",
+            "hebg.heb_graph.HEBGraph.predecessors",
             lambda self, node: predecessors[node],
         )
 
-        check.equal(self.option_graph.roots, ["A", "B", "C"])
+        check.equal(self.heb_graph.roots, ["A", "B", "C"])
 
     def test_draw(self, mocker: MockerFixture):
         """should draw itself on a matplotlib Axes."""
         patches = [
-            mocker.patch("option_graph.option_graph.staircase_layout"),
-            mocker.patch("option_graph.option_graph.draw_networkx_nodes_images"),
-            mocker.patch("option_graph.option_graph.draw_networkx_edges"),
+            mocker.patch("hebg.heb_graph.staircase_layout"),
+            mocker.patch("hebg.heb_graph.draw_networkx_nodes_images"),
+            mocker.patch("hebg.heb_graph.draw_networkx_edges"),
             mocker.patch(
-                "option_graph.option_graph.OptionGraph.nodes",
+                "hebg.heb_graph.HEBGraph.nodes",
                 return_value=[("node_0", "empty")],
             ),
-            mocker.patch("option_graph.option_graph.OptionGraph.edges"),
-            mocker.patch("option_graph.option_graph.plt.setp"),
-            mocker.patch("option_graph.option_graph.draw_convex_hull"),
+            mocker.patch("hebg.heb_graph.HEBGraph.edges"),
+            mocker.patch("hebg.heb_graph.plt.setp"),
+            mocker.patch("hebg.heb_graph.draw_convex_hull"),
         ]
 
         class DummyLegend:
@@ -169,20 +169,20 @@ class TestOptionGraph:
             def legend(self, *args, **kwargs):
                 return DummyLegend()
 
-        self.option_graph.draw(DummyAxes())
+        self.heb_graph.draw(DummyAxes())
         for patch in patches[:-1]:
             check.is_true(patch.called)
 
 
-class TestOptionGraphGetAnyAction:
+class TestHEBGraphGetAnyAction:
 
-    """OptionGraph._get_any_action"""
+    """HEBGraph._get_any_action"""
 
     @pytest.fixture(autouse=True)
     def setup(self):
         """Initialize variables."""
         self.option = Option("option_name")
-        self.option_graph = OptionGraph(self.option)
+        self.heb_graph = HEBGraph(self.option)
 
     def test_none_in_actions(self, mocker: MockerFixture):
         """should return None if any node returns None."""
@@ -194,10 +194,8 @@ class TestOptionGraphGetAnyAction:
         def mocked_get_action(*args):
             return _actions.pop(0)
 
-        mocker.patch(
-            "option_graph.option_graph.OptionGraph._get_action", mocked_get_action
-        )
-        action = self.option_graph._get_any_action(range(5), None, None)
+        mocker.patch("hebg.heb_graph.HEBGraph._get_action", mocked_get_action)
+        action = self.heb_graph._get_any_action(range(5), None, None)
         check.is_none(action)
 
     def test_no_actions(self, mocker: MockerFixture):
@@ -210,16 +208,14 @@ class TestOptionGraphGetAnyAction:
         def mocked_get_action(*args):
             return _actions.pop(0)
 
-        mocker.patch(
-            "option_graph.option_graph.OptionGraph._get_action", mocked_get_action
-        )
-        action = self.option_graph._get_any_action(range(5), None, None)
+        mocker.patch("hebg.heb_graph.HEBGraph._get_action", mocked_get_action)
+        action = self.heb_graph._get_any_action(range(5), None, None)
         check.equal(action, "Impossible")
 
-        action = self.option_graph._get_any_action([], None, None)
+        action = self.heb_graph._get_any_action([], None, None)
         check.equal(action, "Impossible")
 
-    @pytest.mark.parametrize("any_mode", OptionGraph.ANY_MODES)
+    @pytest.mark.parametrize("any_mode", HEBGraph.ANY_MODES)
     def test_any_mode_(self, any_mode, mocker: MockerFixture):
         actions = [0, "Impossible", 2, 3, "Impossible"]
 
@@ -230,23 +226,21 @@ class TestOptionGraphGetAnyAction:
 
         expected_actions = {"first": (0,), "last": (3,), "random": (0, 2, 3)}
 
-        mocker.patch(
-            "option_graph.option_graph.OptionGraph._get_action", mocked_get_action
-        )
-        self.option_graph.any_mode = any_mode
-        action = self.option_graph._get_any_action(range(5), None, None)
+        mocker.patch("hebg.heb_graph.HEBGraph._get_action", mocked_get_action)
+        self.heb_graph.any_mode = any_mode
+        action = self.heb_graph._get_any_action(range(5), None, None)
         check.is_in(action, expected_actions[any_mode])
 
 
-class TestOptionGraphGetAction:
+class TestHEBGraphGetAction:
 
-    """OptionGraph._get_action"""
+    """HEBGraph._get_action"""
 
     @pytest.fixture(autouse=True)
     def setup(self):
         """Initialize variables."""
         self.option = Option("option_name")
-        self.option_graph = OptionGraph(self.option)
+        self.heb_graph = HEBGraph(self.option)
 
     def test_action(self):
         """should return action given by an Action node."""
@@ -261,7 +255,7 @@ class TestOptionGraphGetAction:
                 return expected_action
 
         action_node = DummyAction()
-        action = self.option_graph._get_action(action_node, None, None)
+        action = self.heb_graph._get_action(action_node, None, None)
         check.equal(action, expected_action)
 
     def test_empty(self, mocker: MockerFixture):
@@ -278,7 +272,7 @@ class TestOptionGraphGetAction:
                 return expected_action
 
         mocker.patch(
-            "option_graph.option_graph.OptionGraph.successors",
+            "hebg.heb_graph.HEBGraph.successors",
             lambda self, node: iter([DummyAction()]),
         )
 
@@ -288,7 +282,7 @@ class TestOptionGraphGetAction:
             type = "empty"
 
         empty_node = DummyEmpty()
-        action = self.option_graph._get_action(empty_node, None, None)
+        action = self.heb_graph._get_action(empty_node, None, None)
         check.equal(action, expected_action)
 
     def test_unknowed_node_type(self):
@@ -301,7 +295,7 @@ class TestOptionGraphGetAction:
 
         node = DummyNode()
         with pytest.raises(ValueError):
-            self.option_graph._get_action(node, None, None)
+            self.heb_graph._get_action(node, None, None)
 
     def test_option_in_search(self):
         """should return 'Impossible' if option is already in search to avoid cycles."""
@@ -316,7 +310,7 @@ class TestOptionGraphGetAction:
                 return self.name
 
         node = DummyOption()
-        action = self.option_graph._get_action(node, None, ["option_already_in_search"])
+        action = self.heb_graph._get_action(node, None, ["option_already_in_search"])
         check.equal(action, "Impossible")
 
     def test_option_call(self):
@@ -336,7 +330,7 @@ class TestOptionGraphGetAction:
                 return expected_action
 
         node = DummyOption()
-        action = self.option_graph._get_action(node, None, [])
+        action = self.heb_graph._get_action(node, None, [])
         check.equal(action, expected_action)
 
     def test_option_by_all_options(self):
@@ -368,10 +362,10 @@ class TestOptionGraphGetAction:
                 raise NotImplementedError
 
         true_node = DummyTrueOption()
-        self.option_graph.all_options = {str(true_node): true_node}
+        self.heb_graph.all_options = {str(true_node): true_node}
 
         node_in_graph = DummyOptionInGraph()
-        action = self.option_graph._get_action(node_in_graph, None, [])
+        action = self.heb_graph._get_action(node_in_graph, None, [])
         check.equal(action, expected_action)
 
     def test_feature_condition(self, mocker: MockerFixture):
@@ -410,7 +404,7 @@ class TestOptionGraphGetAction:
 
         actions = [DummyAction(i) for i in range(3)]
         mocker.patch(
-            "option_graph.option_graph.OptionGraph.successors",
+            "hebg.heb_graph.HEBGraph.successors",
             lambda self, node: actions,
         )
 
@@ -420,9 +414,9 @@ class TestOptionGraphGetAction:
             def __getitem__(self, e):
                 return {"index": e[1].index}
 
-        mocker.patch("option_graph.option_graph.OptionGraph.edges", DummyEdges())
+        mocker.patch("hebg.heb_graph.HEBGraph.edges", DummyEdges())
         mocker.patch(
-            "option_graph.option_graph.OptionGraph._get_any_action",
+            "hebg.heb_graph.HEBGraph._get_any_action",
             lambda self, next_nodes, observation, options_in_search: next_nodes[0](
                 observation
             ),
@@ -430,7 +424,7 @@ class TestOptionGraphGetAction:
 
         for fc_index in range(3):
             node = DummyFeatureCondition(fc_index)
-            action = self.option_graph._get_action(node, None, [])
+            action = self.heb_graph._get_action(node, None, [])
             expected_action = f"action_{fc_index}"
             check.equal(action, expected_action)
 
@@ -470,7 +464,7 @@ class TestOptionGraphGetAction:
 
         actions = [DummyAction(i) for i in range(3)]
         mocker.patch(
-            "option_graph.option_graph.OptionGraph.successors",
+            "hebg.heb_graph.HEBGraph.successors",
             lambda self, node: actions,
         )
 
@@ -480,8 +474,8 @@ class TestOptionGraphGetAction:
             def __getitem__(self, e):
                 return {"index": e[1].index}
 
-        mocker.patch("option_graph.option_graph.OptionGraph.edges", DummyEdges())
+        mocker.patch("hebg.heb_graph.HEBGraph.edges", DummyEdges())
 
         node = DummyFeatureCondition(4)
         with pytest.raises(ValueError):
-            self.option_graph._get_action(node, None, [])
+            self.heb_graph._get_action(node, None, [])
