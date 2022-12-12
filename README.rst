@@ -26,7 +26,7 @@ HEBG - Hierachical Explainable Behaviors using Graphs
    :target: https://www.gnu.org/licenses/
 
 
-Contributing to hebg
+Contributing to HEBG
 --------------------
 
 Whenever you encounter a :bug: **bug** or have :tada: **feature request**, 
