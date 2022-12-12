@@ -1,7 +1,7 @@
 # HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" Module for base Option. """
+""" Module for base Behavior. """
 
 from __future__ import annotations
 

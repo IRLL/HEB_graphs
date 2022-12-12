@@ -20,7 +20,7 @@ from hebg import Action, Behavior, FeatureCondition, HEBGraph
 from hebg.metrics.complexity.histograms import nodes_histograms
 from hebg.metrics.complexity.complexities import learning_complexity
 from hebg.requirements_graph import build_requirement_graph
-from hebg.heb_graph import OPTIONS_SEPARATOR
+from hebg.heb_graph import BEHAVIOR_SEPARATOR
 
 
 class TestPaperBasicExamples:
@@ -30,11 +30,11 @@ class TestPaperBasicExamples:
     def setup(self):
         """Initialize variables."""
 
-        class Option0(Behavior):
-            """Option 0"""
+        class Behavior0(Behavior):
+            """Behavior 0"""
 
             def __init__(self) -> None:
-                super().__init__("option 0")
+                super().__init__("behavior 0")
 
             def build_graph(self) -> HEBGraph:
                 graph = HEBGraph(self)
@@ -43,27 +43,27 @@ class TestPaperBasicExamples:
                 graph.add_edge(feature, Action(1, complexity=1), index=True)
                 return graph
 
-        class Option1(Behavior):
-            """Option 1"""
+        class Behavior1(Behavior):
+            """Behavior 1"""
 
             def __init__(self) -> None:
-                super().__init__("option 1")
+                super().__init__("behavior 1")
 
             def build_graph(self) -> HEBGraph:
                 graph = HEBGraph(self)
                 feature_1 = FeatureCondition("feature 1", complexity=1)
                 feature_2 = FeatureCondition("feature 2", complexity=1)
-                graph.add_edge(feature_1, Option0(), index=False)
+                graph.add_edge(feature_1, Behavior0(), index=False)
                 graph.add_edge(feature_1, feature_2, index=True)
                 graph.add_edge(feature_2, Action(0, complexity=1), index=False)
                 graph.add_edge(feature_2, Action(2, complexity=1), index=True)
                 return graph
 
-        class Option2(Behavior):
-            """Option 2"""
+        class Behavior2(Behavior):
+            """Behavior 2"""
 
             def __init__(self) -> None:
-                super().__init__("option 2")
+                super().__init__("behavior 2")
 
             def build_graph(self) -> HEBGraph:
                 graph = HEBGraph(self)
@@ -73,33 +73,33 @@ class TestPaperBasicExamples:
                 graph.add_edge(feature_3, feature_4, index=False)
                 graph.add_edge(feature_3, feature_5, index=True)
                 graph.add_edge(feature_4, Action(0, complexity=1), index=False)
-                graph.add_edge(feature_4, Option1(), index=True)
-                graph.add_edge(feature_5, Option1(), index=False)
-                graph.add_edge(feature_5, Option0(), index=True)
+                graph.add_edge(feature_4, Behavior1(), index=True)
+                graph.add_edge(feature_5, Behavior1(), index=False)
+                graph.add_edge(feature_5, Behavior0(), index=True)
                 return graph
 
         self.actions: List[Action] = [Action(i, complexity=1) for i in range(3)]
         self.feature_conditions: List[FeatureCondition] = [
             FeatureCondition(f"feature {i}", complexity=1) for i in range(6)
         ]
-        self.options: List[Behavior] = [Option0(), Option1(), Option2()]
+        self.behaviors: List[Behavior] = [Behavior0(), Behavior1(), Behavior2()]
         self.expected_used_nodes_all: Dict[Behavior, Dict[Action, int]] = {
-            self.options[0]: {
+            self.behaviors[0]: {
                 self.actions[0]: 1,
                 self.actions[1]: 1,
                 self.feature_conditions[0]: 1,
             },
-            self.options[1]: {
+            self.behaviors[1]: {
                 self.actions[0]: 1,
                 self.actions[2]: 1,
-                self.options[0]: 1,
+                self.behaviors[0]: 1,
                 self.feature_conditions[1]: 1,
                 self.feature_conditions[2]: 1,
             },
-            self.options[2]: {
+            self.behaviors[2]: {
                 self.actions[0]: 1,
-                self.options[0]: 1,
-                self.options[1]: 2,
+                self.behaviors[0]: 1,
+                self.behaviors[1]: 2,
                 self.feature_conditions[3]: 1,
                 self.feature_conditions[4]: 1,
                 self.feature_conditions[5]: 1,
@@ -108,76 +108,80 @@ class TestPaperBasicExamples:
 
     def test_nodes_histograms(self):
         """should give expected nodes_histograms results."""
-        used_nodes_all = nodes_histograms(self.options)
+        used_nodes_all = nodes_histograms(self.behaviors)
         check.equal(used_nodes_all, self.expected_used_nodes_all)
 
     def test_learning_complexity(self):
         """should give expected learning_complexity."""
         expected_learning_complexities = {
-            self.options[0]: 3,
-            self.options[1]: 6,
-            self.options[2]: 9,
+            self.behaviors[0]: 3,
+            self.behaviors[1]: 6,
+            self.behaviors[2]: 9,
         }
         expected_saved_complexities = {
-            self.options[0]: 0,
-            self.options[1]: 1,
-            self.options[2]: 12,
+            self.behaviors[0]: 0,
+            self.behaviors[1]: 1,
+            self.behaviors[2]: 12,
         }
 
-        for option in self.options:
+        for behavior in self.behaviors:
             c_learning, saved_complexity = learning_complexity(
-                option, used_nodes_all=self.expected_used_nodes_all
+                behavior, used_nodes_all=self.expected_used_nodes_all
             )
 
             print(
-                f"{option}: {c_learning}|{expected_learning_complexities[option]}"
-                f" {saved_complexity}|{expected_saved_complexities[option]}"
+                f"{behavior}: {c_learning}|{expected_learning_complexities[behavior]}"
+                f" {saved_complexity}|{expected_saved_complexities[behavior]}"
             )
-            diff_complexity = abs(c_learning - expected_learning_complexities[option])
-            diff_saved = abs(saved_complexity - expected_saved_complexities[option])
+            diff_complexity = abs(c_learning - expected_learning_complexities[behavior])
+            diff_saved = abs(saved_complexity - expected_saved_complexities[behavior])
             check.less(diff_complexity, 1e-14)
             check.less(diff_saved, 1e-14)
 
     def test_requirement_graph_edges(self):
         """should give expected requirement_graph edges."""
         expected_requirement_graph = DiGraph()
-        for option in self.options:
-            expected_requirement_graph.add_node(option)
-        expected_requirement_graph.add_edge(self.options[0], self.options[1])
-        expected_requirement_graph.add_edge(self.options[0], self.options[2])
-        expected_requirement_graph.add_edge(self.options[1], self.options[2])
+        for behavior in self.behaviors:
+            expected_requirement_graph.add_node(behavior)
+        expected_requirement_graph.add_edge(self.behaviors[0], self.behaviors[1])
+        expected_requirement_graph.add_edge(self.behaviors[0], self.behaviors[2])
+        expected_requirement_graph.add_edge(self.behaviors[1], self.behaviors[2])
 
-        requirements_graph = build_requirement_graph(self.options)
-        for option, other_option in permutations(self.options, 2):
-            print(option, other_option)
-            req_has_edge = requirements_graph.has_edge(option, other_option)
+        requirements_graph = build_requirement_graph(self.behaviors)
+        for behavior, other_behavior in permutations(self.behaviors, 2):
+            print(behavior, other_behavior)
+            req_has_edge = requirements_graph.has_edge(behavior, other_behavior)
             expected_req_has_edge = expected_requirement_graph.has_edge(
-                option, other_option
+                behavior, other_behavior
             )
             check.equal(req_has_edge, expected_req_has_edge)
 
     def test_requirement_graph_levels(self):
         """should give expected requirement_graph node levels (requirement depth)."""
-        expected_levels = {self.options[0]: 0, self.options[1]: 1, self.options[2]: 2}
-        requirements_graph = build_requirement_graph(self.options)
-        for option, level in requirements_graph.nodes(data="level"):
-            check.equal(level, expected_levels[option])
+        expected_levels = {
+            self.behaviors[0]: 0,
+            self.behaviors[1]: 1,
+            self.behaviors[2]: 2,
+        }
+        requirements_graph = build_requirement_graph(self.behaviors)
+        for behavior, level in requirements_graph.nodes(data="level"):
+            check.equal(level, expected_levels[behavior])
 
-    def test_unrolled_options_graphs(self):
-        """should give expected unrolled_options_graphs for each example options."""
+    def test_unrolled_behaviors_graphs(self):
+        """should give expected unrolled_behaviors_graphs for each example behaviors."""
 
         def lname(*args):
-            return OPTIONS_SEPARATOR.join([str(arg) for arg in args])
+            return BEHAVIOR_SEPARATOR.join([str(arg) for arg in args])
 
-        expected_graph_0 = deepcopy(self.options[0].graph)
+        expected_graph_0 = deepcopy(self.behaviors[0].graph)
 
-        expected_graph_1 = HEBGraph(self.options[1])
-        feature_0 = FeatureCondition(lname(self.options[0], "feature 0"))
+        expected_graph_1 = HEBGraph(self.behaviors[1])
+        feature_0 = FeatureCondition(lname(self.behaviors[0], "feature 0"))
         expected_graph_1.add_edge(
-            feature_0, Action(0, lname(self.options[0], "action 0")), index=False
+            feature_0, Action(0, lname(self.behaviors[0], "action 0")), index=False
         )
         expected_graph_1.add_edge(
-            feature_0, Action(1, lname(self.options[0], "action 1")), index=True
+            feature_0, Action(1, lname(self.behaviors[0], "action 1")), index=True
         )
         feature_1 = FeatureCondition("feature 1")
         feature_2 = FeatureCondition("feature 2")
@@ -186,7 +190,7 @@ class TestPaperBasicExamples:
         expected_graph_1.add_edge(feature_2, Action(0), index=False)
         expected_graph_1.add_edge(feature_2, Action(2), index=True)
 
-        expected_graph_2 = HEBGraph(self.options[2])
+        expected_graph_2 = HEBGraph(self.behaviors[2])
         feature_3 = FeatureCondition("feature 3")
         feature_4 = FeatureCondition("feature 4")
         feature_5 = FeatureCondition("feature 5")
@@ -195,40 +199,40 @@ class TestPaperBasicExamples:
         expected_graph_2.add_edge(feature_4, Action(0), index=False)
 
         feature_0 = FeatureCondition(
-            lname(self.options[1], self.options[0], "feature 0")
+            lname(self.behaviors[1], self.behaviors[0], "feature 0")
         )
         expected_graph_2.add_edge(
             feature_0,
-            Action(0, lname(self.options[1], self.options[0], "action 0")),
+            Action(0, lname(self.behaviors[1], self.behaviors[0], "action 0")),
             index=False,
         )
         expected_graph_2.add_edge(
             feature_0,
-            Action(1, lname(self.options[1], self.options[0], "action 1")),
+            Action(1, lname(self.behaviors[1], self.behaviors[0], "action 1")),
             index=True,
         )
-        feature_1 = FeatureCondition(lname(self.options[1], "feature 1"))
-        feature_2 = FeatureCondition(lname(self.options[1], "feature 2"))
+        feature_1 = FeatureCondition(lname(self.behaviors[1], "feature 1"))
+        feature_2 = FeatureCondition(lname(self.behaviors[1], "feature 2"))
         expected_graph_2.add_edge(feature_1, feature_0, index=False)
         expected_graph_2.add_edge(feature_1, feature_2, index=True)
         expected_graph_2.add_edge(
-            feature_2, Action(0, lname(self.options[1], "action 0")), index=False
+            feature_2, Action(0, lname(self.behaviors[1], "action 0")), index=False
         )
         expected_graph_2.add_edge(
-            feature_2, Action(2, lname(self.options[1], "action 2")), index=True
+            feature_2, Action(2, lname(self.behaviors[1], "action 2")), index=True
         )
 
         expected_graph_2.add_edge(feature_4, feature_1, index=True)
 
-        feature_0_0 = FeatureCondition(lname(self.options[0], "feature 0"))
+        feature_0_0 = FeatureCondition(lname(self.behaviors[0], "feature 0"))
         expected_graph_2.add_edge(
             feature_0_0,
-            Action(0, lname(self.options[0], "action 0")),
+            Action(0, lname(self.behaviors[0], "action 0")),
             index=False,
         )
         expected_graph_2.add_edge(
             feature_0_0,
-            Action(1, lname(self.options[0], "action 1")),
+            Action(1, lname(self.behaviors[0], "action 1")),
             index=True,
         )
 
@@ -236,16 +240,16 @@ class TestPaperBasicExamples:
         expected_graph_2.add_edge(feature_5, feature_0_0, index=True)
 
         expected_graph = {
-            self.options[0]: expected_graph_0,
-            self.options[1]: expected_graph_1,
-            self.options[2]: expected_graph_2,
+            self.behaviors[0]: expected_graph_0,
+            self.behaviors[1]: expected_graph_1,
+            self.behaviors[2]: expected_graph_2,
         }
-        for option in self.options:
-            unrolled_graph = option.graph.unrolled_graph
-            check.is_true(is_isomorphic(unrolled_graph, expected_graph[option]))
+        for behavior in self.behaviors:
+            unrolled_graph = behavior.graph.unrolled_graph
+            check.is_true(is_isomorphic(unrolled_graph, expected_graph[behavior]))
 
             # fig, axes = plt.subplots(1, 2)
-            # unrolled_graph = option.graph.unrolled_graph
-            # unrolled_graph.draw(axes[0], draw_options_hulls=True)
-            # expected_graph[option].draw(axes[1], draw_options_hulls=True)
+            # unrolled_graph = behavior.graph.unrolled_graph
+            # unrolled_graph.draw(axes[0], draw_behaviors_hulls=True)
+            # expected_graph[behavior].draw(axes[1], draw_behaviors_hulls=True)
             # plt.show()

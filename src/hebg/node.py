@@ -18,7 +18,7 @@ class Node:
 
     """Base Node class for any HEBGraph."""
 
-    NODE_TYPES = ("action", "feature_condition", "option", "empty")
+    NODE_TYPES = ("action", "feature_condition", "behavior", "empty")
 
     def __init__(
         self,
