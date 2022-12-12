@@ -7,7 +7,7 @@ import pytest
 import pytest_check as check
 from pytest_mock import MockerFixture
 
-from hebg.option import Option
+from hebg.behavior import Behavior
 
 
 class TestOption:
@@ -17,7 +17,7 @@ class TestOption:
     @pytest.fixture(autouse=True)
     def setup(self):
         """Initialize variables."""
-        self.node = Option("option_name")
+        self.node = Behavior("option_name")
 
     def test_node_type(self):
         """should have 'option' as node_type."""

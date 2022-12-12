@@ -20,20 +20,20 @@ from hebg.draw_utils import draw_convex_hull
 from hebg.graph import draw_networkx_nodes_images, get_roots
 from hebg.layouts import staircase_layout
 from hebg.node import Node
-from hebg.option import Option
+from hebg.behavior import Behavior
 
 OPTIONS_SEPARATOR = "\n>"
 
 
 class HEBGraph(DiGraph):
 
-    """Base class for option graphs.
+    """Base class for Hierchical Explanation of Behavior as Graphs.
 
     An HEBGraph is a DiGraph, and as such stores nodes and directed edges with
     optional data, or attributes.
 
-    But nodes of an option graph are not arbitrary.
-    Leaf nodes can either be an Action or an Option.
+    But nodes of an HEBGraph are not arbitrary.
+    Leaf nodes can either be an Action or a Behavior.
     Other nodes can either be a FeatureCondition or an EmptyNode.
 
     An HEBGraph determines the behavior of an option, it can be called with an observation
@@ -67,8 +67,8 @@ class HEBGraph(DiGraph):
 
     def __init__(
         self,
-        option: Option,
-        all_options: Dict[str, Option] = None,
+        option: Behavior,
+        all_options: Dict[str, Behavior] = None,
         incoming_graph_data=None,
         any_mode: str = "first",
         **attr,
@@ -171,7 +171,7 @@ class HEBGraph(DiGraph):
             node_graph: HEBGraph = None
 
             if node.type == "option":
-                node: Option = node  # Add typechecking
+                node: Behavior = node  # Add typechecking
                 try:
                     try:
                         node_graph = node.graph.unrolled_graph

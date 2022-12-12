@@ -5,11 +5,13 @@
 
 from typing import Dict, List
 
-from hebg import Option
+from hebg import Behavior
 
 
 def binary_graphbased_utility(
-    option: Option, solving_options: List[Option], used_nodes: Dict[str, Dict[str, int]]
+    option: Behavior,
+    solving_options: List[Behavior],
+    used_nodes: Dict[str, Dict[str, int]],
 ) -> bool:
     """Returns if the option in the option graph of any solving_option.
 

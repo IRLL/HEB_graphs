@@ -12,7 +12,7 @@ from hebg.metrics.complexity.histograms import (
     _get_node_histogram_complexity,
     _successors_by_index,
 )
-from hebg import Action, Option, FeatureCondition, HEBGraph
+from hebg import Action, Behavior, FeatureCondition, HEBGraph
 
 
 class TestHistograms:

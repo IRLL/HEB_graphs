@@ -7,13 +7,13 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
-from hebg import HEBGraph, Node, Option
+from hebg import HEBGraph, Node, Behavior
 from hebg.metrics.complexity.utils import update_sum_dict
 
 
 def nodes_histograms(
-    options: List[Option], default_node_complexity: float = 1.0
-) -> Dict[Option, Dict[Node, int]]:
+    options: List[Behavior], default_node_complexity: float = 1.0
+) -> Dict[Behavior, Dict[Node, int]]:
     """Compute the used nodes histograms for a list of Option.
 
     Args:
@@ -33,7 +33,7 @@ def nodes_histograms(
 
 
 def nodes_histogram(
-    option: Option, default_node_complexity: float = 1.0, _options_in_search=None
+    option: Behavior, default_node_complexity: float = 1.0, _options_in_search=None
 ) -> Tuple[Dict[Node, int], float]:
     """Compute the used nodes histogram for an Option.
 

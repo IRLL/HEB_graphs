@@ -11,7 +11,7 @@ import pytest
 import pytest_check as check
 from pytest_mock import MockerFixture
 
-from hebg.heb_graph import HEBGraph, DiGraph, Option
+from hebg.heb_graph import HEBGraph, DiGraph, Behavior
 
 
 class TestHEBGraph:
@@ -21,7 +21,7 @@ class TestHEBGraph:
     @pytest.fixture(autouse=True)
     def setup(self):
         """Initialize variables."""
-        self.option = Option("base_option_name")
+        self.option = Behavior("base_option_name")
         self.heb_graph = HEBGraph(self.option)
 
     def test_init(self):
@@ -181,7 +181,7 @@ class TestHEBGraphGetAnyAction:
     @pytest.fixture(autouse=True)
     def setup(self):
         """Initialize variables."""
-        self.option = Option("option_name")
+        self.option = Behavior("option_name")
         self.heb_graph = HEBGraph(self.option)
 
     def test_none_in_actions(self, mocker: MockerFixture):
@@ -239,7 +239,7 @@ class TestHEBGraphGetAction:
     @pytest.fixture(autouse=True)
     def setup(self):
         """Initialize variables."""
-        self.option = Option("option_name")
+        self.option = Behavior("option_name")
         self.heb_graph = HEBGraph(self.option)
 
     def test_action(self):

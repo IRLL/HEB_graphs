@@ -26,7 +26,7 @@ Option Graph - A structure for explainable hierarchical reinforcement learning
    :target: https://www.gnu.org/licenses/
 
 
-Contributing to HEBGraph
+Contributing to OptionGraph
 ---------------------------
 
 Whenever you encounter a :bug: **bug** or have :tada: **feature request**, 

@@ -8,14 +8,14 @@ from typing import TYPE_CHECKING, Dict, Tuple
 
 from hebg.metrics.complexity.utils import update_sum_dict
 from hebg.node import Action
-from hebg.option import Option
+from hebg.behavior import Behavior
 
 if TYPE_CHECKING:
     from hebg.node import Node
 
 
 def general_complexity(
-    option: Option,
+    option: Behavior,
     used_nodes_all: Dict["Node", Dict["Node", int]],
     scomplexity,
     kcomplexity,
@@ -55,7 +55,7 @@ def general_complexity(
             previous_used_nodes[node] if node in previous_used_nodes else 0
         )
 
-        if isinstance(node, Option) and node in used_nodes_all:
+        if isinstance(node, Behavior) and node in used_nodes_all:
             node_complexity, saved_node_complexity = general_complexity(
                 node,
                 used_nodes_all,
@@ -73,7 +73,7 @@ def general_complexity(
 
         total_complexity += node_complexity * kcomplexity(node, n_used)
 
-        if isinstance(node, (Option, Action)):
+        if isinstance(node, (Behavior, Action)):
             saved_complexity += node_complexity * scomplexity(
                 node, n_used, n_previous_used
             )
@@ -84,7 +84,7 @@ def general_complexity(
 
 
 def learning_complexity(
-    option: Option,
+    option: Behavior,
     used_nodes_all: Dict["Node", Dict["Node", int]],
     previous_used_nodes=None,
 ):

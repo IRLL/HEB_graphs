@@ -13,10 +13,10 @@ from networkx import DiGraph, descendants
 
 from hebg.graph import compute_levels
 from hebg.node import EmptyNode
-from hebg.option import Option
+from hebg.behavior import Behavior
 
 
-def build_requirement_graph(options: List[Option]) -> DiGraph:
+def build_requirement_graph(options: List[Behavior]) -> DiGraph:
     """Builds a DiGraph of the requirements induced by a list of options.
 
     Args:
@@ -58,7 +58,7 @@ def build_requirement_graph(options: List[Option]) -> DiGraph:
                     following_options = [
                         following_node
                         for following_node in descendants(cut_graph, alternative)
-                        if isinstance(following_node, Option)
+                        if isinstance(following_node, Behavior)
                     ]
                     for following_option in following_options:
                         try:
@@ -68,7 +68,7 @@ def build_requirement_graph(options: List[Option]) -> DiGraph:
 
     for option, graph in zip(options, options_graphs):
         for node in graph.nodes():
-            if isinstance(node, Option):
+            if isinstance(node, Behavior):
                 try:
                     requirement_degree[option][node] += 1
                 except KeyError:
@@ -77,7 +77,7 @@ def build_requirement_graph(options: List[Option]) -> DiGraph:
     index = 0
     for option, graph in zip(options, options_graphs):
         for node in graph.nodes():
-            if isinstance(node, Option) and requirement_degree[option][node] > 0:
+            if isinstance(node, Behavior) and requirement_degree[option][node] > 0:
                 if node not in requirements_graph.nodes():
                     requirements_graph.add_node(node)
                 index = len(list(requirements_graph.successors(node))) + 1

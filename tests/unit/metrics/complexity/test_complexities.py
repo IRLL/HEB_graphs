@@ -7,7 +7,7 @@ import pytest
 import pytest_check as check
 
 from hebg.metrics.complexity.complexities import learning_complexity
-from hebg import Action, Option, FeatureCondition
+from hebg import Action, Behavior, FeatureCondition
 
 
 class TestComplexities:

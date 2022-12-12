@@ -1,16 +1,16 @@
 # HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" Intergration tests for basic options graphs. """
+""" Intergration tests for basic HEBGraphs. """
 
 import pytest_check as check
 
 from hebg.node import Action, EmptyNode, FeatureCondition
-from hebg.option import Option
+from hebg.behavior import Behavior
 from hebg.heb_graph import HEBGraph
 
 
-class FundamentalOption(Option):
+class FundamentalOption(Behavior):
 
     """Fundamental option based on an Action."""
 
@@ -53,7 +53,7 @@ def test_a_graph():
 def test_f_a_graph():
     """(F-A) Feature condition should orient path properly."""
 
-    class F_A_Option(Option):
+    class F_A_Option(Behavior):
 
         """Single feature condition option"""
 
@@ -74,7 +74,7 @@ def test_e_a_graph():
 
     action_id = 42
 
-    class E_A_Option(Option):
+    class E_A_Option(Behavior):
 
         """Empty option"""
 
@@ -90,7 +90,7 @@ def test_e_a_graph():
 def test_f_f_a_graph():
     """(F-F-A) Feature condition should orient path properly in double chain."""
 
-    class F_F_A_Option(Option):
+    class F_F_A_Option(Behavior):
 
         """Double layer feature conditions option"""
 
@@ -122,7 +122,7 @@ def test_f_f_a_graph():
 def test_e_f_a_graph():
     """(E-F-A) Empty should orient path properly in chain with Feature condition."""
 
-    class E_F_A_Option(Option):
+    class E_F_A_Option(Behavior):
 
         """Double layer empty then feature conditions option"""
 
@@ -146,7 +146,7 @@ def test_e_f_a_graph():
 def test_f_e_a_graph():
     """(F-E-A) Feature condition should orient path properly in chain with Empty."""
 
-    class F_E_A_Option(Option):
+    class F_E_A_Option(Behavior):
 
         """Double layer feature conditions then empty option"""
 
@@ -173,7 +173,7 @@ def test_f_e_a_graph():
 def test_e_e_a_graph():
     """(E-E-A) Empty should orient path properly in double chain."""
 
-    class E_E_A_Option(Option):
+    class E_E_A_Option(Behavior):
 
         """Double layer empty option"""
 
@@ -195,7 +195,7 @@ def test_e_e_a_graph():
 def test_aa_graph():
     """(AA) Should choose between roots depending on 'any_mode'."""
 
-    class AA_Option(Option):
+    class AA_Option(Behavior):
 
         """Double root fundamental option"""
 
@@ -221,7 +221,7 @@ def test_aa_graph():
 def test_af_a_graph():
     """(AF-A) Should choose between roots depending on 'any_mode'."""
 
-    class AF_A_Option(Option):
+    class AF_A_Option(Behavior):
 
         """Double root with feature condition option"""
 
@@ -252,7 +252,7 @@ def test_af_a_graph():
 def test_f_af_a_graph():
     """(F-AA) Should choose between condition edges depending on 'any_mode'."""
 
-    class AF_A_Option(Option):
+    class AF_A_Option(Behavior):
 
         """Double root with feature condition option"""
 

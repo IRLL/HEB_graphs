@@ -16,7 +16,7 @@ from itertools import permutations
 from networkx.classes.digraph import DiGraph
 from networkx import is_isomorphic
 
-from hebg import Action, Option, FeatureCondition, HEBGraph
+from hebg import Action, Behavior, FeatureCondition, HEBGraph
 from hebg.metrics.complexity.histograms import nodes_histograms
 from hebg.metrics.complexity.complexities import learning_complexity
 from hebg.requirements_graph import build_requirement_graph
@@ -30,7 +30,7 @@ class TestPaperBasicExamples:
     def setup(self):
         """Initialize variables."""
 
-        class Option0(Option):
+        class Option0(Behavior):
             """Option 0"""
 
             def __init__(self) -> None:
@@ -43,7 +43,7 @@ class TestPaperBasicExamples:
                 graph.add_edge(feature, Action(1, complexity=1), index=True)
                 return graph
 
-        class Option1(Option):
+        class Option1(Behavior):
             """Option 1"""
 
             def __init__(self) -> None:
@@ -59,7 +59,7 @@ class TestPaperBasicExamples:
                 graph.add_edge(feature_2, Action(2, complexity=1), index=True)
                 return graph
 
-        class Option2(Option):
+        class Option2(Behavior):
             """Option 2"""
 
             def __init__(self) -> None:
@@ -82,8 +82,8 @@ class TestPaperBasicExamples:
         self.feature_conditions: List[FeatureCondition] = [
             FeatureCondition(f"feature {i}", complexity=1) for i in range(6)
         ]
-        self.options: List[Option] = [Option0(), Option1(), Option2()]
-        self.expected_used_nodes_all: Dict[Option, Dict[Action, int]] = {
+        self.options: List[Behavior] = [Option0(), Option1(), Option2()]
+        self.expected_used_nodes_all: Dict[Behavior, Dict[Action, int]] = {
             self.options[0]: {
                 self.actions[0]: 1,
                 self.actions[1]: 1,
