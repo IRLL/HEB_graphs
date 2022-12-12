@@ -319,7 +319,7 @@ class HEBGraph(DiGraph):
             )
             plt.setp(legend.get_texts(), color=fontcolor)
 
-            if kwargs.get("draw_options_hulls", False):
+            if kwargs.get("draw_hulls", False):
                 grouped_points = group_behaviors_points(pos, self)
                 if not kwargs.get("show_all_hulls", False):
                     key_count = {key[-1]: 0 for key in grouped_points}
