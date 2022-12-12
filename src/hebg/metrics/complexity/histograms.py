@@ -7,40 +7,40 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
-from hebg import HEBGraph, Node, Option
+from hebg import HEBGraph, Node, Behavior
 from hebg.metrics.complexity.utils import update_sum_dict
 
 
 def nodes_histograms(
-    options: List[Option], default_node_complexity: float = 1.0
-) -> Dict[Option, Dict[Node, int]]:
-    """Compute the used nodes histograms for a list of Option.
+    behaviors: List[Behavior], default_node_complexity: float = 1.0
+) -> Dict[Behavior, Dict[Node, int]]:
+    """Compute the used nodes histograms for a list of Behavior.
 
     Args:
-        options: List of Option to compute histograms of.
+        behaviors: List of Behavior to compute histograms of.
         default_node_complexity: Default node complexity if Node has no attribute complexity.
 
     Return:
-        Dictionary of dictionaries of the number of use for each used node, for each option.
+        Dictionary of dictionaries of the number of use for each used node, for each behavior.
 
     """
     return {
-        option: nodes_histogram(
-            option, default_node_complexity=default_node_complexity
+        behavior: nodes_histogram(
+            behavior, default_node_complexity=default_node_complexity
         )[0]
-        for option in options
+        for behavior in behaviors
     }
 
 
 def nodes_histogram(
-    option: Option, default_node_complexity: float = 1.0, _options_in_search=None
+    behavior: Behavior, default_node_complexity: float = 1.0, _behaviors_in_search=None
 ) -> Tuple[Dict[Node, int], float]:
-    """Compute the used nodes histogram for an Option.
+    """Compute the used nodes histogram for a Behavior.
 
     Args:
-        option: Option to compute histogram of.
+        behavior: Behavior to compute histogram of.
         default_node_complexity: Default node complexity if Node has no attribute complexity.
-        _options_in_search: Options already in search to avoid circular search.
+        _behaviors_in_search: List of Behavior already in search to avoid circular search.
 
     Return:
         Tuple composed of a dictionary of the number of use for each used node and the total
@@ -48,12 +48,12 @@ def nodes_histogram(
 
     """
 
-    graph = option.graph
+    graph = behavior.graph
     nodes_by_level = graph.graph["nodes_by_level"]
     depth = graph.graph["depth"]
 
-    _options_in_search = [] if _options_in_search is None else _options_in_search
-    _options_in_search.append(str(option))
+    _behaviors_in_search = [] if _behaviors_in_search is None else _behaviors_in_search
+    _behaviors_in_search.append(str(behavior))
 
     complexities = {}
     nodes_used_nodes = {}
@@ -77,14 +77,14 @@ def nodes_histogram(
 
             # Node only histogram and complexity
             (
-                node_only_used_options,
+                node_only_used_behaviors,
                 node_only_complexity,
             ) = _get_node_histogram_complexity(
                 node,
                 default_node_complexity=default_node_complexity,
-                options_in_search=_options_in_search,
+                behaviors_in_search=_behaviors_in_search,
             )
-            node_used_nodes = update_sum_dict(node_used_nodes, node_only_used_options)
+            node_used_nodes = update_sum_dict(node_used_nodes, node_only_used_behaviors)
             node_complexity += node_only_complexity
 
             complexities[node] = node_complexity
@@ -124,13 +124,13 @@ def _successors_by_index(
 
 
 def _get_node_histogram_complexity(
-    node: Node, options_in_search=None, default_node_complexity: float = 1.0
+    node: Node, behaviors_in_search=None, default_node_complexity: float = 1.0
 ) -> Tuple[Dict[Node, int], float]:
     """Compute the used nodes histogram and complexity of a single node.
 
     Args:
         node: The Node from which we want to compute the complexity.
-        options_in_search: Options already in search to avoid circular search.
+        behaviors_in_search: List of Behavior already in search to avoid circular search.
         default_node_complexity: Default node complexity if Node has no attribute complexity.
 
     Return:
@@ -139,10 +139,10 @@ def _get_node_histogram_complexity(
 
     """
 
-    if node.type == "option":
-        if options_in_search is not None and str(node) in options_in_search:
+    if node.type == "behavior":
+        if behaviors_in_search is not None and str(node) in behaviors_in_search:
             return {}, np.inf
-    if node.type in ("action", "feature_condition", "option"):
+    if node.type in ("action", "feature_condition", "behavior"):
         try:
             node_complexity = node.complexity
         except AttributeError:

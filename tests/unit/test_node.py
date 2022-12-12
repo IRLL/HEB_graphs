@@ -21,7 +21,7 @@ class TestNode:
         """should have correct node_type and raise ValueError otherwise."""
         with pytest.raises(ValueError):
             Node("", "")
-        for node_type in ("action", "feature_condition", "option", "empty"):
+        for node_type in ("action", "feature_condition", "behavior", "empty"):
             node = Node("", node_type)
             check.equal(node.type, node_type)
 

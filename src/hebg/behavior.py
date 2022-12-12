@@ -1,7 +1,7 @@
 # HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" Module for base Option. """
+""" Module for base Behavior. """
 
 from __future__ import annotations
 
@@ -14,16 +14,16 @@ if TYPE_CHECKING:
     from hebg.heb_graph import HEBGraph
 
 
-class Option(Node):
+class Behavior(Node):
 
-    """Abstract class for options"""
+    """Abstract class for a Behavior as Node"""
 
     def __init__(self, name: str, image=None) -> None:
-        super().__init__(name, "option", image=image)
+        super().__init__(name, "behavior", image=image)
         self._graph = None
 
     def __call__(self, observation, *args, **kwargs):
-        """Use the option to get next actions.
+        """Use the behavior to get next actions.
 
         By default, uses the HEBGraph if it can be built.
 
@@ -32,14 +32,13 @@ class Option(Node):
             greedy: If true, the agent should act greedily.
 
         Returns:
-            action: Action given by the option with current observation.
-            option_done: True if the option is done, False otherwise.
+            action: Action given by the behavior with current observation.
 
         """
         return self.graph.__call__(observation, *args, **kwargs)
 
     def build_graph(self) -> HEBGraph:
-        """Build the HEBGraph of this Option.
+        """Build the HEBGraph of this Behavior.
 
         Returns:
             The built HEBGraph.
@@ -49,12 +48,12 @@ class Option(Node):
 
     @property
     def graph(self) -> HEBGraph:
-        """Access to the Option's graph.
+        """Access to the Behavior's graph.
 
         Only build's the graph the first time called for efficiency.
 
         Returns:
-            This Option's HEBGraph.
+            This Behavior's HEBGraph.
 
         """
         if self._graph is None:

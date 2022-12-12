@@ -5,5 +5,5 @@
 
 from hebg.heb_graph import HEBGraph
 from hebg.node import Action, EmptyNode, FeatureCondition, Node, StochasticAction
-from hebg.option import Option
+from hebg.behavior import Behavior
 from hebg.requirements_graph import build_requirement_graph

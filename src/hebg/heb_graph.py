@@ -20,24 +20,24 @@ from hebg.draw_utils import draw_convex_hull
 from hebg.graph import draw_networkx_nodes_images, get_roots
 from hebg.layouts import staircase_layout
 from hebg.node import Node
-from hebg.option import Option
+from hebg.behavior import Behavior
 
-OPTIONS_SEPARATOR = "\n>"
+BEHAVIOR_SEPARATOR = "\n>"
 
 
 class HEBGraph(DiGraph):
 
-    """Base class for option graphs.
+    """Base class for Hierchical Explanation of Behavior as Graphs.
 
     An HEBGraph is a DiGraph, and as such stores nodes and directed edges with
     optional data, or attributes.
 
-    But nodes of an option graph are not arbitrary.
-    Leaf nodes can either be an Action or an Option.
+    But nodes of an HEBGraph are not arbitrary.
+    Leaf nodes can either be an Action or a Behavior.
     Other nodes can either be a FeatureCondition or an EmptyNode.
 
-    An HEBGraph determines the behavior of an option, it can be called with an observation
-    to return the action given by this option.
+    An HEBGraph determines a behavior, it can be called with an observation
+    to return the action given by this behavior.
 
     An HEBGraph edges are directed and indexed,
     this indexing for path making when calling the graph.
@@ -45,15 +45,15 @@ class HEBGraph(DiGraph):
     As in a DiGraph loops are allowed but multiple (parallel) edges are not.
 
     Args:
-        option: The Option object from which this graph is built.
-        all_options: A dictionary of Option, this can be used to avoid cirular definitions using
-            the option names as anchor instead of the Option object itself.
+        behavior: The Behavior object from which this graph is built.
+        all_behaviors: A dictionary of behavior, this can be used to avoid cirular definitions using
+            the behavior names as anchor instead of the behavior object itself.
         any_mode: How to choose path, when multiple path are valid.
         incoming_graph_data: Additional data to include in the graph.
 
     """
 
-    NODES_COLORS = {"feature_condition": "blue", "action": "red", "option": "orange"}
+    NODES_COLORS = {"feature_condition": "blue", "action": "red", "behavior": "orange"}
     EDGES_COLORS = {
         0: "red",
         1: "green",
@@ -67,14 +67,14 @@ class HEBGraph(DiGraph):
 
     def __init__(
         self,
-        option: Option,
-        all_options: Dict[str, Option] = None,
+        behavior: Behavior,
+        all_behaviors: Dict[str, Behavior] = None,
         incoming_graph_data=None,
         any_mode: str = "first",
         **attr,
     ):
-        self.option = option
-        self.all_options = all_options if all_options is not None else {}
+        self.behavior = behavior
+        self.all_behaviors = all_behaviors if all_behaviors is not None else {}
 
         self._unrolled_graph = None
 
@@ -108,10 +108,12 @@ class HEBGraph(DiGraph):
                 color = "black"
         super().add_edge(u_of_edge, v_of_edge, index=index, color=color, **attr)
 
-    def _get_any_action(self, nodes: List[Node], observation, options_in_search: list):
+    def _get_any_action(
+        self, nodes: List[Node], observation, behaviors_in_search: list
+    ):
         actions = []
         for node in nodes:
-            action = self._get_action(node, observation, options_in_search)
+            action = self._get_action(node, observation, behaviors_in_search)
             if action is None:
                 return None
             actions.append(action)
@@ -127,10 +129,10 @@ class HEBGraph(DiGraph):
 
     @property
     def unrolled_graph(self) -> HEBGraph:
-        """Access to the unrolled option graph.
+        """Access to the unrolled behavior graph.
 
-        The unrolled option graph as the same behavior but every option node is recursively replaced
-        by it's option graph if it can be computed.
+        The unrolled behavior graph as the same behavior but every behavior node is recursively replaced
+        by it's behavior graph if it can be computed.
 
         Only build's the graph the first time called for efficiency.
 
@@ -143,10 +145,10 @@ class HEBGraph(DiGraph):
         return self._unrolled_graph
 
     def build_unrolled_graph(self) -> HEBGraph:
-        """Build the the unrolled option graph.
+        """Build the the unrolled HEBGraph.
 
-        The unrolled option graph as the same behavior but every option node is recursively replaced
-        by it's option graph if it can be computed.
+        The HEBGraph as the same behavior but every behavior node is recursively replaced
+        by it's own HEBGraph if it can be computed.
 
         Returns:
             This HEBGraph's unrolled HEBGraph.
@@ -170,19 +172,19 @@ class HEBGraph(DiGraph):
             node: Node = node  # Add typechecking
             node_graph: HEBGraph = None
 
-            if node.type == "option":
-                node: Option = node  # Add typechecking
+            if node.type == "behavior":
+                node: Behavior = node  # Add typechecking
                 try:
                     try:
                         node_graph = node.graph.unrolled_graph
                     except NotImplementedError:
-                        node_graph = self.all_options[str(node)].graph.unrolled_graph
+                        node_graph = self.all_behaviors[str(node)].graph.unrolled_graph
 
                     # Relabel graph nodes to obtain disjoint node labels (if more that one node).
                     if len(node_graph.nodes()) > 1:
-                        add_prefix(node_graph, str(node) + OPTIONS_SEPARATOR)
+                        add_prefix(node_graph, str(node) + BEHAVIOR_SEPARATOR)
 
-                    # Replace the option node by the unrolled option's graph
+                    # Replace the behavior node by the unrolled behavior's graph
                     unrolled_graph = compose_heb_graphs(unrolled_graph, node_graph)
                     for edge_u, _, data in unrolled_graph.in_edges(node, data=True):
                         for root in node_graph.roots:
@@ -197,16 +199,16 @@ class HEBGraph(DiGraph):
 
         return unrolled_graph
 
-    def _get_action(self, node: Node, observation, options_in_search: list):
-        # Option
-        if node.type == "option":
-            if str(node) in options_in_search:
+    def _get_action(self, node: Node, observation, behaviors_in_search: list):
+        # Behavior
+        if node.type == "behavior":
+            if str(node) in behaviors_in_search:
                 return "Impossible"
             try:
-                return node(observation, options_in_search)
+                return node(observation, behaviors_in_search)
             except NotImplementedError:
-                # Search in all_options, used to avoid cycling definitions
-                return self.all_options[str(node)](observation, options_in_search)
+                # Search in all_behaviors, used to avoid cycling definitions
+                return self.all_behaviors[str(node)](observation, behaviors_in_search)
         # Action
         if node.type == "action":
             return node(observation)
@@ -223,23 +225,23 @@ class HEBGraph(DiGraph):
                     f"FeatureCondition {node} returned index {next_edge_index}"
                     f" but {next_edge_index} was not found as an edge index"
                 )
-            return self._get_any_action(next_nodes, observation, options_in_search)
+            return self._get_any_action(next_nodes, observation, behaviors_in_search)
         # Empty
         if node.type == "empty":
             next_node = self.successors(node).__next__()
-            return self._get_action(next_node, observation, options_in_search)
+            return self._get_action(next_node, observation, behaviors_in_search)
         raise ValueError(f"Unknowed value {node.type} for node.type with node: {node}.")
 
-    def __call__(self, observation, options_in_search=None) -> Any:
-        options_in_search = (
-            [] if options_in_search is None else deepcopy(options_in_search)
+    def __call__(self, observation, behaviors_in_search=None) -> Any:
+        behaviors_in_search = (
+            [] if behaviors_in_search is None else deepcopy(behaviors_in_search)
         )
-        options_in_search.append(self.option.name)
-        return self._get_any_action(self.roots, observation, options_in_search)
+        behaviors_in_search.append(self.behavior.name)
+        return self._get_any_action(self.roots, observation, behaviors_in_search)
 
     @property
     def roots(self) -> List[Node]:
-        """Roots of the option graph (nodes without predecessors)."""
+        """Roots of the behavior graph (nodes without predecessors)."""
         return get_roots(self)
 
     def draw(self, ax: Axes, **kwargs) -> Tuple[Axes, Dict[Node, Tuple[float, float]]]:
@@ -317,8 +319,8 @@ class HEBGraph(DiGraph):
             )
             plt.setp(legend.get_texts(), color=fontcolor)
 
-            if kwargs.get("draw_options_hulls", False):
-                grouped_points = group_options_points(pos, self)
+            if kwargs.get("draw_hulls", False):
+                grouped_points = group_behaviors_points(pos, self)
                 if not kwargs.get("show_all_hulls", False):
                     key_count = {key[-1]: 0 for key in grouped_points}
                     for key in grouped_points:
@@ -347,13 +349,13 @@ def compose_heb_graphs(G: HEBGraph, H: HEBGraph):
     The node sets of G and H do not need to be disjoint.
 
     Args:
-        G, H : Option graphs to compose.
+        G, H : HEBGraphs to compose.
 
     Returns:
-        R: A new option graph  with the same type as G
+        R: A new HEBGraph with the same type as G.
 
     """
-    R = HEBGraph(G.option, all_options=G.all_options, any_mode=G.any_mode)
+    R = HEBGraph(G.behavior, all_behaviors=G.all_behaviors, any_mode=G.any_mode)
     # add graph attributes, H attributes take precedent over G attributes
     R.graph.update(G.graph)
     R.graph.update(H.graph)
@@ -372,25 +374,27 @@ def compose_heb_graphs(G: HEBGraph, H: HEBGraph):
     return R
 
 
-def group_options_points(pos: Dict[Node, tuple], graph: HEBGraph) -> Dict[tuple, list]:
-    """Group nodes positions of an HEBGraph in options.
+def group_behaviors_points(
+    pos: Dict[Node, tuple], graph: HEBGraph
+) -> Dict[tuple, list]:
+    """Group nodes positions of an HEBGraph by sub-behavior.
 
     Args:
         pos (Dict[Node, tuple]): Positions of nodes.
         graph (HEBGraph): Graph.
 
     Returns:
-        Dict[tuple, list]: A dictionary of nodes grouped by their option hierarchy.
+        Dict[tuple, list]: A dictionary of nodes grouped by their behavior's hierarchy.
     """
-    points_grouped_by_option: Dict[tuple, list] = {}
+    points_grouped_by_behavior: Dict[tuple, list] = {}
     for node in graph.nodes():
-        groups = str(node).split(OPTIONS_SEPARATOR)
+        groups = str(node).split(BEHAVIOR_SEPARATOR)
         if len(groups) > 1:
             for i in range(len(groups[:-1])):
                 key = tuple(groups[: -1 - i])
                 point = pos[node]
                 try:
-                    points_grouped_by_option[key].append(point)
+                    points_grouped_by_behavior[key].append(point)
                 except KeyError:
-                    points_grouped_by_option[key] = [point]
-    return points_grouped_by_option
+                    points_grouped_by_behavior[key] = [point]
+    return points_grouped_by_behavior

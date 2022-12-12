@@ -2,7 +2,7 @@
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 # pylint: disable=protected-access, unused-argument, missing-function-docstring
 
-""" Unit tests for the hebg.option module. """
+""" Unit tests for the hebg.behavior module. """
 
 from copy import deepcopy
 from networkx.algorithms.shortest_paths.unweighted import predecessor
@@ -11,7 +11,7 @@ import pytest
 import pytest_check as check
 from pytest_mock import MockerFixture
 
-from hebg.heb_graph import HEBGraph, DiGraph, Option
+from hebg.heb_graph import HEBGraph, DiGraph, Behavior
 
 
 class TestHEBGraph:
@@ -21,14 +21,14 @@ class TestHEBGraph:
     @pytest.fixture(autouse=True)
     def setup(self):
         """Initialize variables."""
-        self.option = Option("base_option_name")
-        self.heb_graph = HEBGraph(self.option)
+        self.behavior = Behavior("base_behavior_name")
+        self.heb_graph = HEBGraph(self.behavior)
 
     def test_init(self):
         """should instanciate correctly."""
         graph = self.heb_graph
-        check.equal(graph.option, self.option)
-        check.equal(graph.all_options, {})
+        check.equal(graph.behavior, self.behavior)
+        check.equal(graph.all_behaviors, {})
         check.equal(graph.any_mode, "first")
         check.is_true(isinstance(graph, DiGraph))
 
@@ -126,7 +126,7 @@ class TestHEBGraph:
         args, _ = HEBGraph._get_any_action.call_args
         check.equal(args[0], roots)
         check.equal(args[1], observation)
-        check.equal(args[2], [self.option.name])
+        check.equal(args[2], [self.behavior.name])
 
     def test_roots(self, mocker: MockerFixture):
         """should have roots as property."""
@@ -181,8 +181,8 @@ class TestHEBGraphGetAnyAction:
     @pytest.fixture(autouse=True)
     def setup(self):
         """Initialize variables."""
-        self.option = Option("option_name")
-        self.heb_graph = HEBGraph(self.option)
+        self.behavior = Behavior("behavior_name")
+        self.heb_graph = HEBGraph(self.behavior)
 
     def test_none_in_actions(self, mocker: MockerFixture):
         """should return None if any node returns None."""
@@ -239,8 +239,8 @@ class TestHEBGraphGetAction:
     @pytest.fixture(autouse=True)
     def setup(self):
         """Initialize variables."""
-        self.option = Option("option_name")
-        self.heb_graph = HEBGraph(self.option)
+        self.behavior = Behavior("behavior_name")
+        self.heb_graph = HEBGraph(self.behavior)
 
     def test_action(self):
         """should return action given by an Action node."""
@@ -297,31 +297,31 @@ class TestHEBGraphGetAction:
         with pytest.raises(ValueError):
             self.heb_graph._get_action(node, None, None)
 
-    def test_option_in_search(self):
-        """should return 'Impossible' if option is already in search to avoid cycles."""
+    def test_behavior_in_search(self):
+        """should return 'Impossible' if behavior is already in search to avoid cycles."""
 
-        class DummyOption:
-            """DummyOption"""
+        class DummyBehavior:
+            """DummyBehavior"""
 
-            type = "option"
-            name = "option_already_in_search"
+            type = "behavior"
+            name = "behavior_already_in_search"
 
             def __str__(self) -> str:
                 return self.name
 
-        node = DummyOption()
-        action = self.heb_graph._get_action(node, None, ["option_already_in_search"])
+        node = DummyBehavior()
+        action = self.heb_graph._get_action(node, None, ["behavior_already_in_search"])
         check.equal(action, "Impossible")
 
-    def test_option_call(self):
-        """should return option's return if option can be called."""
-        expected_action = "option_action"
+    def test_behavior_call(self):
+        """should return behavior's return if behavior can be called."""
+        expected_action = "behavior_action"
 
-        class DummyOption:
-            """DummyOption"""
+        class DummyBehavior:
+            """DummyBehavior"""
 
-            type = "option"
-            name = "option_name"
+            type = "behavior"
+            name = "behavior_name"
 
             def __str__(self) -> str:
                 return self.name
@@ -329,19 +329,19 @@ class TestHEBGraphGetAction:
             def __call__(self, *args) -> str:
                 return expected_action
 
-        node = DummyOption()
+        node = DummyBehavior()
         action = self.heb_graph._get_action(node, None, [])
         check.equal(action, expected_action)
 
-    def test_option_by_all_options(self):
-        """should use all_options if option cannot be called."""
-        expected_action = "option_action"
+    def test_behavior_by_all_behaviors(self):
+        """should use all_behaviors if behavior cannot be called."""
+        expected_action = "behavior_action"
 
-        class DummyTrueOption:
-            """DummyOption"""
+        class DummyTrueBehavior:
+            """DummyBehavior"""
 
-            type = "option"
-            name = "option_name"
+            type = "behavior"
+            name = "behavior_name"
 
             def __str__(self) -> str:
                 return self.name
@@ -349,11 +349,11 @@ class TestHEBGraphGetAction:
             def __call__(self, *args):
                 return expected_action
 
-        class DummyOptionInGraph:
-            """DummyOption"""
+        class DummyBehaviorInGraph:
+            """DummyBehavior"""
 
-            type = "option"
-            name = "option_name"
+            type = "behavior"
+            name = "behavior_name"
 
             def __str__(self) -> str:
                 return self.name
@@ -361,10 +361,10 @@ class TestHEBGraphGetAction:
             def __call__(self, *args):
                 raise NotImplementedError
 
-        true_node = DummyTrueOption()
-        self.heb_graph.all_options = {str(true_node): true_node}
+        true_node = DummyTrueBehavior()
+        self.heb_graph.all_behaviors = {str(true_node): true_node}
 
-        node_in_graph = DummyOptionInGraph()
+        node_in_graph = DummyBehaviorInGraph()
         action = self.heb_graph._get_action(node_in_graph, None, [])
         check.equal(action, expected_action)
 
@@ -417,7 +417,7 @@ class TestHEBGraphGetAction:
         mocker.patch("hebg.heb_graph.HEBGraph.edges", DummyEdges())
         mocker.patch(
             "hebg.heb_graph.HEBGraph._get_any_action",
-            lambda self, next_nodes, observation, options_in_search: next_nodes[0](
+            lambda self, next_nodes, observation, behaviors_in_search: next_nodes[0](
                 observation
             ),
         )

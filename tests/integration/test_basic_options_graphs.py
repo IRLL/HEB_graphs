@@ -1,22 +1,22 @@
 # HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" Intergration tests for basic options graphs. """
+""" Intergration tests for basic HEBGraphs. """
 
 import pytest_check as check
 
 from hebg.node import Action, EmptyNode, FeatureCondition
-from hebg.option import Option
+from hebg.behavior import Behavior
 from hebg.heb_graph import HEBGraph
 
 
-class FundamentalOption(Option):
+class FundamentalBehavior(Behavior):
 
-    """Fundamental option based on an Action."""
+    """Fundamental behavior based on an Action."""
 
     def __init__(self, action: Action) -> None:
         self.action = action
-        name = action.name + "_option"
+        name = action.name + "_behavior"
         super().__init__(name, image=action.image)
 
     def build_graph(self) -> HEBGraph:
@@ -44,18 +44,18 @@ class ThresholdFeatureCondition(FeatureCondition):
 
 
 def test_a_graph():
-    """(A) Fundamental options (single action) should work properly."""
+    """(A) Fundamental behaviors (single action) should work properly."""
     action_id = 42
-    a_graph = FundamentalOption(Action(action_id))
+    a_graph = FundamentalBehavior(Action(action_id))
     check.equal(a_graph(None), action_id)
 
 
 def test_f_a_graph():
     """(F-A) Feature condition should orient path properly."""
 
-    class F_A_Option(Option):
+    class F_A_Behavior(Behavior):
 
-        """Single feature condition option"""
+        """Single feature condition behavior"""
 
         def build_graph(self) -> HEBGraph:
             graph = HEBGraph(self)
@@ -64,9 +64,9 @@ def test_f_a_graph():
                 graph.add_edge(feature_condition, Action(i), index=i)
             return graph
 
-    option = F_A_Option("F_A")
-    check.equal(option(1), 1)
-    check.equal(option(-1), 0)
+    behavior = F_A_Behavior("F_A")
+    check.equal(behavior(1), 1)
+    check.equal(behavior(-1), 0)
 
 
 def test_e_a_graph():
@@ -74,25 +74,25 @@ def test_e_a_graph():
 
     action_id = 42
 
-    class E_A_Option(Option):
+    class E_A_Behavior(Behavior):
 
-        """Empty option"""
+        """Empty behavior"""
 
         def build_graph(self) -> HEBGraph:
             graph = HEBGraph(self)
             graph.add_edge(EmptyNode("empty"), Action(action_id))
             return graph
 
-    option = E_A_Option("E_A")
-    check.equal(option(None), action_id)
+    behavior = E_A_Behavior("E_A")
+    check.equal(behavior(None), action_id)
 
 
 def test_f_f_a_graph():
     """(F-F-A) Feature condition should orient path properly in double chain."""
 
-    class F_F_A_Option(Option):
+    class F_F_A_Behavior(Behavior):
 
-        """Double layer feature conditions option"""
+        """Double layer feature conditions behavior"""
 
         def build_graph(self) -> HEBGraph:
             graph = HEBGraph(self)
@@ -112,19 +112,19 @@ def test_f_f_a_graph():
 
             return graph
 
-    option = F_F_A_Option("F_F_A")
-    check.equal(option(2), 0)
-    check.equal(option(1), 1)
-    check.equal(option(-1), 3)
-    check.equal(option(-2), 2)
+    behavior = F_F_A_Behavior("F_F_A")
+    check.equal(behavior(2), 0)
+    check.equal(behavior(1), 1)
+    check.equal(behavior(-1), 3)
+    check.equal(behavior(-2), 2)
 
 
 def test_e_f_a_graph():
     """(E-F-A) Empty should orient path properly in chain with Feature condition."""
 
-    class E_F_A_Option(Option):
+    class E_F_A_Behavior(Behavior):
 
-        """Double layer empty then feature conditions option"""
+        """Double layer empty then feature conditions behavior"""
 
         def build_graph(self) -> HEBGraph:
             graph = HEBGraph(self)
@@ -138,17 +138,17 @@ def test_e_f_a_graph():
 
             return graph
 
-    option = E_F_A_Option("E_F_A")
-    check.equal(option(-1), 0)
-    check.equal(option(1), 1)
+    behavior = E_F_A_Behavior("E_F_A")
+    check.equal(behavior(-1), 0)
+    check.equal(behavior(1), 1)
 
 
 def test_f_e_a_graph():
     """(F-E-A) Feature condition should orient path properly in chain with Empty."""
 
-    class F_E_A_Option(Option):
+    class F_E_A_Behavior(Behavior):
 
-        """Double layer feature conditions then empty option"""
+        """Double layer feature conditions then empty behavior"""
 
         def build_graph(self) -> HEBGraph:
             graph = HEBGraph(self)
@@ -165,17 +165,17 @@ def test_f_e_a_graph():
 
             return graph
 
-    option = F_E_A_Option("F_E_A")
-    check.equal(option(1), 0)
-    check.equal(option(-1), 1)
+    behavior = F_E_A_Behavior("F_E_A")
+    check.equal(behavior(1), 0)
+    check.equal(behavior(-1), 1)
 
 
 def test_e_e_a_graph():
     """(E-E-A) Empty should orient path properly in double chain."""
 
-    class E_E_A_Option(Option):
+    class E_E_A_Behavior(Behavior):
 
-        """Double layer empty option"""
+        """Double layer empty behavior"""
 
         def build_graph(self) -> HEBGraph:
             graph = HEBGraph(self)
@@ -188,16 +188,16 @@ def test_e_e_a_graph():
 
             return graph
 
-    option = E_E_A_Option("E_E_A")
-    check.equal(option(None), 0)
+    behavior = E_E_A_Behavior("E_E_A")
+    check.equal(behavior(None), 0)
 
 
 def test_aa_graph():
     """(AA) Should choose between roots depending on 'any_mode'."""
 
-    class AA_Option(Option):
+    class AA_Behavior(Behavior):
 
-        """Double root fundamental option"""
+        """Double root fundamental behavior"""
 
         def __init__(self, name: str, any_mode: str) -> None:
             super().__init__(name, image=None)
@@ -211,19 +211,19 @@ def test_aa_graph():
 
             return graph
 
-    option = AA_Option("AA", any_mode="first")
-    check.equal(option(None), 0)
+    behavior = AA_Behavior("AA", any_mode="first")
+    check.equal(behavior(None), 0)
 
-    option = AA_Option("AA", any_mode="last")
-    check.equal(option(None), 1)
+    behavior = AA_Behavior("AA", any_mode="last")
+    check.equal(behavior(None), 1)
 
 
 def test_af_a_graph():
     """(AF-A) Should choose between roots depending on 'any_mode'."""
 
-    class AF_A_Option(Option):
+    class AF_A_Behavior(Behavior):
 
-        """Double root with feature condition option"""
+        """Double root with feature condition behavior"""
 
         def __init__(self, name: str, any_mode: str) -> None:
             super().__init__(name, image=None)
@@ -240,21 +240,21 @@ def test_af_a_graph():
 
             return graph
 
-    option = AF_A_Option("AF_A", any_mode="first")
-    check.equal(option(1), 0)
-    check.equal(option(-1), 0)
+    behavior = AF_A_Behavior("AF_A", any_mode="first")
+    check.equal(behavior(1), 0)
+    check.equal(behavior(-1), 0)
 
-    option = AF_A_Option("AF_A", any_mode="last")
-    check.equal(option(1), 1)
-    check.equal(option(-1), 2)
+    behavior = AF_A_Behavior("AF_A", any_mode="last")
+    check.equal(behavior(1), 1)
+    check.equal(behavior(-1), 2)
 
 
 def test_f_af_a_graph():
     """(F-AA) Should choose between condition edges depending on 'any_mode'."""
 
-    class AF_A_Option(Option):
+    class AF_A_Behavior(Behavior):
 
-        """Double root with feature condition option"""
+        """Double root with feature condition behavior"""
 
         def __init__(self, name: str, any_mode: str) -> None:
             super().__init__(name, image=None)
@@ -270,10 +270,10 @@ def test_f_af_a_graph():
 
             return graph
 
-    option = AF_A_Option("AF_A", any_mode="first")
-    check.equal(option(1), 0)
-    check.equal(option(-1), 1)
+    behavior = AF_A_Behavior("AF_A", any_mode="first")
+    check.equal(behavior(1), 0)
+    check.equal(behavior(-1), 1)
 
-    option = AF_A_Option("AF_A", any_mode="last")
-    check.equal(option(1), 0)
-    check.equal(option(-1), 2)
+    behavior = AF_A_Behavior("AF_A", any_mode="last")
+    check.equal(behavior(1), 0)
+    check.equal(behavior(-1), 2)

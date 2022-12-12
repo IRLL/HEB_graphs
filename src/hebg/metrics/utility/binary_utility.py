@@ -5,32 +5,34 @@
 
 from typing import Dict, List
 
-from hebg import Option
+from hebg import Behavior
 
 
 def binary_graphbased_utility(
-    option: Option, solving_options: List[Option], used_nodes: Dict[str, Dict[str, int]]
+    behavior: Behavior,
+    solving_behaviors: List[Behavior],
+    used_nodes: Dict[str, Dict[str, int]],
 ) -> bool:
-    """Returns if the option in the option graph of any solving_option.
+    """Returns if the behavior is in the HEBGraph of any solving_behavior.
 
     Args:
-        option: option of which we want to compute the utility.
-        solving_options: list of options that solves the task of interest.
-        used_nodes: dictionary mapping option_id to nodes used in the option.
+        behavior: Behavior of which we want to compute the utility.
+        solving_behaviors: list of behaviors that solves the task of interest.
+        used_nodes: dictionary mapping behavior_id to nodes used in the behavior.
 
     Returns:
-        True if the option in the option graph of any solving_option. False otherwise.
+        True if the behavior in the HEBGraph of any solving_behavior. False otherwise.
 
     """
 
-    for solving_option in solving_options:
-        if option == solving_option:
+    for solving_behavior in solving_behaviors:
+        if behavior == solving_behavior:
             return True
-        if option in solving_option.graph.nodes():
+        if behavior in solving_behavior.graph.nodes():
             return True
         if (
-            option in used_nodes[solving_option]
-            and used_nodes[solving_option][option] > 0
+            behavior in used_nodes[solving_behavior]
+            and used_nodes[solving_behavior][behavior] > 0
         ):
             return True
     return False
