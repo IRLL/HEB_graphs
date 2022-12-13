@@ -9,81 +9,34 @@ from hebg.node import Action, EmptyNode, FeatureCondition
 from hebg.behavior import Behavior
 from hebg.heb_graph import HEBGraph
 
-
-class FundamentalBehavior(Behavior):
-
-    """Fundamental behavior based on an Action."""
-
-    def __init__(self, action: Action) -> None:
-        self.action = action
-        name = action.name + "_behavior"
-        super().__init__(name, image=action.image)
-
-    def build_graph(self) -> HEBGraph:
-        graph = HEBGraph(self)
-        graph.add_node(self.action)
-        return graph
-
-
-class ThresholdFeatureCondition(FeatureCondition):
-
-    """Threshold-based feature condition for scalar feature."""
-
-    def __init__(self, relation: str = ">=", threshold: float = 0) -> None:
-        name = f"{relation} {threshold} ?"
-        self.relation = relation
-        self.threshold = threshold
-        super().__init__(name=name, image=None)
-
-    def __call__(self, observation: float) -> int:
-        if self.relation == ">=":
-            return int(observation >= self.threshold)
-        if self.relation == "<=":
-            return int(observation <= self.threshold)
-        raise ValueError(f"Unkowned relation: {self.relation}")
+from tests.integration import (
+    FundamentalBehavior,
+    ThresholdFeatureCondition,
+    F_A_Behavior,
+    E_A_Behavior,
+)
 
 
 def test_a_graph():
     """(A) Fundamental behaviors (single action) should work properly."""
     action_id = 42
-    a_graph = FundamentalBehavior(Action(action_id))
-    check.equal(a_graph(None), action_id)
+    behavior = FundamentalBehavior(Action(action_id))
+    check.equal(behavior(None), action_id)
 
 
 def test_f_a_graph():
     """(F-A) Feature condition should orient path properly."""
-
-    class F_A_Behavior(Behavior):
-
-        """Single feature condition behavior"""
-
-        def build_graph(self) -> HEBGraph:
-            graph = HEBGraph(self)
-            feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
-            for i in range(2):
-                graph.add_edge(feature_condition, Action(i), index=i)
-            return graph
-
-    behavior = F_A_Behavior("F_A")
+    feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
+    actions = {0: Action(0), 1: Action(1)}
+    behavior = F_A_Behavior("F_A", feature_condition, actions)
     check.equal(behavior(1), 1)
     check.equal(behavior(-1), 0)
 
 
 def test_e_a_graph():
     """(E-A) Empty nodes should skip to successor."""
-
     action_id = 42
-
-    class E_A_Behavior(Behavior):
-
-        """Empty behavior"""
-
-        def build_graph(self) -> HEBGraph:
-            graph = HEBGraph(self)
-            graph.add_edge(EmptyNode("empty"), Action(action_id))
-            return graph
-
-    behavior = E_A_Behavior("E_A")
+    behavior = E_A_Behavior("E_A", Action(action_id))
     check.equal(behavior(None), action_id)
 
 
