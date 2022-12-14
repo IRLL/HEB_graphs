@@ -3,7 +3,7 @@
 
 """ Integration tests for the heb_graph package. """
 
-from typing import Dict
+from typing import Dict, Union
 from enum import Enum
 
 from hebg.node import Action, EmptyNode, FeatureCondition
@@ -22,11 +22,12 @@ class ThresholdFeatureCondition(FeatureCondition):
         LESSER_THAN = "<"
 
     def __init__(
-        self, relation: Relation = Relation.GREATER_OR_EQUAL_TO, threshold: float = 0
+        self, relation: Union[Relation, str] = ">=", threshold: float = 0
     ) -> None:
-        self.relation = self.Relation(relation)
+        self.relation = relation
         self.threshold = threshold
-        name = f"{self.relation.name.capitalize()} {threshold} ?"
+        self._relation = self.Relation(relation)
+        name = f"{self._relation.name.capitalize()} {threshold} ?"
         super().__init__(name=name, image=None)
 
     def __call__(self, observation: float) -> int:
@@ -36,9 +37,8 @@ class ThresholdFeatureCondition(FeatureCondition):
             self.Relation.GREATER_THAN: int(observation > self.threshold),
             self.Relation.LESSER_THAN: int(observation < self.threshold),
         }
-        if self.relation in conditions:
-            return conditions[self.relation]
-        raise ValueError(f"Unkowned relation: {self.relation}")
+        if self._relation in conditions:
+            return conditions[self._relation]
 
 
 class FundamentalBehavior(Behavior):
