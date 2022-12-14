@@ -215,16 +215,7 @@ class HEBGraph(DiGraph):
         # Feature Condition
         if node.type == "feature_condition":
             next_edge_index = int(node(observation))
-            succs = self.successors(node)
-            next_nodes = []
-            for next_node in succs:
-                if int(self.edges[node, next_node]["index"]) == next_edge_index:
-                    next_nodes.append(next_node)
-            if len(next_nodes) == 0:
-                raise ValueError(
-                    f"FeatureCondition {node} returned index {next_edge_index}"
-                    f" but {next_edge_index} was not found as an edge index"
-                )
+            next_nodes = get_successors_with_index(self, node, next_edge_index)
             return self._get_any_action(next_nodes, observation, behaviors_in_search)
         # Empty
         if node.type == "empty":
@@ -398,3 +389,17 @@ def group_behaviors_points(
                 except KeyError:
                     points_grouped_by_behavior[key] = [point]
     return points_grouped_by_behavior
+
+
+def get_successors_with_index(graph: HEBGraph, node: Node, next_edge_index: int):
+    succs = graph.successors(node)
+    next_nodes = []
+    for next_node in succs:
+        if int(graph.edges[node, next_node]["index"]) == next_edge_index:
+            next_nodes.append(next_node)
+    if len(next_nodes) == 0:
+        raise ValueError(
+            f"FeatureCondition {node} returned index {next_edge_index}"
+            f" but {next_edge_index} was not found as an edge index"
+        )
+    return next_nodes

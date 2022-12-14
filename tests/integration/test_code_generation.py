@@ -37,13 +37,13 @@ def test_f_a_graph_codegen():
         (
             "class IsAboveZero:",
             "    def __init__(self):",
+            '        self.greater_or_equal_to_0 = ThresholdFeatureCondition(relation=">=", threshold=0)',
             "        self.action_0 = Action(0)",
             "        self.action_1 = Action(1)",
-            '        self.greater_or_equal_to_0 = ThresholdFeatureCondition(relation=">=", threshold=0)',
             "    def __call__(self, observation):",
-            "        if self.greater_or_equal_to_0(observation) == 0",
+            "        if self.greater_or_equal_to_0(observation) == 0:",
             "            return self.action_0(observation)",
-            "        if self.greater_or_equal_to_0(observation) == 1",
+            "        if self.greater_or_equal_to_0(observation) == 1:",
             "            return self.action_1(observation)",
         )
     )
