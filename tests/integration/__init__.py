@@ -4,6 +4,7 @@
 """ Integration tests for the heb_graph package. """
 
 from typing import Dict
+from enum import Enum
 
 from hebg.node import Action, EmptyNode, FeatureCondition
 from hebg.behavior import Behavior
@@ -14,17 +15,29 @@ class ThresholdFeatureCondition(FeatureCondition):
 
     """Threshold-based feature condition for scalar feature."""
 
-    def __init__(self, relation: str = ">=", threshold: float = 0) -> None:
-        name = f"{relation} {threshold} ?"
-        self.relation = relation
+    class Relation(Enum):
+        GREATER_OR_EQUAL_TO = ">="
+        LESSER_OR_EQUAL_TO = "<="
+        GREATER_THAN = ">"
+        LESSER_THAN = "<"
+
+    def __init__(
+        self, relation: Relation = Relation.GREATER_OR_EQUAL_TO, threshold: float = 0
+    ) -> None:
+        self.relation = self.Relation(relation)
         self.threshold = threshold
+        name = f"{self.relation.name.capitalize()} {threshold} ?"
         super().__init__(name=name, image=None)
 
     def __call__(self, observation: float) -> int:
-        if self.relation == ">=":
-            return int(observation >= self.threshold)
-        if self.relation == "<=":
-            return int(observation <= self.threshold)
+        conditions = {
+            self.Relation.GREATER_OR_EQUAL_TO: int(observation >= self.threshold),
+            self.Relation.LESSER_OR_EQUAL_TO: int(observation <= self.threshold),
+            self.Relation.GREATER_THAN: int(observation > self.threshold),
+            self.Relation.LESSER_THAN: int(observation < self.threshold),
+        }
+        if self.relation in conditions:
+            return conditions[self.relation]
         raise ValueError(f"Unkowned relation: {self.relation}")
 
 
