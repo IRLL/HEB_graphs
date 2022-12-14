@@ -12,31 +12,41 @@ def get_hebg_source(graph: HEBGraph) -> str:
     behavior_class_codelines.append(f"class {behavior_class_name}:")
 
     # Init
-    behavior_class_codelines.append("    def __init__(self):")
+    indent = 1
+    behavior_class_codelines.append(indent_str(indent) + "def __init__(self):")
+    indent += 1
     behavior_init_codelines = [
-        " " * 8 + f"self.{to_snake_case(node.name)} = " + get_instanciation(node)
+        indent_str(indent)
+        + f"self.{to_snake_case(node.name)} = "
+        + get_instanciation(node)
         for node in graph.nodes
     ]
     behavior_class_codelines += behavior_init_codelines
 
     # Call
-    behavior_call_codelines = ["    def __call__(self, observation):"]
+    indent = 1
+    behavior_call_codelines = [indent_str(indent) + "def __call__(self, observation):"]
+    indent += 1
     roots = get_roots(graph)
 
     node: Node = roots[0]
     if isinstance(node, FeatureCondition):
         for i in [0, 1]:
             behavior_call_codelines.append(
-                " " * 8 + f"if self.{to_snake_case(node.name)}(observation) == {i}:"
+                indent_str(indent)
+                + f"if self.{to_snake_case(node.name)}(observation) == {i}:"
             )
+            indent += 1
             successors = get_successors_with_index(graph, node, i)
             action: Node = successors[0]
             behavior_call_codelines.append(
-                " " * 12 + f"return self.{to_snake_case(action.name)}(observation)"
+                indent_str(indent)
+                + f"return self.{to_snake_case(action.name)}(observation)"
             )
+            indent -= 1
     if isinstance(node, Action):
         behavior_call_codelines.append(
-            " " * 8 + f"return self.{to_snake_case(node.name)}(observation)"
+            indent_str(indent) + f"return self.{to_snake_case(node.name)}(observation)"
         )
 
     behavior_class_codelines += behavior_call_codelines
@@ -60,6 +70,10 @@ def get_instanciation(node: Node) -> str:
                 attrs[attr_name] = attr
         attrs_str = ", ".join((f"{name}={val}" for name, val in attrs.items()))
         return f"{node.__class__.__name__}({attrs_str})"
+
+
+def indent_str(indent_level: int, indent_amount: int = 4):
+    return " " * indent_level * indent_amount
 
 
 def to_camel_case(text: str) -> str:
