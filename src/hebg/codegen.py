@@ -1,5 +1,6 @@
 from re import sub
 import inspect
+from typing import List
 
 from hebg.node import Node, Action, FeatureCondition
 from hebg.heb_graph import HEBGraph, get_successors_with_index
@@ -10,49 +11,51 @@ def get_hebg_source(graph: HEBGraph) -> str:
     behavior_class_codelines = []
     behavior_class_name = to_camel_case(graph.behavior.name.capitalize())
     behavior_class_codelines.append(f"class {behavior_class_name}:")
+    behavior_class_codelines += get_behavior_init_codelines(graph)
+    behavior_class_codelines += get_behavior_call_codelines(graph)
+    source = "\n".join(behavior_class_codelines)
+    return source
 
-    # Init
+
+def get_behavior_init_codelines(graph: HEBGraph) -> List[str]:
     indent = 1
-    behavior_class_codelines.append(indent_str(indent) + "def __init__(self):")
+    init_codelines = [indent_str(indent) + "def __init__(self):"]
     indent += 1
-    behavior_init_codelines = [
+    init_codelines += [
         indent_str(indent)
         + f"self.{to_snake_case(node.name)} = "
         + get_instanciation(node)
         for node in graph.nodes
     ]
-    behavior_class_codelines += behavior_init_codelines
+    return init_codelines
 
-    # Call
+
+def get_behavior_call_codelines(graph: HEBGraph):
     indent = 1
-    behavior_call_codelines = [indent_str(indent) + "def __call__(self, observation):"]
+    call_codelines = [indent_str(indent) + "def __call__(self, observation):"]
     indent += 1
     roots = get_roots(graph)
 
     node: Node = roots[0]
     if isinstance(node, FeatureCondition):
         for i in [0, 1]:
-            behavior_call_codelines.append(
+            call_codelines.append(
                 indent_str(indent)
                 + f"if self.{to_snake_case(node.name)}(observation) == {i}:"
             )
             indent += 1
             successors = get_successors_with_index(graph, node, i)
             action: Node = successors[0]
-            behavior_call_codelines.append(
+            call_codelines.append(
                 indent_str(indent)
                 + f"return self.{to_snake_case(action.name)}(observation)"
             )
             indent -= 1
     if isinstance(node, Action):
-        behavior_call_codelines.append(
+        call_codelines.append(
             indent_str(indent) + f"return self.{to_snake_case(node.name)}(observation)"
         )
-
-    behavior_class_codelines += behavior_call_codelines
-
-    source = "\n".join(behavior_class_codelines)
-    return source
+    return call_codelines
 
 
 def get_instanciation(node: Node) -> str:
