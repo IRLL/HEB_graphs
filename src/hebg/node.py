@@ -16,8 +16,6 @@ def bytecode_complexity(obj):
 
 class Node:
 
-    """Base Node class for any HEBGraph."""
-
     NODE_TYPES = ("action", "feature_condition", "behavior", "empty")
 
     def __init__(
@@ -27,6 +25,19 @@ class Node:
         complexity: int = None,
         image=None,
     ) -> None:
+        """Base Node class for any HEBGraph.
+
+        Args:
+            name (str): A UNIQUE name representing this node.
+            node_type (str): One of {action, feature_condition, behavior, empty}.
+            complexity (int, optional): Given individual complexity of the node.
+                If None, uses the number of bytecode instructions of init and call.
+                Defaults to None.
+            image (2d array, optional): Image to represent the node. Defaults to None.
+
+        Raises:
+            ValueError: If node_type has an unexpected value.
+        """
         self.name = name
         self.image = image
         if node_type not in self.NODE_TYPES:
