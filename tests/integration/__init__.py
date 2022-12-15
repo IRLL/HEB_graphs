@@ -27,7 +27,8 @@ class ThresholdFeatureCondition(FeatureCondition):
         self.relation = relation
         self.threshold = threshold
         self._relation = self.Relation(relation)
-        name = f"{self._relation.name.capitalize()} {threshold} ?"
+        threshold_str = str(threshold).replace("-", "n")
+        name = f"{self._relation.name.capitalize()} {threshold_str} ?"
         super().__init__(name=name, image=None)
 
     def __call__(self, observation: float) -> int:

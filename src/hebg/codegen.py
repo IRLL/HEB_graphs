@@ -36,26 +36,27 @@ def get_behavior_call_codelines(graph: HEBGraph):
     indent += 1
     roots = get_roots(graph)
 
-    node: Node = roots[0]
-    if isinstance(node, FeatureCondition):
-        for i in [0, 1]:
-            call_codelines.append(
+    def get_node_call_codelines(node: Node, indent: int):
+        node_codelines = []
+        if isinstance(node, Action):
+            node_codelines.append(
                 indent_str(indent)
-                + f"if self.{to_snake_case(node.name)}(observation) == {i}:"
+                + f"return self.{to_snake_case(node.name)}(observation)"
             )
-            indent += 1
-            successors = get_successors_with_index(graph, node, i)
-            action: Node = successors[0]
-            call_codelines.append(
-                indent_str(indent)
-                + f"return self.{to_snake_case(action.name)}(observation)"
-            )
-            indent -= 1
-    if isinstance(node, Action):
-        call_codelines.append(
-            indent_str(indent) + f"return self.{to_snake_case(node.name)}(observation)"
-        )
-    return call_codelines
+            return node_codelines
+        if isinstance(node, FeatureCondition):
+            for i in [0, 1]:
+                node_codelines.append(
+                    indent_str(indent)
+                    + f"if self.{to_snake_case(node.name)}(observation) == {i}:"
+                )
+                successors = get_successors_with_index(graph, node, i)
+                for succ_node in successors:
+                    node_codelines += get_node_call_codelines(succ_node, indent + 1)
+            return node_codelines
+        raise NotImplementedError
+
+    return call_codelines + get_node_call_codelines(roots[0], indent)
 
 
 def get_instanciation(node: Node) -> str:
@@ -80,7 +81,14 @@ def indent_str(indent_level: int, indent_amount: int = 4):
 
 
 def to_camel_case(text: str) -> str:
-    s = text.replace("-", " ").replace("_", " ")
+    s = (
+        text.replace("-", " ")
+        .replace("_", " ")
+        .replace("?", "")
+        .replace("[", "")
+        .replace("]", "")
+        .replace(",", "")
+    )
     s = s.split()
     if len(text) == 0:
         return text
@@ -88,7 +96,7 @@ def to_camel_case(text: str) -> str:
 
 
 def to_snake_case(text: str) -> str:
-    text = text.replace("-", " ").replace("?", " ")
+    text = text.replace("-", " ").replace("?", "")
     return "_".join(
         sub("([A-Z][a-z]+)", r" \1", sub("([A-Z]+)", r" \1", text)).split()
     ).lower()

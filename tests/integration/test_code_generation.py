@@ -70,7 +70,7 @@ def test_f_f_a_graph_codegen():
             graph.add_edge(feature_condition_1, feature_condition_2, index=False)
             graph.add_edge(feature_condition_1, feature_condition_3, index=True)
 
-            for action, edge_index in zip(range(2), (1, 0)):
+            for action, edge_index in zip(range(2), (0, 1)):
                 graph.add_edge(feature_condition_2, Action(action), index=edge_index)
 
             for action, edge_index in zip(range(2, 4), (0, 1)):
@@ -83,7 +83,7 @@ def test_f_f_a_graph_codegen():
     source_code = get_hebg_source(graph)
     expected_source_code = "\n".join(
         (
-            "class IsAboveZero:",
+            "class ScalarClassification101:",
             "    def __init__(self):",
             '        self.greater_or_equal_to_0 = ThresholdFeatureCondition(relation=">=", threshold=0)',
             '        self.lesser_or_equal_to_1 = ThresholdFeatureCondition(relation="<=", threshold=1)',
