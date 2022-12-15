@@ -19,10 +19,11 @@ def test_a_graph_codegen():
     expected_source_code = "\n".join(
         (
             "class Action42Behavior:",
-            "    def __init__(self):",
-            "        self.action_42 = Action(42)",
+            "    def __init__(self, actions:Dict[str, Action], feature_conditions: Dict[str, FeatureCondition]):",
+            "        self.actions = actions",
+            "        self.feature_conditions = feature_conditions",
             "    def __call__(self, observation):",
-            "        return self.action_42(observation)",
+            "        return self.actions['action 42'](observation)",
         )
     )
     check.equal(source_code, expected_source_code)
@@ -38,15 +39,15 @@ def test_f_a_graph_codegen():
     expected_source_code = "\n".join(
         (
             "class IsAboveZero:",
-            "    def __init__(self):",
-            '        self.greater_or_equal_to_0 = ThresholdFeatureCondition(relation=">=", threshold=0)',
-            "        self.action_0 = Action(0)",
-            "        self.action_1 = Action(1)",
+            "    def __init__(self, actions:Dict[str, Action], feature_conditions: Dict[str, FeatureCondition]):",
+            "        self.actions = actions",
+            "        self.feature_conditions = feature_conditions",
             "    def __call__(self, observation):",
-            "        if self.greater_or_equal_to_0(observation) == 0:",
-            "            return self.action_0(observation)",
-            "        if self.greater_or_equal_to_0(observation) == 1:",
-            "            return self.action_1(observation)",
+            "        edge_index = self.feature_conditions['Greater or equal to 0 ?'](observation)",
+            "        if edge_index == 0:",
+            "            return self.actions['action 0'](observation)",
+            "        if edge_index == 1:",
+            "            return self.actions['action 1'](observation)",
         )
     )
 
@@ -84,25 +85,23 @@ def test_f_f_a_graph_codegen():
     expected_source_code = "\n".join(
         (
             "class ScalarClassification101:",
-            "    def __init__(self):",
-            '        self.greater_or_equal_to_0 = ThresholdFeatureCondition(relation=">=", threshold=0)',
-            '        self.lesser_or_equal_to_1 = ThresholdFeatureCondition(relation="<=", threshold=1)',
-            '        self.greater_or_equal_to_n1 = ThresholdFeatureCondition(relation=">=", threshold=-1)',
-            "        self.action_0 = Action(0)",
-            "        self.action_1 = Action(1)",
-            "        self.action_2 = Action(2)",
-            "        self.action_3 = Action(3)",
+            "    def __init__(self, actions:Dict[str, Action], feature_conditions: Dict[str, FeatureCondition]):",
+            "        self.actions = actions",
+            "        self.feature_conditions = feature_conditions",
             "    def __call__(self, observation):",
-            "        if self.greater_or_equal_to_0(observation) == 0:",
-            "            if self.lesser_or_equal_to_1(observation) == 0:",
-            "                return self.action_0(observation)",
-            "            if self.lesser_or_equal_to_1(observation) == 1:",
-            "                return self.action_1(observation)",
-            "        if self.greater_or_equal_to_0(observation) == 1:",
-            "            if self.greater_or_equal_to_n1(observation) == 0:",
-            "                return self.action_2(observation)",
-            "            if self.greater_or_equal_to_n1(observation) == 1:",
-            "                return self.action_3(observation)",
+            "        edge_index = self.feature_conditions['Greater or equal to 0 ?'](observation)",
+            "        if edge_index == 0:",
+            "            edge_index_1 = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
+            "            if edge_index_1 == 0:",
+            "                return self.actions['action 0'](observation)",
+            "            if edge_index_1 == 1:",
+            "                return self.actions['action 1'](observation)",
+            "        if edge_index == 1:",
+            "            edge_index_1 = self.feature_conditions['Greater or equal to -1 ?'](observation)",
+            "            if edge_index_1 == 0:",
+            "                return self.actions['action 2'](observation)",
+            "            if edge_index_1 == 1:",
+            "                return self.actions['action 3'](observation)",
         )
     )
 
