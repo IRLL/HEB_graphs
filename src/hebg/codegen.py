@@ -18,14 +18,12 @@ def get_hebg_source(graph: HEBGraph) -> str:
 
 
 def get_behavior_init_codelines(graph: HEBGraph) -> List[str]:
-    indent = 1
-    init_codelines = [indent_str(indent) + "def __init__(self):"]
-    indent += 1
-    init_codelines += [
-        indent_str(indent)
-        + f"self.{to_snake_case(node.name)} = "
-        + get_instanciation(node)
-        for node in graph.nodes
+    init_codelines = [
+        indent_str(1)
+        + "def __init__(self, actions:Dict[str, Action],"
+        + " feature_conditions: Dict[str, FeatureCondition]):",
+        indent_str(2) + "self.actions = actions",
+        indent_str(2) + "self.feature_conditions = feature_conditions",
     ]
     return init_codelines
 
@@ -40,16 +38,17 @@ def get_behavior_call_codelines(graph: HEBGraph):
         node_codelines = []
         if isinstance(node, Action):
             node_codelines.append(
-                indent_str(indent)
-                + f"return self.{to_snake_case(node.name)}(observation)"
+                indent_str(indent) + f"return self.actions['{node.name}'](observation)"
             )
             return node_codelines
         if isinstance(node, FeatureCondition):
+            var_name = f"edge_index_{indent-2}" if indent > 2 else "edge_index"
+            node_codelines.append(
+                indent_str(indent)
+                + f"{var_name} = self.feature_conditions['{node.name}'](observation)"
+            )
             for i in [0, 1]:
-                node_codelines.append(
-                    indent_str(indent)
-                    + f"if self.{to_snake_case(node.name)}(observation) == {i}:"
-                )
+                node_codelines.append(indent_str(indent) + f"if {var_name} == {i}:")
                 successors = get_successors_with_index(graph, node, i)
                 for succ_node in successors:
                     node_codelines += get_node_call_codelines(succ_node, indent + 1)
