@@ -27,6 +27,7 @@ class TestABehavior:
             (
                 "class Action42Behavior:",
                 "    def __init__(",
+                "        self,",
                 "        actions: Dict[str, 'Action'] = None,",
                 "        feature_conditions: Dict[str, 'FeatureCondition'] = None,",
                 "        behaviors: Dict[str, 'Behaviors'] = None,",
@@ -59,6 +60,7 @@ class TestFABehavior:
             (
                 "class IsAboveZero:",
                 "    def __init__(",
+                "        self,",
                 "        actions: Dict[str, 'Action'] = None,",
                 "        feature_conditions: Dict[str, 'FeatureCondition'] = None,",
                 "        behaviors: Dict[str, 'Behaviors'] = None,",
@@ -116,6 +118,7 @@ class TestFFABehavior:
             (
                 "class ScalarClassification101:",
                 "    def __init__(",
+                "        self,",
                 "        actions: Dict[str, 'Action'] = None,",
                 "        feature_conditions: Dict[str, 'FeatureCondition'] = None,",
                 "        behaviors: Dict[str, 'Behaviors'] = None,",
@@ -167,6 +170,7 @@ class TestFBBehavior:
             (
                 "class ScalarClassification101:",
                 "    def __init__(",
+                "        self,",
                 "        actions: Dict[str, 'Action'] = None,",
                 "        feature_conditions: Dict[str, 'FeatureCondition'] = None,",
                 "        behaviors: Dict[str, 'Behaviors'] = None,",
@@ -186,9 +190,7 @@ class TestFBBehavior:
         check.equal(source_code, expected_source_code)
 
     def test_exec_codegen(self):
-        check_execution_for_values(
-            self.behavior, "ScalarClassification101", (-1, 0, 1, 2)
-        )
+        check_execution_for_values(self.behavior, "IsBetween0And1", (-1, 0, 1, 2))
 
 
 def check_execution_for_values(behavior: Behavior, class_name: str, values: Tuple[Any]):
@@ -203,9 +205,14 @@ def check_execution_for_values(behavior: Behavior, class_name: str, values: Tupl
         for node in behavior.graph.nodes
         if isinstance(node, FeatureCondition)
     }
+    behaviors = {
+        node.name: node for node in behavior.graph.nodes if isinstance(node, Behavior)
+    }
 
     behavior_rebuilt = CodeGenPolicy(
-        actions=actions, feature_conditions=feature_conditions
+        actions=actions,
+        feature_conditions=feature_conditions,
+        behaviors=behaviors,
     )
 
     for val in values:
