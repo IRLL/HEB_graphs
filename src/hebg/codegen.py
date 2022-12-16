@@ -3,7 +3,7 @@ import inspect
 from typing import TYPE_CHECKING, List, Dict
 
 from hebg.node import Node, Action, FeatureCondition
-from hebg.behavior import Behavior
+from hebg.behavior import Behavior, BEHAVIOR_SEPARATOR
 from hebg.graph import get_roots, get_successors_with_index
 
 if TYPE_CHECKING:
@@ -49,15 +49,17 @@ def get_node_call_codelines(
 ):
     node_codelines = []
     if isinstance(node, Action):
+        action_name = node.name.split(BEHAVIOR_SEPARATOR)[-1]
         node_codelines.append(
-            indent_str(indent) + f"return self.actions['{node.name}'](observation)"
+            indent_str(indent) + f"return self.actions['{action_name}'](observation)"
         )
         return node_codelines
     if isinstance(node, FeatureCondition):
         var_name = f"edge_index_{indent-2}" if indent > 2 else "edge_index"
+        fc_name = node.name.split(BEHAVIOR_SEPARATOR)[-1]
         node_codelines.append(
             indent_str(indent)
-            + f"{var_name} = self.feature_conditions['{node.name}'](observation)"
+            + f"{var_name} = self.feature_conditions['{fc_name}'](observation)"
         )
         for i in [0, 1]:
             node_codelines.append(indent_str(indent) + f"if {var_name} == {i}:")
