@@ -34,7 +34,7 @@ class TestABehavior:
                 "    ):",
                 "        self.actions = actions if actions is not None else {}",
                 "        self.feature_conditions = feature_conditions if actions is not None else {}",
-                "        self.known_behaviors = behaviors if actions is not None else {}"
+                "        self.known_behaviors = behaviors if actions is not None else {}",
                 "    def __call__(self, observation):",
                 "        return self.actions['action 42'](observation)",
             )
@@ -67,7 +67,7 @@ class TestFABehavior:
                 "    ):",
                 "        self.actions = actions if actions is not None else {}",
                 "        self.feature_conditions = feature_conditions if actions is not None else {}",
-                "        self.known_behaviors = behaviors if actions is not None else {}"
+                "        self.known_behaviors = behaviors if actions is not None else {}",
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['Greater or equal to 0 ?'](observation)",
                 "        if edge_index == 0:",
@@ -125,7 +125,7 @@ class TestFFABehavior:
                 "    ):",
                 "        self.actions = actions if actions is not None else {}",
                 "        self.feature_conditions = feature_conditions if actions is not None else {}",
-                "        self.known_behaviors = behaviors if actions is not None else {}"
+                "        self.known_behaviors = behaviors if actions is not None else {}",
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['Greater or equal to 0 ?'](observation)",
                 "        if edge_index == 0:",
@@ -168,7 +168,7 @@ class TestFBBehavior:
         source_code = get_hebg_source(self.behavior.graph)
         expected_source_code = "\n".join(
             (
-                "class ScalarClassification101:",
+                "class IsBetween0And1:",
                 "    def __init__(",
                 "        self,",
                 "        actions: Dict[str, 'Action'] = None,",
@@ -177,7 +177,7 @@ class TestFBBehavior:
                 "    ):",
                 "        self.actions = actions if actions is not None else {}",
                 "        self.feature_conditions = feature_conditions if actions is not None else {}",
-                "        self.known_behaviors = behaviors if actions is not None else {}"
+                "        self.known_behaviors = behaviors if actions is not None else {}",
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
                 "        if edge_index == 0:",
