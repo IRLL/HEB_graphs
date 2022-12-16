@@ -1,6 +1,6 @@
 from re import sub
 import inspect
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Dict
 
 from hebg.node import Node, Action, FeatureCondition
 from hebg.behavior import Behavior
@@ -10,29 +10,25 @@ if TYPE_CHECKING:
     from hebg.heb_graph import HEBGraph
 
 
+class GeneratedBehavior:
+    def __init__(
+        self,
+        actions: Dict[str, "Action"] = None,
+        feature_conditions: Dict[str, "FeatureCondition"] = None,
+        behaviors: Dict[str, "Behavior"] = None,
+    ):
+        self.actions = actions if actions is not None else {}
+        self.feature_conditions = feature_conditions if actions is not None else {}
+        self.known_behaviors = behaviors if actions is not None else {}
+
+
 def get_hebg_source(graph: "HEBGraph") -> str:
     behavior_class_codelines = []
     behavior_class_name = to_camel_case(graph.behavior.name.capitalize())
-    behavior_class_codelines.append(f"class {behavior_class_name}:")
-    behavior_class_codelines += get_behavior_init_codelines()
+    behavior_class_codelines.append(f"class {behavior_class_name}(GeneratedBehavior):")
     behavior_class_codelines += get_behavior_call_codelines(graph)
     source = "\n".join(behavior_class_codelines)
     return source
-
-
-def get_behavior_init_codelines() -> List[str]:
-    init_codelines = [
-        "def __init__(",
-        "    self,",
-        "    actions: Dict[str, 'Action'] = None,",
-        "    feature_conditions: Dict[str, 'FeatureCondition'] = None,",
-        "    behaviors: Dict[str, 'Behaviors'] = None,",
-        "):",
-        "    self.actions = actions if actions is not None else {}",
-        "    self.feature_conditions = feature_conditions if actions is not None else {}",
-        "    self.known_behaviors = behaviors if actions is not None else {}",
-    ]
-    return [indent_str(1) + line for line in init_codelines]
 
 
 def get_behavior_call_codelines(graph: "HEBGraph"):
