@@ -171,9 +171,9 @@ class TestFBBehavior:
                 "            return self.actions['action 0'](observation)",
                 "        if edge_index == 1:",
                 "            edge_index_1 = self.feature_conditions['Greater or equal to 0 ?'](observation)",
-                "            if edge_index == 0:",
+                "            if edge_index_1 == 0:",
                 "                return self.actions['action 0'](observation)",
-                "            if edge_index == 1:",
+                "            if edge_index_1 == 1:",
                 "                return self.actions['action 1'](observation)",
             )
         )
