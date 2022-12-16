@@ -133,6 +133,45 @@ class TestFFABehavior:
         )
 
 
+class TestFBBehavior:
+    """(F-BA) Behaviors should only call the behavior like an action."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
+        actions = {0: Action(0), 1: Action(1)}
+        sub_behavior = F_A_Behavior("Is above_zero", feature_condition, actions)
+
+        feature_condition = ThresholdFeatureCondition(relation="<=", threshold=1)
+        actions = {0: Action(0), 1: sub_behavior}
+        self.behavior = F_A_Behavior("Is between 0 and 1 ?", feature_condition, actions)
+
+    def test_source_codegen(self):
+        source_code = get_hebg_source(self.behavior.graph)
+        expected_source_code = "\n".join(
+            (
+                "class ScalarClassification101:",
+                "    def __init__(self, actions:Dict[str, Action], feature_conditions: Dict[str, FeatureCondition], behaviors: Dict[str, Behaviors]):",
+                "        self.actions = actions",
+                "        self.feature_conditions = feature_conditions",
+                "        self.known_behaviors = behaviors"
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
+                "        if edge_index == 0:",
+                "            return self.actions['action 0'](observation)",
+                "        if edge_index == 1:",
+                "            return self.known_behaviors['Is above_zero'](observation)",
+            )
+        )
+
+        check.equal(source_code, expected_source_code)
+
+    def test_exec_codegen(self):
+        check_execution_for_values(
+            self.behavior, "ScalarClassification101", (-1, 0, 1, 2)
+        )
+
+
 def check_execution_for_values(behavior: Behavior, class_name: str, values: Tuple[Any]):
     exec(get_hebg_source(behavior.graph))
     CodeGenPolicy = locals()[class_name]
