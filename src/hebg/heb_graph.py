@@ -17,8 +17,9 @@ from matplotlib.legend_handler import HandlerPatch
 from networkx import DiGraph, draw_networkx_edges, relabel_nodes
 
 from hebg.draw_utils import draw_convex_hull
-from hebg.graph import draw_networkx_nodes_images, get_roots
+from hebg.graph import draw_networkx_nodes_images, get_roots, get_successors_with_index
 from hebg.layouts import staircase_layout
+from hebg.codegen import get_hebg_source
 from hebg.node import Node
 from hebg.behavior import Behavior
 
@@ -235,6 +236,11 @@ class HEBGraph(DiGraph):
         """Roots of the behavior graph (nodes without predecessors)."""
         return get_roots(self)
 
+    @property
+    def source_code(self) -> str:
+        """Generated source code of the behavior from graph."""
+        return get_hebg_source(self)
+
     def draw(self, ax: Axes, **kwargs) -> Tuple[Axes, Dict[Node, Tuple[float, float]]]:
         """Draw the HEBGraph on the given Axis.
 
@@ -389,17 +395,3 @@ def group_behaviors_points(
                 except KeyError:
                     points_grouped_by_behavior[key] = [point]
     return points_grouped_by_behavior
-
-
-def get_successors_with_index(graph: HEBGraph, node: Node, next_edge_index: int):
-    succs = graph.successors(node)
-    next_nodes = []
-    for next_node in succs:
-        if int(graph.edges[node, next_node]["index"]) == next_edge_index:
-            next_nodes.append(next_node)
-    if len(next_nodes) == 0:
-        raise ValueError(
-            f"FeatureCondition {node} returned index {next_edge_index}"
-            f" but {next_edge_index} was not found as an edge index"
-        )
-    return next_nodes

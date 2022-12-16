@@ -1,14 +1,16 @@
 from re import sub
 import inspect
-from typing import List
+from typing import TYPE_CHECKING, List
 
 from hebg.node import Node, Action, FeatureCondition
 from hebg.behavior import Behavior
-from hebg.heb_graph import HEBGraph, get_successors_with_index
-from hebg.graph import get_roots
+from hebg.graph import get_roots, get_successors_with_index
+
+if TYPE_CHECKING:
+    from hebg.heb_graph import HEBGraph
 
 
-def get_hebg_source(graph: HEBGraph) -> str:
+def get_hebg_source(graph: "HEBGraph") -> str:
     behavior_class_codelines = []
     behavior_class_name = to_camel_case(graph.behavior.name.capitalize())
     behavior_class_codelines.append(f"class {behavior_class_name}:")
@@ -33,7 +35,7 @@ def get_behavior_init_codelines() -> List[str]:
     return [indent_str(1) + line for line in init_codelines]
 
 
-def get_behavior_call_codelines(graph: HEBGraph):
+def get_behavior_call_codelines(graph: "HEBGraph"):
     indent = 1
     call_codelines = [indent_str(indent) + "def __call__(self, observation):"]
     indent += 1
