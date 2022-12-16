@@ -160,6 +160,26 @@ class TestFBBehavior:
 
         check.equal(source_code, expected_source_code)
 
+    def test_unrolled_source_codegen(self):
+        source_code = self.behavior.graph.unrolled_graph.source_code
+        expected_source_code = "\n".join(
+            (
+                "class IsBetween0And1(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
+                "        if edge_index == 0:",
+                "            return self.actions['action 0'](observation)",
+                "        if edge_index == 1:",
+                "            edge_index_1 = self.feature_conditions['Greater or equal to 0 ?'](observation)",
+                "            if edge_index == 0:",
+                "                return self.actions['action 0'](observation)",
+                "            if edge_index == 1:",
+                "                return self.actions['action 1'](observation)",
+            )
+        )
+
+        check.equal(source_code, expected_source_code)
+
     def test_exec_codegen(self):
         check_execution_for_values(self.behavior, "IsBetween0And1", (-1, 0, 1, 2))
 
