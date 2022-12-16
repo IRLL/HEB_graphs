@@ -23,48 +23,58 @@ class GeneratedBehavior:
 
 
 def get_hebg_source(graph: "HEBGraph") -> str:
-    behavior_class_codelines = []
+    behavior_codelines = []
     behavior_class_name = to_camel_case(graph.behavior.name.capitalize())
-    behavior_class_codelines.append(f"class {behavior_class_name}(GeneratedBehavior):")
-    behavior_class_codelines += get_behavior_call_codelines(graph)
-    source = "\n".join(behavior_class_codelines)
+    behavior_codelines.append(f"class {behavior_class_name}(GeneratedBehavior):")
+    behavior_codelines += get_behavior_call_codelines(graph, behavior_codelines)
+    source = "\n".join(behavior_codelines)
     return source
 
 
-def get_behavior_call_codelines(graph: "HEBGraph"):
+def get_behavior_call_codelines(graph: "HEBGraph", behavior_codelines: List[str]):
     indent = 1
     call_codelines = [indent_str(indent) + "def __call__(self, observation):"]
     indent += 1
     roots = get_roots(graph)
+    return call_codelines + get_node_call_codelines(
+        graph, roots[0], indent, behavior_codelines
+    )
 
-    def get_node_call_codelines(node: Node, indent: int):
-        node_codelines = []
-        if isinstance(node, Action):
-            node_codelines.append(
-                indent_str(indent) + f"return self.actions['{node.name}'](observation)"
-            )
-            return node_codelines
-        if isinstance(node, FeatureCondition):
-            var_name = f"edge_index_{indent-2}" if indent > 2 else "edge_index"
-            node_codelines.append(
-                indent_str(indent)
-                + f"{var_name} = self.feature_conditions['{node.name}'](observation)"
-            )
-            for i in [0, 1]:
-                node_codelines.append(indent_str(indent) + f"if {var_name} == {i}:")
-                successors = get_successors_with_index(graph, node, i)
-                for succ_node in successors:
-                    node_codelines += get_node_call_codelines(succ_node, indent + 1)
-            return node_codelines
-        if isinstance(node, Behavior):
-            node_codelines.append(
-                indent_str(indent)
-                + f"return self.known_behaviors['{node.name}'](observation)"
-            )
-            return node_codelines
-        raise NotImplementedError
 
-    return call_codelines + get_node_call_codelines(roots[0], indent)
+def get_node_call_codelines(
+    graph: "HEBGraph",
+    node: Node,
+    indent: int,
+    behavior_codelines: List[str],
+):
+    node_codelines = []
+    if isinstance(node, Action):
+        node_codelines.append(
+            indent_str(indent) + f"return self.actions['{node.name}'](observation)"
+        )
+        return node_codelines
+    if isinstance(node, FeatureCondition):
+        var_name = f"edge_index_{indent-2}" if indent > 2 else "edge_index"
+        node_codelines.append(
+            indent_str(indent)
+            + f"{var_name} = self.feature_conditions['{node.name}'](observation)"
+        )
+        for i in [0, 1]:
+            node_codelines.append(indent_str(indent) + f"if {var_name} == {i}:")
+            successors = get_successors_with_index(graph, node, i)
+            for succ_node in successors:
+                node_codelines += get_node_call_codelines(
+                    graph, succ_node, indent + 1, behavior_codelines
+                )
+        return node_codelines
+    if isinstance(node, Behavior):
+        node_codelines.append(
+            indent_str(indent)
+            + f"return self.known_behaviors['{node.name}'](observation)"
+        )
+        behavior_codelines.insert(0, node.graph.source_code)
+        return node_codelines
+    raise NotImplementedError
 
 
 def get_instanciation(node: Node) -> str:
