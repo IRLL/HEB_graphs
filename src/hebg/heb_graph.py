@@ -21,9 +21,7 @@ from hebg.graph import draw_networkx_nodes_images, get_roots, get_successors_wit
 from hebg.layouts import staircase_layout
 from hebg.codegen import get_hebg_source
 from hebg.node import Node
-from hebg.behavior import Behavior
-
-BEHAVIOR_SEPARATOR = "\n>"
+from hebg.behavior import Behavior, BEHAVIOR_SEPARATOR
 
 
 class HEBGraph(DiGraph):
