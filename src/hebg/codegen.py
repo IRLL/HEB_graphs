@@ -3,6 +3,7 @@ import inspect
 from typing import List
 
 from hebg.node import Node, Action, FeatureCondition
+from hebg.behavior import Behavior
 from hebg.heb_graph import HEBGraph, get_successors_with_index
 from hebg.graph import get_roots
 
@@ -11,21 +12,25 @@ def get_hebg_source(graph: HEBGraph) -> str:
     behavior_class_codelines = []
     behavior_class_name = to_camel_case(graph.behavior.name.capitalize())
     behavior_class_codelines.append(f"class {behavior_class_name}:")
-    behavior_class_codelines += get_behavior_init_codelines(graph)
+    behavior_class_codelines += get_behavior_init_codelines()
     behavior_class_codelines += get_behavior_call_codelines(graph)
     source = "\n".join(behavior_class_codelines)
     return source
 
 
-def get_behavior_init_codelines(graph: HEBGraph) -> List[str]:
+def get_behavior_init_codelines() -> List[str]:
     init_codelines = [
-        indent_str(1)
-        + "def __init__(self, actions:Dict[str, Action],"
-        + " feature_conditions: Dict[str, FeatureCondition]):",
-        indent_str(2) + "self.actions = actions",
-        indent_str(2) + "self.feature_conditions = feature_conditions",
+        "def __init__(",
+        "    self,",
+        "    actions: Dict[str, 'Action'] = None,",
+        "    feature_conditions: Dict[str, 'FeatureCondition'] = None,",
+        "    behaviors: Dict[str, 'Behaviors'] = None,",
+        "):",
+        "    self.actions = actions if actions is not None else {}",
+        "    self.feature_conditions = feature_conditions if actions is not None else {}",
+        "    self.known_behaviors = behaviors if actions is not None else {}",
     ]
-    return init_codelines
+    return [indent_str(1) + line for line in init_codelines]
 
 
 def get_behavior_call_codelines(graph: HEBGraph):
@@ -52,6 +57,12 @@ def get_behavior_call_codelines(graph: HEBGraph):
                 successors = get_successors_with_index(graph, node, i)
                 for succ_node in successors:
                     node_codelines += get_node_call_codelines(succ_node, indent + 1)
+            return node_codelines
+        if isinstance(node, Behavior):
+            node_codelines.append(
+                indent_str(indent)
+                + f"return self.known_behaviors['{node.name}'](observation)"
+            )
             return node_codelines
         raise NotImplementedError
 
