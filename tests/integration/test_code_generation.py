@@ -11,7 +11,6 @@ from tests.integration import (
 )
 from hebg.node import Action, FeatureCondition
 from hebg.behavior import Behavior
-from hebg.codegen import get_hebg_source
 
 
 class TestABehavior:
@@ -22,7 +21,7 @@ class TestABehavior:
         self.behavior = FundamentalBehavior(Action(42))
 
     def test_source_codegen(self):
-        source_code = get_hebg_source(self.behavior.graph)
+        source_code = self.behavior.graph.source_code
         expected_source_code = "\n".join(
             (
                 "class Action42Behavior:",
@@ -55,7 +54,7 @@ class TestFABehavior:
         self.behavior = F_A_Behavior("Is above_zero", feature_condition, actions)
 
     def test_source_codegen(self):
-        source_code = get_hebg_source(self.behavior.graph)
+        source_code = self.behavior.graph.source_code
         expected_source_code = "\n".join(
             (
                 "class IsAboveZero:",
@@ -113,7 +112,7 @@ class TestFFABehavior:
         self.behavior = self.F_F_A_Behavior("scalar classification ]-1,0,1[ ?")
 
     def test_source_codegen(self):
-        source_code = get_hebg_source(self.behavior.graph)
+        source_code = self.behavior.graph.source_code
         expected_source_code = "\n".join(
             (
                 "class ScalarClassification101:",
@@ -165,7 +164,7 @@ class TestFBBehavior:
         self.behavior = F_A_Behavior("Is between 0 and 1 ?", feature_condition, actions)
 
     def test_source_codegen(self):
-        source_code = get_hebg_source(self.behavior.graph)
+        source_code = self.behavior.graph.source_code
         expected_source_code = "\n".join(
             (
                 "class IsBetween0And1:",
@@ -194,7 +193,7 @@ class TestFBBehavior:
 
 
 def check_execution_for_values(behavior: Behavior, class_name: str, values: Tuple[Any]):
-    exec(get_hebg_source(behavior.graph))
+    exec(behavior.graph.source_code)
     CodeGenPolicy = locals()[class_name]
 
     actions = {
