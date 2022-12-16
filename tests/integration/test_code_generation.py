@@ -26,9 +26,14 @@ class TestABehavior:
         expected_source_code = "\n".join(
             (
                 "class Action42Behavior:",
-                "    def __init__(self, actions:Dict[str, Action], feature_conditions: Dict[str, FeatureCondition]):",
-                "        self.actions = actions",
-                "        self.feature_conditions = feature_conditions",
+                "    def __init__(",
+                "        actions: Dict[str, 'Action'] = None,",
+                "        feature_conditions: Dict[str, 'FeatureCondition'] = None,",
+                "        behaviors: Dict[str, 'Behaviors'] = None,",
+                "    ):",
+                "        self.actions = actions if actions is not None else {}",
+                "        self.feature_conditions = feature_conditions if actions is not None else {}",
+                "        self.known_behaviors = behaviors if actions is not None else {}"
                 "    def __call__(self, observation):",
                 "        return self.actions['action 42'](observation)",
             )
@@ -53,9 +58,14 @@ class TestFABehavior:
         expected_source_code = "\n".join(
             (
                 "class IsAboveZero:",
-                "    def __init__(self, actions:Dict[str, Action], feature_conditions: Dict[str, FeatureCondition]):",
-                "        self.actions = actions",
-                "        self.feature_conditions = feature_conditions",
+                "    def __init__(",
+                "        actions: Dict[str, 'Action'] = None,",
+                "        feature_conditions: Dict[str, 'FeatureCondition'] = None,",
+                "        behaviors: Dict[str, 'Behaviors'] = None,",
+                "    ):",
+                "        self.actions = actions if actions is not None else {}",
+                "        self.feature_conditions = feature_conditions if actions is not None else {}",
+                "        self.known_behaviors = behaviors if actions is not None else {}"
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['Greater or equal to 0 ?'](observation)",
                 "        if edge_index == 0:",
@@ -105,9 +115,14 @@ class TestFFABehavior:
         expected_source_code = "\n".join(
             (
                 "class ScalarClassification101:",
-                "    def __init__(self, actions:Dict[str, Action], feature_conditions: Dict[str, FeatureCondition]):",
-                "        self.actions = actions",
-                "        self.feature_conditions = feature_conditions",
+                "    def __init__(",
+                "        actions: Dict[str, 'Action'] = None,",
+                "        feature_conditions: Dict[str, 'FeatureCondition'] = None,",
+                "        behaviors: Dict[str, 'Behaviors'] = None,",
+                "    ):",
+                "        self.actions = actions if actions is not None else {}",
+                "        self.feature_conditions = feature_conditions if actions is not None else {}",
+                "        self.known_behaviors = behaviors if actions is not None else {}"
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['Greater or equal to 0 ?'](observation)",
                 "        if edge_index == 0:",
@@ -151,10 +166,14 @@ class TestFBBehavior:
         expected_source_code = "\n".join(
             (
                 "class ScalarClassification101:",
-                "    def __init__(self, actions:Dict[str, Action], feature_conditions: Dict[str, FeatureCondition], behaviors: Dict[str, Behaviors]):",
-                "        self.actions = actions",
-                "        self.feature_conditions = feature_conditions",
-                "        self.known_behaviors = behaviors"
+                "    def __init__(",
+                "        actions: Dict[str, 'Action'] = None,",
+                "        feature_conditions: Dict[str, 'FeatureCondition'] = None,",
+                "        behaviors: Dict[str, 'Behaviors'] = None,",
+                "    ):",
+                "        self.actions = actions if actions is not None else {}",
+                "        self.feature_conditions = feature_conditions if actions is not None else {}",
+                "        self.known_behaviors = behaviors if actions is not None else {}"
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
                 "        if edge_index == 0:",
