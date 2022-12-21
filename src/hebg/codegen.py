@@ -74,7 +74,12 @@ def get_node_call_codelines(
             indent_str(indent)
             + f"return self.known_behaviors['{node.name}'](observation)"
         )
-        behavior_codelines.insert(0, node.graph.source_code)
+        try:
+            behavior_codelines.insert(0, node.graph.source_code)
+        except NotImplementedError:
+            behavior_codelines.insert(
+                0, f"# Require '{node.name}' behavior to be given."
+            )
         return node_codelines
     raise NotImplementedError
 
