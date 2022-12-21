@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, Any
+from typing import Optional, Tuple, Any
 
 import pytest
 import pytest_check as check
@@ -184,7 +184,66 @@ class TestFBBehavior:
         check_execution_for_values(self.behavior, "IsBetween0And1", (-1, 0, 1, 2))
 
 
-def check_execution_for_values(behavior: Behavior, class_name: str, values: Tuple[Any]):
+class TestFBBehavior:
+    """(F-BA) Behaviors should work with only name reference to behavior,
+    but will expect behavior to be given, even when unrolled."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        feature_condition = ThresholdFeatureCondition(relation="<=", threshold=1)
+        actions = {0: Action(0), 1: Behavior("Is above_zero")}
+        self.behavior = F_A_Behavior("Is between 0 and 1 ?", feature_condition, actions)
+
+    def test_source_codegen(self):
+        source_code = self.behavior.graph.source_code
+        expected_source_code = "\n".join(
+            (
+                "class IsBetween0And1(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
+                "        if edge_index == 0:",
+                "            return self.actions['action 0'](observation)",
+                "        if edge_index == 1:",
+                "            return self.known_behaviors['Is above_zero'](observation)",
+            )
+        )
+
+        check.equal(source_code, expected_source_code)
+
+    def test_unrolled_source_codegen(self):
+        source_code = self.behavior.graph.unrolled_graph.source_code
+        expected_source_code = "\n".join(
+            (
+                "class IsBetween0And1(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
+                "        if edge_index == 0:",
+                "            return self.actions['action 0'](observation)",
+                "        if edge_index == 1:",
+                "            return self.known_behaviors['Is above_zero'](observation)",
+            )
+        )
+
+        check.equal(source_code, expected_source_code)
+
+    def test_exec_codegen(self):
+        feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
+        actions = {0: Action(0), 1: Action(1)}
+        sub_behavior = F_A_Behavior("Is above_zero", feature_condition, actions)
+        check_execution_for_values(
+            self.behavior,
+            "IsBetween0And1",
+            (-1, 0, 1, 2),
+            known_behaviors={"Is above_zero": sub_behavior},
+        )
+
+
+def check_execution_for_values(
+    behavior: Behavior,
+    class_name: str,
+    values: Tuple[Any],
+    known_behaviors: Optional[dict] = None,
+):
     exec(behavior.graph.source_code)
     CodeGenPolicy = locals()[class_name]
 
@@ -199,6 +258,8 @@ def check_execution_for_values(behavior: Behavior, class_name: str, values: Tupl
     behaviors = {
         node.name: node for node in behavior.graph.nodes if isinstance(node, Behavior)
     }
+    known_behaviors = known_behaviors if known_behaviors is not None else {}
+    behaviors.update(known_behaviors)
 
     behavior_rebuilt = CodeGenPolicy(
         actions=actions,
