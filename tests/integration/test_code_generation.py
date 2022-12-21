@@ -198,6 +198,7 @@ class TestFBBehavior:
         source_code = self.behavior.graph.source_code
         expected_source_code = "\n".join(
             (
+                "# Require 'Is above_zero' behavior to be given.",
                 "class IsBetween0And1(GeneratedBehavior):",
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
@@ -214,6 +215,7 @@ class TestFBBehavior:
         source_code = self.behavior.graph.unrolled_graph.source_code
         expected_source_code = "\n".join(
             (
+                "# Require 'Is above_zero' behavior to be given.",
                 "class IsBetween0And1(GeneratedBehavior):",
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
