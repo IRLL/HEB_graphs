@@ -232,6 +232,7 @@ class TestFBBehavior:
         feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
         actions = {0: Action(0), 1: Action(1)}
         sub_behavior = F_A_Behavior("Is above_zero", feature_condition, actions)
+        self.behavior.graph.all_behaviors["Is above_zero"] = sub_behavior
         check_execution_for_values(
             self.behavior,
             "IsBetween0And1",
