@@ -211,6 +211,33 @@ class TestFBBehavior:
 
         check.equal(source_code, expected_source_code)
 
+    def test_source_codegen_in_all_behavior(self):
+        feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
+        actions = {0: Action(0), 1: Action(1)}
+        sub_behavior = F_A_Behavior("Is above_zero", feature_condition, actions)
+        self.behavior.graph.all_behaviors["Is above_zero"] = sub_behavior
+        source_code = self.behavior.graph.source_code
+        expected_source_code = "\n".join(
+            (
+                "class IsAboveZero(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['Greater or equal to 0 ?'](observation)",
+                "        if edge_index == 0:",
+                "            return self.actions['action 0'](observation)",
+                "        if edge_index == 1:",
+                "            return self.actions['action 1'](observation)",
+                "class IsBetween0And1(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
+                "        if edge_index == 0:",
+                "            return self.actions['action 0'](observation)",
+                "        if edge_index == 1:",
+                "            return self.known_behaviors['Is above_zero'](observation)",
+            )
+        )
+
+        check.equal(source_code, expected_source_code)
+
     def test_unrolled_source_codegen(self):
         source_code = self.behavior.graph.unrolled_graph.source_code
         expected_source_code = "\n".join(
