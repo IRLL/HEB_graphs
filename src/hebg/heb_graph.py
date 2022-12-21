@@ -177,7 +177,13 @@ class HEBGraph(DiGraph):
                     try:
                         node_graph = node.graph.unrolled_graph
                     except NotImplementedError:
-                        node_graph = self.all_behaviors[str(node)].graph.unrolled_graph
+                        if str(node) in self.all_behaviors:
+                            node_graph = self.all_behaviors[
+                                str(node)
+                            ].graph.unrolled_graph
+                        else:
+                            # If we don't find any reference, we keep it as is.
+                            continue
 
                     # Relabel graph nodes to obtain disjoint node labels (if more that one node).
                     if len(node_graph.nodes()) > 1:
