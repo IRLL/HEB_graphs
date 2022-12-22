@@ -6,6 +6,7 @@ import pytest_check as check
 from tests.integration import (
     FundamentalBehavior,
     ThresholdFeatureCondition,
+    IsDivisibleFeatureCondition,
     F_A_Behavior,
     HEBGraph,
 )
@@ -184,7 +185,7 @@ class TestFBBehavior:
         check_execution_for_values(self.behavior, "IsBetween0And1", (-1, 0, 1, 2))
 
 
-class TestFBBehavior:
+class TestFBBehaviorNameRef:
     """(F-BA) Behaviors should work with only name reference to behavior,
     but will expect behavior to be given, even when unrolled."""
 
@@ -265,6 +266,91 @@ class TestFBBehavior:
             "IsBetween0And1",
             (-1, 0, 1, 2),
             known_behaviors={"Is above_zero": sub_behavior},
+        )
+
+
+class TestFBBBehavior:
+    """(F-B-B) Behaviors should only be added once as a class."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        feature_condition = IsDivisibleFeatureCondition(2)
+        actions = {0: Action(0), 1: Action(1)}
+        binary_1 = F_A_Behavior("Is x1 in binary ?", feature_condition, actions)
+
+        feature_condition = IsDivisibleFeatureCondition(2)
+        actions = {0: Action(1), 1: Action(0)}
+        binary_0 = F_A_Behavior("Is x0 in binary ?", feature_condition, actions)
+
+        feature_condition = IsDivisibleFeatureCondition(4)
+        actions = {0: Action(0), 1: binary_1}
+        binary_11 = F_A_Behavior("Is x11 in binary ?", feature_condition, actions)
+
+        feature_condition = IsDivisibleFeatureCondition(4)
+        actions = {0: binary_0, 1: binary_1}
+        binary_10_01 = F_A_Behavior(
+            "Is x01 or x10 in binary ?", feature_condition, actions
+        )
+
+        feature_condition = IsDivisibleFeatureCondition(8)
+        actions = {0: binary_11, 1: binary_10_01}
+        self.behavior = F_A_Behavior(
+            "Is sum (of last 3 binary) 2 ?", feature_condition, actions
+        )
+
+    def test_source_codegen(self):
+        source_code = self.behavior.graph.source_code
+        expected_source_code = "\n".join(
+            (
+                "class IsX1InBinary(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['Is divisible by 2 ?'](observation)",
+                "        if edge_index == 0:",
+                "            return self.actions['action 0'](observation)",
+                "        if edge_index == 1:",
+                "            return self.actions['action 1'](observation)",
+                "class IsX0InBinary(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['Is divisible by 2 ?'](observation)",
+                "        if edge_index == 0:",
+                "            return self.actions['action 1'](observation)",
+                "        if edge_index == 1:",
+                "            return self.actions['action 0'](observation)",
+                "class IsX01OrX10InBinary(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['Is divisible by 4 ?'](observation)",
+                "        if edge_index == 0:",
+                "            return self.known_behaviors['Is x0 in binary ?'](observation)",
+                "        if edge_index == 1:",
+                "            return self.known_behaviors['Is x1 in binary ?'](observation)",
+                "class IsX11InBinary(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['Is divisible by 4 ?'](observation)",
+                "        if edge_index == 0:",
+                "            return self.actions['action 0'](observation)",
+                "        if edge_index == 1:",
+                "            return self.known_behaviors['Is x1 in binary ?'](observation)",
+                "class IsSumOfLast3Binary2(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['Is divisible by 8 ?'](observation)",
+                "        if edge_index == 0:",
+                "            return self.known_behaviors['Is x11 in binary ?'](observation)",
+                "        if edge_index == 1:",
+                "            return self.known_behaviors['Is x01 or x10 in binary ?'](observation)",
+            )
+        )
+
+        check.equal(source_code, expected_source_code)
+
+    def test_unrolled_source_codegen(self):
+        source_code = self.behavior.graph.unrolled_graph.source_code
+        expected_source_code = "\n".join(("", ""))
+
+        check.equal(source_code, expected_source_code)
+
+    def test_exec_codegen(self):
+        check_execution_for_values(
+            self.behavior, "IsSumOfLast3Binary2", (0, 1, 3, 5, 15)
         )
 
 
