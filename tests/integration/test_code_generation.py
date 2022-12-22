@@ -342,12 +342,6 @@ class TestFBBBehavior:
 
         check.equal(source_code, expected_source_code)
 
-    def test_unrolled_source_codegen(self):
-        source_code = self.behavior.graph.unrolled_graph.source_code
-        expected_source_code = "\n".join(("", ""))
-
-        check.equal(source_code, expected_source_code)
-
     def test_exec_codegen(self):
         check_execution_for_values(
             self.behavior, "IsSumOfLast3Binary2", (0, 1, 3, 5, 15)
