@@ -114,6 +114,8 @@ def to_camel_case(text: str) -> str:
         .replace("?", "")
         .replace("[", "")
         .replace("]", "")
+        .replace("(", "")
+        .replace(")", "")
         .replace(",", "")
     )
     s = s.split()
