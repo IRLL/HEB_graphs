@@ -12,9 +12,6 @@ from hebg.heb_graph import HEBGraph
 
 
 class ThresholdFeatureCondition(FeatureCondition):
-
-    """Threshold-based feature condition for scalar feature."""
-
     class Relation(Enum):
         GREATER_OR_EQUAL_TO = ">="
         LESSER_OR_EQUAL_TO = "<="
@@ -24,6 +21,7 @@ class ThresholdFeatureCondition(FeatureCondition):
     def __init__(
         self, relation: Union[Relation, str] = ">=", threshold: float = 0
     ) -> None:
+        """Threshold-based feature condition for scalar feature."""
         self.relation = relation
         self.threshold = threshold
         self._relation = self.Relation(relation)
@@ -40,6 +38,17 @@ class ThresholdFeatureCondition(FeatureCondition):
         }
         if self._relation in conditions:
             return conditions[self._relation]
+
+
+class IsDivisibleFeatureCondition(FeatureCondition):
+    def __init__(self, number: int = 0) -> None:
+        """Is divisible feature condition for scalar feature."""
+        self.number = number
+        name = f"Is divisible by {number} ?"
+        super().__init__(name=name, image=None)
+
+    def __call__(self, observation: float) -> int:
+        return int(observation // self.number == 1)
 
 
 class FundamentalBehavior(Behavior):
