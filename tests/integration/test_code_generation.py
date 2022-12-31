@@ -3,16 +3,16 @@ from typing import Optional, Tuple, Any
 import pytest
 import pytest_check as check
 
-from tests.integration import (
-    FundamentalBehavior,
-    ThresholdFeatureCondition,
-    IsDivisibleFeatureCondition,
-    F_A_Behavior,
-    HEBGraph,
-)
-from hebg.node import Action, FeatureCondition
-from hebg.behavior import Behavior
+from hebg import HEBGraph, Action, FeatureCondition, Behavior
 from hebg.codegen import GeneratedBehavior
+
+from tests.examples.behaviors import (
+    FundamentalBehavior,
+    F_A_Behavior,
+    F_F_A_Behavior,
+    build_binary_sum_behavior,
+)
+from tests.examples.feature_conditions import ThresholdFeatureCondition
 
 
 class TestABehavior:
@@ -69,31 +69,9 @@ class TestFABehavior:
 class TestFFABehavior:
     """(F-F-A) Chained FeatureConditions should condition should generate nested if/else."""
 
-    class F_F_A_Behavior(Behavior):
-
-        """Double layer feature conditions behavior"""
-
-        def build_graph(self) -> HEBGraph:
-            graph = HEBGraph(self)
-
-            feature_condition_1 = ThresholdFeatureCondition(relation=">=", threshold=0)
-            feature_condition_2 = ThresholdFeatureCondition(relation="<=", threshold=1)
-            feature_condition_3 = ThresholdFeatureCondition(relation=">=", threshold=-1)
-
-            graph.add_edge(feature_condition_1, feature_condition_2, index=False)
-            graph.add_edge(feature_condition_1, feature_condition_3, index=True)
-
-            for action, edge_index in zip(range(2), (0, 1)):
-                graph.add_edge(feature_condition_2, Action(action), index=edge_index)
-
-            for action, edge_index in zip(range(2, 4), (0, 1)):
-                graph.add_edge(feature_condition_3, Action(action), index=edge_index)
-
-            return graph
-
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.behavior = self.F_F_A_Behavior("scalar classification ]-1,0,1[ ?")
+        self.behavior = F_F_A_Behavior("scalar classification ]-1,0,1[ ?")
 
     def test_source_codegen(self):
         source_code = self.behavior.graph.generate_source_code()
@@ -103,17 +81,17 @@ class TestFFABehavior:
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['Greater or equal to 0 ?'](observation)",
                 "        if edge_index == 0:",
-                "            edge_index_1 = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
+                "            edge_index_1 = self.feature_conditions['Greater or equal to -1 ?'](observation)",
                 "            if edge_index_1 == 0:",
                 "                return self.actions['action 0'](observation)",
                 "            if edge_index_1 == 1:",
                 "                return self.actions['action 1'](observation)",
                 "        if edge_index == 1:",
-                "            edge_index_1 = self.feature_conditions['Greater or equal to -1 ?'](observation)",
+                "            edge_index_1 = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
                 "            if edge_index_1 == 0:",
-                "                return self.actions['action 2'](observation)",
-                "            if edge_index_1 == 1:",
                 "                return self.actions['action 3'](observation)",
+                "            if edge_index_1 == 1:",
+                "                return self.actions['action 2'](observation)",
             )
         )
 
@@ -274,29 +252,7 @@ class TestFBBBehavior:
 
     @pytest.fixture(autouse=True)
     def setup(self):
-        feature_condition = IsDivisibleFeatureCondition(2)
-        actions = {0: Action(0), 1: Action(1)}
-        binary_1 = F_A_Behavior("Is x1 in binary ?", feature_condition, actions)
-
-        feature_condition = IsDivisibleFeatureCondition(2)
-        actions = {0: Action(1), 1: Action(0)}
-        binary_0 = F_A_Behavior("Is x0 in binary ?", feature_condition, actions)
-
-        feature_condition = IsDivisibleFeatureCondition(4)
-        actions = {0: Action(0), 1: binary_1}
-        binary_11 = F_A_Behavior("Is x11 in binary ?", feature_condition, actions)
-
-        feature_condition = IsDivisibleFeatureCondition(4)
-        actions = {0: binary_0, 1: binary_1}
-        binary_10_01 = F_A_Behavior(
-            "Is x01 or x10 in binary ?", feature_condition, actions
-        )
-
-        feature_condition = IsDivisibleFeatureCondition(8)
-        actions = {0: binary_11, 1: binary_10_01}
-        self.behavior = F_A_Behavior(
-            "Is sum (of last 3 binary) 2 ?", feature_condition, actions
-        )
+        self.behavior = build_binary_sum_behavior()
 
     def test_classes_in_codegen(self):
         source_code = self.behavior.graph.generate_source_code()
