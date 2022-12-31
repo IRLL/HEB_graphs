@@ -22,6 +22,8 @@ from hebg.metrics.complexity.complexities import learning_complexity
 from hebg.requirements_graph import build_requirement_graph
 from hebg.heb_graph import BEHAVIOR_SEPARATOR
 
+from tests.examples.behaviors.report_example import Behavior0, Behavior1, Behavior2
+
 
 class TestPaperBasicExamples:
     """Basic examples from the initial paper"""
@@ -30,59 +32,12 @@ class TestPaperBasicExamples:
     def setup(self):
         """Initialize variables."""
 
-        class Behavior0(Behavior):
-            """Behavior 0"""
-
-            def __init__(self) -> None:
-                super().__init__("behavior 0")
-
-            def build_graph(self) -> HEBGraph:
-                graph = HEBGraph(self)
-                feature = FeatureCondition("feature 0", complexity=1)
-                graph.add_edge(feature, Action(0, complexity=1), index=False)
-                graph.add_edge(feature, Action(1, complexity=1), index=True)
-                return graph
-
-        class Behavior1(Behavior):
-            """Behavior 1"""
-
-            def __init__(self) -> None:
-                super().__init__("behavior 1")
-
-            def build_graph(self) -> HEBGraph:
-                graph = HEBGraph(self)
-                feature_1 = FeatureCondition("feature 1", complexity=1)
-                feature_2 = FeatureCondition("feature 2", complexity=1)
-                graph.add_edge(feature_1, Behavior0(), index=False)
-                graph.add_edge(feature_1, feature_2, index=True)
-                graph.add_edge(feature_2, Action(0, complexity=1), index=False)
-                graph.add_edge(feature_2, Action(2, complexity=1), index=True)
-                return graph
-
-        class Behavior2(Behavior):
-            """Behavior 2"""
-
-            def __init__(self) -> None:
-                super().__init__("behavior 2")
-
-            def build_graph(self) -> HEBGraph:
-                graph = HEBGraph(self)
-                feature_3 = FeatureCondition("feature 3", complexity=1)
-                feature_4 = FeatureCondition("feature 4", complexity=1)
-                feature_5 = FeatureCondition("feature 5", complexity=1)
-                graph.add_edge(feature_3, feature_4, index=False)
-                graph.add_edge(feature_3, feature_5, index=True)
-                graph.add_edge(feature_4, Action(0, complexity=1), index=False)
-                graph.add_edge(feature_4, Behavior1(), index=True)
-                graph.add_edge(feature_5, Behavior1(), index=False)
-                graph.add_edge(feature_5, Behavior0(), index=True)
-                return graph
-
         self.actions: List[Action] = [Action(i, complexity=1) for i in range(3)]
         self.feature_conditions: List[FeatureCondition] = [
             FeatureCondition(f"feature {i}", complexity=1) for i in range(6)
         ]
         self.behaviors: List[Behavior] = [Behavior0(), Behavior1(), Behavior2()]
+
         self.expected_used_nodes_all: Dict[Behavior, Dict[Action, int]] = {
             self.behaviors[0]: {
                 self.actions[0]: 1,
