@@ -23,7 +23,7 @@ class TestABehavior:
         self.behavior = FundamentalBehavior(Action(42))
 
     def test_source_codegen(self):
-        source_code = self.behavior.graph.source_code
+        source_code = self.behavior.graph.generate_source_code()
         expected_source_code = "\n".join(
             (
                 "class Action42Behavior(GeneratedBehavior):",
@@ -47,7 +47,7 @@ class TestFABehavior:
         self.behavior = F_A_Behavior("Is above_zero", feature_condition, actions)
 
     def test_source_codegen(self):
-        source_code = self.behavior.graph.source_code
+        source_code = self.behavior.graph.generate_source_code()
         expected_source_code = "\n".join(
             (
                 "class IsAboveZero(GeneratedBehavior):",
@@ -96,7 +96,7 @@ class TestFFABehavior:
         self.behavior = self.F_F_A_Behavior("scalar classification ]-1,0,1[ ?")
 
     def test_source_codegen(self):
-        source_code = self.behavior.graph.source_code
+        source_code = self.behavior.graph.generate_source_code()
         expected_source_code = "\n".join(
             (
                 "class ScalarClassification101(GeneratedBehavior):",
@@ -139,7 +139,7 @@ class TestFBBehavior:
         self.behavior = F_A_Behavior("Is between 0 and 1 ?", feature_condition, actions)
 
     def test_source_codegen(self):
-        source_code = self.behavior.graph.source_code
+        source_code = self.behavior.graph.generate_source_code()
         expected_source_code = "\n".join(
             (
                 "class IsAboveZero(GeneratedBehavior):",
@@ -162,7 +162,7 @@ class TestFBBehavior:
         check.equal(source_code, expected_source_code)
 
     def test_unrolled_source_codegen(self):
-        source_code = self.behavior.graph.unrolled_graph.source_code
+        source_code = self.behavior.graph.unrolled_graph.generate_source_code()
         expected_source_code = "\n".join(
             (
                 "class IsBetween0And1(GeneratedBehavior):",
@@ -196,7 +196,7 @@ class TestFBBehaviorNameRef:
         self.behavior = F_A_Behavior("Is between 0 and 1 ?", feature_condition, actions)
 
     def test_source_codegen(self):
-        source_code = self.behavior.graph.source_code
+        source_code = self.behavior.graph.generate_source_code()
         expected_source_code = "\n".join(
             (
                 "# Require 'Is above_zero' behavior to be given.",
@@ -217,7 +217,7 @@ class TestFBBehaviorNameRef:
         actions = {0: Action(0), 1: Action(1)}
         sub_behavior = F_A_Behavior("Is above_zero", feature_condition, actions)
         self.behavior.graph.all_behaviors["Is above_zero"] = sub_behavior
-        source_code = self.behavior.graph.source_code
+        source_code = self.behavior.graph.generate_source_code()
         expected_source_code = "\n".join(
             (
                 "class IsAboveZero(GeneratedBehavior):",
@@ -240,7 +240,7 @@ class TestFBBehaviorNameRef:
         check.equal(source_code, expected_source_code)
 
     def test_unrolled_source_codegen(self):
-        source_code = self.behavior.graph.unrolled_graph.source_code
+        source_code = self.behavior.graph.unrolled_graph.generate_source_code()
         expected_source_code = "\n".join(
             (
                 "# Require 'Is above_zero' behavior to be given.",
@@ -298,49 +298,18 @@ class TestFBBBehavior:
             "Is sum (of last 3 binary) 2 ?", feature_condition, actions
         )
 
-    def test_source_codegen(self):
-        source_code = self.behavior.graph.source_code
-        expected_source_code = "\n".join(
-            (
-                "class IsX1InBinary(GeneratedBehavior):",
-                "    def __call__(self, observation):",
-                "        edge_index = self.feature_conditions['Is divisible by 2 ?'](observation)",
-                "        if edge_index == 0:",
-                "            return self.actions['action 0'](observation)",
-                "        if edge_index == 1:",
-                "            return self.actions['action 1'](observation)",
-                "class IsX0InBinary(GeneratedBehavior):",
-                "    def __call__(self, observation):",
-                "        edge_index = self.feature_conditions['Is divisible by 2 ?'](observation)",
-                "        if edge_index == 0:",
-                "            return self.actions['action 1'](observation)",
-                "        if edge_index == 1:",
-                "            return self.actions['action 0'](observation)",
-                "class IsX01OrX10InBinary(GeneratedBehavior):",
-                "    def __call__(self, observation):",
-                "        edge_index = self.feature_conditions['Is divisible by 4 ?'](observation)",
-                "        if edge_index == 0:",
-                "            return self.known_behaviors['Is x0 in binary ?'](observation)",
-                "        if edge_index == 1:",
-                "            return self.known_behaviors['Is x1 in binary ?'](observation)",
-                "class IsX11InBinary(GeneratedBehavior):",
-                "    def __call__(self, observation):",
-                "        edge_index = self.feature_conditions['Is divisible by 4 ?'](observation)",
-                "        if edge_index == 0:",
-                "            return self.actions['action 0'](observation)",
-                "        if edge_index == 1:",
-                "            return self.known_behaviors['Is x1 in binary ?'](observation)",
-                "class IsSumOfLast3Binary2(GeneratedBehavior):",
-                "    def __call__(self, observation):",
-                "        edge_index = self.feature_conditions['Is divisible by 8 ?'](observation)",
-                "        if edge_index == 0:",
-                "            return self.known_behaviors['Is x11 in binary ?'](observation)",
-                "        if edge_index == 1:",
-                "            return self.known_behaviors['Is x01 or x10 in binary ?'](observation)",
-            )
-        )
+    def test_classes_in_codegen(self):
+        source_code = self.behavior.graph.generate_source_code()
+        expected_classes = [
+            "IsX1InBinary",
+            "IsX0InBinary",
+            "IsX01OrX10InBinary",
+            "IsX11InBinary",
+            "IsSumOfLast3Binary2",
+        ]
 
-        check.equal(source_code, expected_source_code)
+        for expected_class in expected_classes:
+            check.equal(source_code.count(expected_class), 1)
 
     def test_exec_codegen(self):
         check_execution_for_values(
@@ -354,7 +323,7 @@ def check_execution_for_values(
     values: Tuple[Any],
     known_behaviors: Optional[dict] = None,
 ):
-    exec(behavior.graph.source_code)
+    exec(behavior.graph.generate_source_code())
     CodeGenPolicy = locals()[class_name]
 
     actions = {
