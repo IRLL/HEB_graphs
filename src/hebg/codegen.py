@@ -1,6 +1,6 @@
 from re import sub
 import inspect
-from typing import TYPE_CHECKING, List, Dict
+from typing import TYPE_CHECKING, Optional, List, Dict, Set
 
 from hebg.node import Node, Action, FeatureCondition
 from hebg.behavior import Behavior, BEHAVIOR_SEPARATOR
@@ -22,22 +22,36 @@ class GeneratedBehavior:
         self.known_behaviors = behaviors if actions is not None else {}
 
 
-def get_hebg_source(graph: "HEBGraph") -> str:
+def get_hebg_source(
+    graph: "HEBGraph",
+    existing_classes: Optional[Set[str]] = None,
+) -> str:
+    existing_classes = existing_classes if existing_classes is not None else set()
     behavior_codelines = []
     behavior_class_name = to_camel_case(graph.behavior.name.capitalize())
     behavior_codelines.append(f"class {behavior_class_name}(GeneratedBehavior):")
-    behavior_codelines += get_behavior_call_codelines(graph, behavior_codelines)
+    behavior_codelines += get_behavior_call_codelines(
+        graph, behavior_codelines, existing_classes
+    )
     source = "\n".join(behavior_codelines)
     return source
 
 
-def get_behavior_call_codelines(graph: "HEBGraph", behavior_codelines: List[str]):
+def get_behavior_call_codelines(
+    graph: "HEBGraph",
+    behavior_codelines: List[str],
+    existing_classes: Set[str],
+):
     indent = 1
     call_codelines = [indent_str(indent) + "def __call__(self, observation):"]
     indent += 1
     roots = get_roots(graph)
     return call_codelines + get_node_call_codelines(
-        graph, roots[0], indent, behavior_codelines
+        graph,
+        roots[0],
+        indent,
+        behavior_codelines=behavior_codelines,
+        existing_classes=existing_classes,
     )
 
 
@@ -46,6 +60,7 @@ def get_node_call_codelines(
     node: Node,
     indent: int,
     behavior_codelines: List[str],
+    existing_classes: Set[str] = None,
 ):
     node_codelines = []
     if isinstance(node, Action):
@@ -66,7 +81,7 @@ def get_node_call_codelines(
             successors = get_successors_with_index(graph, node, i)
             for succ_node in successors:
                 node_codelines += get_node_call_codelines(
-                    graph, succ_node, indent + 1, behavior_codelines
+                    graph, succ_node, indent + 1, behavior_codelines, existing_classes
                 )
         return node_codelines
     if isinstance(node, Behavior):
@@ -77,11 +92,14 @@ def get_node_call_codelines(
         sub_behavior = node
         if node.name in graph.all_behaviors:
             sub_behavior = graph.all_behaviors[node.name]
+        if node.name in existing_classes:
+            return node_codelines
         try:
-            sub_code = sub_behavior.graph.source_code
+            sub_code = sub_behavior.graph.generate_source_code(existing_classes)
         except NotImplementedError:
             sub_code = f"# Require '{node.name}' behavior to be given."
         behavior_codelines.insert(0, sub_code)
+        existing_classes.add(node.name)
         return node_codelines
     raise NotImplementedError
 
