@@ -3,17 +3,20 @@
 
 """ HEBGraph used nodes histograms computation. """
 
-from typing import Dict, List, Tuple
+from typing import TYPE_CHECKING, Dict, List, Tuple
 
 import numpy as np
 
-from hebg import HEBGraph, Node, Behavior
+
 from hebg.metrics.complexity.utils import update_sum_dict
+
+if TYPE_CHECKING:
+    from hebg import HEBGraph, Node, Behavior
 
 
 def nodes_histograms(
-    behaviors: List[Behavior], default_node_complexity: float = 1.0
-) -> Dict[Behavior, Dict[Node, int]]:
+    behaviors: List["Behavior"], default_node_complexity: float = 1.0
+) -> Dict["Behavior", Dict["Node", int]]:
     """Compute the used nodes histograms for a list of Behavior.
 
     Args:
@@ -33,8 +36,10 @@ def nodes_histograms(
 
 
 def nodes_histogram(
-    behavior: Behavior, default_node_complexity: float = 1.0, _behaviors_in_search=None
-) -> Tuple[Dict[Node, int], float]:
+    behavior: "Behavior",
+    default_node_complexity: float = 1.0,
+    _behaviors_in_search=None,
+) -> Tuple[Dict["Node", int], float]:
     """Compute the used nodes histogram for a Behavior.
 
     Args:
@@ -95,8 +100,8 @@ def nodes_histogram(
 
 
 def _successors_by_index(
-    graph: HEBGraph, node: Node, complexities: Dict[Node, float]
-) -> Tuple[Dict[int, List[Node]], Dict[int, List[float]]]:
+    graph: "HEBGraph", node: "Node", complexities: Dict["Node", float]
+) -> Tuple[Dict[int, List["Node"]], Dict[int, List[float]]]:
     """Group successors and their complexities by index.
 
     Args:
@@ -124,8 +129,8 @@ def _successors_by_index(
 
 
 def _get_node_histogram_complexity(
-    node: Node, behaviors_in_search=None, default_node_complexity: float = 1.0
-) -> Tuple[Dict[Node, int], float]:
+    node: "Node", behaviors_in_search=None, default_node_complexity: float = 1.0
+) -> Tuple[Dict["Node", int], float]:
     """Compute the used nodes histogram and complexity of a single node.
 
     Args:
