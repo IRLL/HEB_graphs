@@ -17,7 +17,7 @@ from networkx.classes.digraph import DiGraph
 from networkx import is_isomorphic
 
 from hebg import Action, Behavior, FeatureCondition, HEBGraph
-from hebg.metrics.complexity.histograms import nodes_histograms
+from hebg.metrics.histograms import nodes_histograms
 from hebg.metrics.complexity.complexities import learning_complexity
 from hebg.requirements_graph import build_requirement_graph
 from hebg.heb_graph import BEHAVIOR_SEPARATOR
