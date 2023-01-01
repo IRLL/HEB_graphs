@@ -3,7 +3,7 @@ from typing import Optional, Tuple, Any
 import pytest
 import pytest_check as check
 
-from hebg import HEBGraph, Action, FeatureCondition, Behavior
+from hebg import Action, FeatureCondition, Behavior
 from hebg.codegen import GeneratedBehavior
 
 from tests.examples.behaviors import (
@@ -104,7 +104,7 @@ class TestFFABehavior:
 
 
 class TestFBBehavior:
-    """(F-BA) Behaviors should only call the behavior like an action."""
+    """(F-BA) Behaviors should be unrolled by default if they appear only once and have a graph."""
 
     @pytest.fixture(autouse=True)
     def setup(self):
@@ -118,29 +118,6 @@ class TestFBBehavior:
 
     def test_source_codegen(self):
         source_code = self.behavior.graph.generate_source_code()
-        expected_source_code = "\n".join(
-            (
-                "class IsAboveZero(GeneratedBehavior):",
-                "    def __call__(self, observation):",
-                "        edge_index = self.feature_conditions['Greater or equal to 0 ?'](observation)",
-                "        if edge_index == 0:",
-                "            return self.actions['action 0'](observation)",
-                "        if edge_index == 1:",
-                "            return self.actions['action 1'](observation)",
-                "class IsBetween0And1(GeneratedBehavior):",
-                "    def __call__(self, observation):",
-                "        edge_index = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
-                "        if edge_index == 0:",
-                "            return self.actions['action 0'](observation)",
-                "        if edge_index == 1:",
-                "            return self.known_behaviors['Is above_zero'](observation)",
-            )
-        )
-
-        check.equal(source_code, expected_source_code)
-
-    def test_unrolled_source_codegen(self):
-        source_code = self.behavior.graph.unrolled_graph.generate_source_code()
         expected_source_code = "\n".join(
             (
                 "class IsBetween0And1(GeneratedBehavior):",
@@ -190,33 +167,6 @@ class TestFBBehaviorNameRef:
 
         check.equal(source_code, expected_source_code)
 
-    def test_source_codegen_in_all_behavior(self):
-        feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
-        actions = {0: Action(0), 1: Action(1)}
-        sub_behavior = F_A_Behavior("Is above_zero", feature_condition, actions)
-        self.behavior.graph.all_behaviors["Is above_zero"] = sub_behavior
-        source_code = self.behavior.graph.generate_source_code()
-        expected_source_code = "\n".join(
-            (
-                "class IsAboveZero(GeneratedBehavior):",
-                "    def __call__(self, observation):",
-                "        edge_index = self.feature_conditions['Greater or equal to 0 ?'](observation)",
-                "        if edge_index == 0:",
-                "            return self.actions['action 0'](observation)",
-                "        if edge_index == 1:",
-                "            return self.actions['action 1'](observation)",
-                "class IsBetween0And1(GeneratedBehavior):",
-                "    def __call__(self, observation):",
-                "        edge_index = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
-                "        if edge_index == 0:",
-                "            return self.actions['action 0'](observation)",
-                "        if edge_index == 1:",
-                "            return self.known_behaviors['Is above_zero'](observation)",
-            )
-        )
-
-        check.equal(source_code, expected_source_code)
-
     def test_unrolled_source_codegen(self):
         source_code = self.behavior.graph.unrolled_graph.generate_source_code()
         expected_source_code = "\n".join(
@@ -234,7 +184,35 @@ class TestFBBehaviorNameRef:
 
         check.equal(source_code, expected_source_code)
 
+    def test_source_codegen_in_all_behavior(self):
+        """When the behavior is found in 'all_behaviors'
+        it should used the found behavior for codegen."""
+        feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
+        actions = {0: Action(0), 1: Action(1)}
+        sub_behavior = F_A_Behavior("Is above_zero", feature_condition, actions)
+        self.behavior.graph.all_behaviors["Is above_zero"] = sub_behavior
+        source_code = self.behavior.graph.generate_source_code()
+        expected_source_code = "\n".join(
+            (
+                "class IsBetween0And1(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
+                "        if edge_index == 0:",
+                "            return self.actions['action 0'](observation)",
+                "        if edge_index == 1:",
+                "            edge_index_1 = self.feature_conditions['Greater or equal to 0 ?'](observation)",
+                "            if edge_index_1 == 0:",
+                "                return self.actions['action 0'](observation)",
+                "            if edge_index_1 == 1:",
+                "                return self.actions['action 1'](observation)",
+            )
+        )
+
+        check.equal(source_code, expected_source_code)
+
     def test_exec_codegen(self):
+        """When the behavior is found in 'all_behaviors'
+        it should used the found behavior for graph call."""
         feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
         actions = {0: Action(0), 1: Action(1)}
         sub_behavior = F_A_Behavior("Is above_zero", feature_condition, actions)
@@ -265,7 +243,7 @@ class TestFBBBehavior:
         ]
 
         for expected_class in expected_classes:
-            check.equal(source_code.count(expected_class), 1)
+            check.equal(source_code.count(f"class {expected_class}"), 1)
 
     def test_exec_codegen(self):
         check_execution_for_values(
