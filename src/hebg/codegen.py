@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Optional, List, Dict, Set
 from hebg.node import Node, Action, FeatureCondition
 from hebg.behavior import Behavior, BEHAVIOR_SEPARATOR
 from hebg.graph import get_roots, get_successors_with_index
+from hebg.metrics.histograms import nodes_histogram
 
 if TYPE_CHECKING:
     from hebg.heb_graph import HEBGraph
@@ -25,13 +26,20 @@ class GeneratedBehavior:
 def get_hebg_source(
     graph: "HEBGraph",
     existing_classes: Optional[Set[str]] = None,
+    behaviors_histogram=None,
 ) -> str:
-    existing_classes = existing_classes if existing_classes is not None else set()
+    if existing_classes is None:
+        existing_classes = set()
+    if behaviors_histogram is None:
+        behaviors_histogram, _ = nodes_histogram(graph.behavior)
     behavior_codelines = []
     behavior_class_name = to_camel_case(graph.behavior.name.capitalize())
     behavior_codelines.append(f"class {behavior_class_name}(GeneratedBehavior):")
     behavior_codelines += get_behavior_call_codelines(
-        graph, behavior_codelines, existing_classes
+        graph,
+        behavior_codelines=behavior_codelines,
+        existing_classes=existing_classes,
+        behaviors_histogram=behaviors_histogram,
     )
     source = "\n".join(behavior_codelines)
     return source
@@ -41,10 +49,14 @@ def get_behavior_call_codelines(
     graph: "HEBGraph",
     behavior_codelines: List[str],
     existing_classes: Set[str],
+    behaviors_histogram,
+    indent: str = 1,
+    with_overhead=True,
 ):
-    indent = 1
-    call_codelines = [indent_str(indent) + "def __call__(self, observation):"]
-    indent += 1
+    call_codelines = []
+    if with_overhead:
+        call_codelines.append(indent_str(indent) + "def __call__(self, observation):")
+        indent += 1
     roots = get_roots(graph)
     return call_codelines + get_node_call_codelines(
         graph,
@@ -52,6 +64,7 @@ def get_behavior_call_codelines(
         indent,
         behavior_codelines=behavior_codelines,
         existing_classes=existing_classes,
+        behaviors_histogram=behaviors_histogram,
     )
 
 
@@ -60,6 +73,7 @@ def get_node_call_codelines(
     node: Node,
     indent: int,
     behavior_codelines: List[str],
+    behaviors_histogram,
     existing_classes: Set[str] = None,
 ):
     node_codelines = []
@@ -81,25 +95,50 @@ def get_node_call_codelines(
             successors = get_successors_with_index(graph, node, i)
             for succ_node in successors:
                 node_codelines += get_node_call_codelines(
-                    graph, succ_node, indent + 1, behavior_codelines, existing_classes
+                    graph,
+                    succ_node,
+                    indent + 1,
+                    behavior_codelines=behavior_codelines,
+                    behaviors_histogram=behaviors_histogram,
+                    existing_classes=existing_classes,
                 )
         return node_codelines
     if isinstance(node, Behavior):
-        node_codelines.append(
+        sub_behavior = node
+        node_codelines = [
             indent_str(indent)
             + f"return self.known_behaviors['{node.name}'](observation)"
-        )
-        sub_behavior = node
+        ]
         if node.name in graph.all_behaviors:
             sub_behavior = graph.all_behaviors[node.name]
         if node.name in existing_classes:
             return node_codelines
+
         try:
-            sub_code = sub_behavior.graph.generate_source_code(existing_classes)
+            sub_graph = sub_behavior.graph
+
+            if node in behaviors_histogram and behaviors_histogram[node] == 1:
+                node_codelines = get_behavior_call_codelines(
+                    sub_graph,
+                    behavior_codelines=behavior_codelines,
+                    existing_classes=existing_classes,
+                    behaviors_histogram=behaviors_histogram,
+                    indent=indent,
+                    with_overhead=False,
+                )
+                return node_codelines
+
+            class_code = get_hebg_source(
+                sub_graph, existing_classes, behaviors_histogram
+            )
+            behavior_codelines.insert(0, class_code)
+            existing_classes.add(node.name)
+
         except NotImplementedError:
-            sub_code = f"# Require '{node.name}' behavior to be given."
-        behavior_codelines.insert(0, sub_code)
-        existing_classes.add(node.name)
+            behavior_codelines.insert(
+                0, f"# Require '{node.name}' behavior to be given."
+            )
+
         return node_codelines
     raise NotImplementedError
 
