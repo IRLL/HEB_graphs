@@ -237,13 +237,15 @@ class TestFBBBehavior:
         expected_classes = [
             "IsX1InBinary",
             "IsX0InBinary",
-            "IsX01OrX10InBinary",
-            "IsX11InBinary",
             "IsSumOfLast3Binary2",
         ]
 
         for expected_class in expected_classes:
-            check.equal(source_code.count(f"class {expected_class}"), 1)
+            check.equal(
+                source_code.count(f"class {expected_class}"),
+                1,
+                msg=f"Missing or duplicated class: {expected_class}",
+            )
 
     def test_exec_codegen(self):
         check_execution_for_values(
@@ -257,20 +259,25 @@ def check_execution_for_values(
     values: Tuple[Any],
     known_behaviors: Optional[dict] = None,
 ):
-    exec(behavior.graph.generate_source_code())
+    generated_source_code = behavior.graph.generate_source_code()
+    exec(generated_source_code)
     CodeGenPolicy = locals()[class_name]
 
-    actions = {
-        node.name: node for node in behavior.graph.nodes if isinstance(node, Action)
-    }
-    feature_conditions = {
-        node.name: node
-        for node in behavior.graph.nodes
-        if isinstance(node, FeatureCondition)
-    }
-    behaviors = {
-        node.name: node for node in behavior.graph.nodes if isinstance(node, Behavior)
-    }
+    actions, feature_conditions, behaviors = separate_nodes_by_type(behavior)
+
+    _behaviors = behaviors.copy()
+    while len(_behaviors) > 0:
+        _, sub_behavior = _behaviors.popitem()
+        if sub_behavior in behavior.graph.all_behaviors:
+            sub_behavior = behavior.graph.all_behaviors[sub_behavior]
+        sub_actions, sub_feature_conditions, sub_behaviors = separate_nodes_by_type(
+            sub_behavior
+        )
+        actions.update(sub_actions)
+        feature_conditions.update(sub_feature_conditions)
+        _behaviors.update(sub_behaviors)
+        behaviors.update(sub_behaviors)
+
     known_behaviors = known_behaviors if known_behaviors is not None else {}
     behaviors.update(known_behaviors)
 
@@ -282,3 +289,18 @@ def check_execution_for_values(
 
     for val in values:
         check.equal(behavior(val), behavior_rebuilt(val))
+
+
+def separate_nodes_by_type(behavior: Behavior):
+    actions = {
+        node.name: node for node in behavior.graph.nodes if isinstance(node, Action)
+    }
+    feature_conditions = {
+        node.name: node
+        for node in behavior.graph.nodes
+        if isinstance(node, FeatureCondition)
+    }
+    behaviors = {
+        node.name: node for node in behavior.graph.nodes if isinstance(node, Behavior)
+    }
+    return actions, feature_conditions, behaviors
