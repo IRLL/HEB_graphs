@@ -29,14 +29,14 @@ def nodes_histograms(
     """
     return {
         behavior: nodes_histogram(
-            behavior, default_node_complexity=default_node_complexity
+            behavior.graph, default_node_complexity=default_node_complexity
         )[0]
         for behavior in behaviors
     }
 
 
 def nodes_histogram(
-    behavior: "Behavior",
+    graph: "HEBGraph",
     default_node_complexity: float = 1.0,
     _behaviors_in_search=None,
 ) -> Tuple[Dict["Node", int], float]:
@@ -53,12 +53,11 @@ def nodes_histogram(
 
     """
 
-    graph = behavior.graph
     nodes_by_level = graph.graph["nodes_by_level"]
     depth = graph.graph["depth"]
 
     _behaviors_in_search = [] if _behaviors_in_search is None else _behaviors_in_search
-    _behaviors_in_search.append(str(behavior))
+    _behaviors_in_search.append(str(graph.behavior))
 
     complexities = {}
     nodes_used_nodes = {}

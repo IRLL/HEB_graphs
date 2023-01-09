@@ -31,7 +31,7 @@ def get_hebg_source(
     if existing_classes is None:
         existing_classes = set()
     if behaviors_histogram is None:
-        behaviors_histogram, _ = nodes_histogram(graph.behavior)
+        behaviors_histogram, _ = nodes_histogram(graph)
     behavior_codelines = []
     behavior_class_name = to_camel_case(graph.behavior.name.capitalize())
     behavior_codelines.append(f"class {behavior_class_name}(GeneratedBehavior):")
