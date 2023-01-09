@@ -210,6 +210,54 @@ class TestFBBehaviorNameRef:
         )
 
 
+class TestNestedBehaviorReuse:
+    """Behaviors should be rolled when they are used mutliple times in nested subgraphs."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        feature_condition = FeatureCondition(name="fc1")
+        actions = {0: Action(0), 1: Action(1)}
+        behavior_0 = F_A_Behavior("Behavior 0", feature_condition, actions)
+
+        feature_condition = FeatureCondition(name="fc2")
+        actions = {0: Action(0), 1: behavior_0}
+        behavior_1 = F_A_Behavior("Behavior 1", feature_condition, actions)
+
+        feature_condition = FeatureCondition(name="fc3")
+        actions = {0: behavior_0, 1: behavior_1}
+        self.behavior = F_A_Behavior("Behavior 2", feature_condition, actions)
+
+    def test_nested_reuse_codegen(self):
+        source_code = self.behavior.graph.generate_source_code()
+        expected_source_code = "\n".join(
+            (
+                "class Behavior0(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['fc1'](observation)",
+                "        if edge_index == 0:",
+                "            return self.actions['action 0'](observation)",
+                "        if edge_index == 1:",
+                "            return self.actions['action 1'](observation)",
+                "class Behavior1(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['fc2'](observation)",
+                "        if edge_index == 0:",
+                "            return self.actions['action 0'](observation)",
+                "        if edge_index == 1:",
+                "            return self.known_behaviors['Behavior0'](observation)",
+                "class Behavior2(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['fc3'](observation)",
+                "        if edge_index == 0:",
+                "            return self.known_behaviors['Behavior0'](observation)",
+                "        if edge_index == 1:",
+                "            return self.known_behaviors['Behavior1'](observation)",
+            )
+        )
+
+        check.equal(source_code, expected_source_code)
+
+
 class TestFBBBehavior:
     """(F-B-B) Behaviors should only be added once as a class."""
 
