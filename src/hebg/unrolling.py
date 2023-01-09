@@ -48,10 +48,8 @@ def unroll_graph(graph: "HEBGraph", add_prefix=True) -> "HEBGraph":
                     node_graph = node.graph.unrolled_graph
                 except NotImplementedError:
                     if str(node) in graph.all_behaviors:
-                        node_graph = unroll_graph(
-                            graph.all_behaviors[str(node)].graph,
-                            add_prefix=add_prefix,
-                        )
+                        noderef_graph = graph.all_behaviors[str(node)].graph
+                        node_graph = unroll_graph(noderef_graph, add_prefix=add_prefix)
                     else:
                         # If we don't find any reference, we keep it as is.
                         continue
