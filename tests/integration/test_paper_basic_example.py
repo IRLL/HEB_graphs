@@ -144,7 +144,7 @@ class TestPaperBasicExamples:
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['feature 1'](observation)",
                 "        if edge_index == 0:",
-                "            return self.known_behaviors['behavior 0'](observation)"
+                "            return self.known_behaviors['behavior 0'](observation)",
                 "        if edge_index == 1:",
                 "            edge_index_1 = self.feature_conditions['feature 2'](observation)",
                 "            if edge_index_1 == 0:",
