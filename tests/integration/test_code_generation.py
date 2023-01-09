@@ -268,8 +268,7 @@ class TestFBBBehavior:
     def test_classes_in_codegen(self):
         source_code = self.behavior.graph.generate_source_code()
         expected_classes = [
-            "IsX1InBinary",
-            "IsX0InBinary",
+            "IsX1InBinary",  # Only this one is used twice
             "IsSumOfLast3Binary2",
         ]
 
