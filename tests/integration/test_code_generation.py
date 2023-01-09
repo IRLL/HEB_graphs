@@ -224,7 +224,7 @@ class TestNestedBehaviorReuse:
         behavior_1 = F_A_Behavior("Behavior 1", feature_condition, actions)
 
         feature_condition = FeatureCondition(name="fc3")
-        actions = {0: behavior_0, 1: behavior_1}
+        actions = {0: behavior_1, 1: behavior_1}
         self.behavior = F_A_Behavior("Behavior 2", feature_condition, actions)
 
     def test_nested_reuse_codegen(self):
@@ -249,7 +249,7 @@ class TestNestedBehaviorReuse:
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['fc3'](observation)",
                 "        if edge_index == 0:",
-                "            return self.known_behaviors['Behavior0'](observation)",
+                "            return self.known_behaviors['Behavior1'](observation)",
                 "        if edge_index == 1:",
                 "            return self.known_behaviors['Behavior1'](observation)",
             )
@@ -277,7 +277,7 @@ class TestFBBBehavior:
             check.equal(
                 source_code.count(f"class {expected_class}"),
                 1,
-                msg=f"Missing or duplicated class: {expected_class}",
+                msg=f"Missing or duplicated class: {expected_class}\n{source_code}",
             )
 
     def test_exec_codegen(self):
