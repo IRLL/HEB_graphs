@@ -62,12 +62,12 @@ class TestPaperBasicExamples:
         }
 
     def test_histograms(self):
-        """should give expected nodes_histograms results."""
+        """should give expected histograms."""
         used_nodes_all = nodes_histograms(self.behaviors)
         check.equal(used_nodes_all, self.expected_used_nodes_all)
 
     def test_cumulated_histograms(self):
-        """should give expected nodes_histograms results."""
+        """should give expected cumulated histograms."""
         expected_cumulated_histograms = {
             self.behaviors[0]: {
                 self.actions[0]: 1,
