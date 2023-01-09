@@ -6,7 +6,7 @@ from hebg.node import Node, Action, FeatureCondition
 from hebg.behavior import Behavior
 from hebg.unrolling import BEHAVIOR_SEPARATOR
 from hebg.graph import get_roots, get_successors_with_index
-from hebg.metrics.histograms import nodes_histogram
+from hebg.metrics.histograms import cumulated_graph_histogram
 
 if TYPE_CHECKING:
     from hebg.heb_graph import HEBGraph
@@ -32,7 +32,7 @@ def get_hebg_source(
     if existing_classes is None:
         existing_classes = set()
     if behaviors_histogram is None:
-        behaviors_histogram, _ = nodes_histogram(graph)
+        behaviors_histogram = cumulated_graph_histogram(graph)
     behavior_codelines = []
     behavior_class_name = to_camel_case(graph.behavior.name.capitalize())
     behavior_codelines.append(f"class {behavior_class_name}(GeneratedBehavior):")
