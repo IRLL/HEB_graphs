@@ -17,7 +17,7 @@ from networkx.classes.digraph import DiGraph
 from networkx import is_isomorphic
 
 from hebg import Action, Behavior, FeatureCondition, HEBGraph
-from hebg.metrics.histograms import nodes_histograms
+from hebg.metrics.histograms import nodes_histograms, cumulated_graph_histogram
 from hebg.metrics.complexity.complexities import learning_complexity
 from hebg.requirements_graph import build_requirement_graph
 from hebg.unrolling import BEHAVIOR_SEPARATOR
@@ -61,10 +61,43 @@ class TestPaperBasicExamples:
             },
         }
 
-    def test_nodes_histograms(self):
+    def test_histograms(self):
         """should give expected nodes_histograms results."""
         used_nodes_all = nodes_histograms(self.behaviors)
         check.equal(used_nodes_all, self.expected_used_nodes_all)
+
+    def test_cumulated_histograms(self):
+        """should give expected nodes_histograms results."""
+        expected_cumulated_histograms = {
+            self.behaviors[0]: {
+                self.actions[0]: 1,
+                self.actions[1]: 1,
+                self.feature_conditions[0]: 1,
+            },
+            self.behaviors[1]: {
+                self.actions[0]: 2,
+                self.actions[2]: 1,
+                self.actions[1]: 1,
+                self.feature_conditions[0]: 1,
+                self.feature_conditions[1]: 1,
+                self.feature_conditions[2]: 1,
+            },
+            self.behaviors[2]: {
+                self.actions[0]: 6,
+                self.actions[1]: 3,
+                self.actions[2]: 2,
+                self.feature_conditions[0]: 3,
+                self.feature_conditions[1]: 2,
+                self.feature_conditions[2]: 2,
+                self.feature_conditions[3]: 1,
+                self.feature_conditions[4]: 1,
+                self.feature_conditions[5]: 1,
+            },
+        }
+        cumulated_histograms = {}
+        for behavior in self.behaviors:
+            cumulated_histograms[behavior] = cumulated_graph_histogram(behavior)
+        check.equal(cumulated_histograms, expected_cumulated_histograms)
 
     def test_learning_complexity(self):
         """should give expected learning_complexity."""
