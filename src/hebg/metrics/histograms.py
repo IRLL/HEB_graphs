@@ -4,14 +4,18 @@
 """ HEBGraph used nodes histograms computation. """
 
 from typing import TYPE_CHECKING, Dict, List, Tuple
+from warnings import warn
 
 import numpy as np
 
 
 from hebg.metrics.complexity.utils import update_sum_dict
+from hebg.behavior import Behavior
+from hebg.graph import compute_levels
+
 
 if TYPE_CHECKING:
-    from hebg import HEBGraph, Node, Behavior
+    from hebg import HEBGraph, Node
 
 
 def nodes_histograms(
@@ -27,12 +31,20 @@ def nodes_histograms(
         Dictionary of dictionaries of the number of use for each used node, for each behavior.
 
     """
-    return {
-        behavior: nodes_histogram(
-            behavior.graph, default_node_complexity=default_node_complexity
+    behaviors_histograms = {}
+    for behavior in behaviors:
+        try:
+            graph = behavior.graph
+        except NotImplementedError:
+            warn(
+                f"Could not load graph for behavior: {behavior}."
+                "Skipping histogram computation."
+            )
+            continue
+        behaviors_histograms[behavior] = nodes_histogram(
+            graph, default_node_complexity=default_node_complexity
         )[0]
-        for behavior in behaviors
-    }
+    return behaviors_histograms
 
 
 def nodes_histogram(
@@ -52,7 +64,80 @@ def nodes_histogram(
         complexity.
 
     """
+    nodes_by_level = graph.graph["nodes_by_level"]
+    nodes_used_nodes, complexities = nodes_sub_histograms(
+        graph, default_node_complexity, _behaviors_in_search
+    )
+    root = nodes_by_level[0][0]
+    return nodes_used_nodes[root], complexities[root]
 
+
+def cumulated_graph_histogram(graph: "HEBGraph", default_node_complexity: float = 1.0):
+    compute_levels(graph)
+    histogram, _ = nodes_histogram(graph, default_node_complexity)
+    behaviors_histograms = {graph.behavior: histogram}
+    sub_behaviors = [
+        node
+        for node in histogram
+        if isinstance(node, Behavior) and node != graph.behavior
+    ]
+    for i, behavior in enumerate(sub_behaviors):
+        if behavior.name in graph.all_behaviors:
+            sub_behaviors[i] = graph.all_behaviors[behavior.name]
+    behaviors_histograms.update(
+        nodes_histograms(sub_behaviors, default_node_complexity)
+    )
+
+    behavior_iteration = {}
+
+    done = False
+    while not done:
+        behaviors = [node for node in histogram if isinstance(node, Behavior)]
+        for behavior in behaviors:
+            already_iterated = (
+                behavior_iteration[behavior] if behavior in behavior_iteration else 0
+            )
+            n_used = max(0, histogram[behavior] - already_iterated)
+            if behavior not in behaviors_histograms:
+                try:
+                    behavior_graph = behavior.graph
+                except NotImplementedError:
+                    if behavior.name in graph.all_behaviors:
+                        behavior_graph = graph.all_behaviors[behavior.name].graph
+                    else:
+                        if behavior not in behavior_iteration:
+                            behavior_iteration[behavior] = 0
+                        behavior_iteration[behavior] += 1
+                        continue
+                sub_histogram, _ = nodes_histogram(
+                    behavior_graph, default_node_complexity
+                )
+                behaviors_histograms[behavior] = sub_histogram
+            for _ in range(n_used):
+                if behavior in behaviors_histograms[behavior]:
+                    behaviors_histograms[behavior].pop(behavior)
+                histogram = update_sum_dict(histogram, behaviors_histograms[behavior])
+                if behavior not in behavior_iteration:
+                    behavior_iteration[behavior] = 0
+                behavior_iteration[behavior] += 1
+        # Recompute behaviors because some might have been added
+        behaviors = [node for node in histogram if isinstance(node, Behavior)]
+        if any(behavior not in behavior_iteration for behavior in behaviors):
+            done = False
+        else:
+            done = all(
+                behavior_iteration[behavior] == histogram[behavior]
+                for behavior in behaviors
+            )
+
+    return histogram
+
+
+def nodes_sub_histograms(
+    graph: "HEBGraph",
+    default_node_complexity: float = 1.0,
+    _behaviors_in_search=None,
+):
     nodes_by_level = graph.graph["nodes_by_level"]
     depth = graph.graph["depth"]
 
@@ -93,9 +178,7 @@ def nodes_histogram(
 
             complexities[node] = node_complexity
             nodes_used_nodes[node] = node_used_nodes
-
-    root = nodes_by_level[0][0]
-    return nodes_used_nodes[root], complexities[root]
+    return nodes_used_nodes, complexities
 
 
 def _successors_by_index(
