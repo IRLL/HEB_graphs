@@ -150,24 +150,8 @@ class TestFBBehaviorNameRef:
         actions = {0: Action(0), 1: Behavior("Is above_zero")}
         self.behavior = F_A_Behavior("Is between 0 and 1 ?", feature_condition, actions)
 
-    def test_source_codegen(self):
-        source_code = self.behavior.graph.generate_source_code()
-        expected_source_code = "\n".join(
-            (
-                "# Require 'Is above_zero' behavior to be given.",
-                "class IsBetween0And1(GeneratedBehavior):",
-                "    def __call__(self, observation):",
-                "        edge_index = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
-                "        if edge_index == 0:",
-                "            return self.actions['action 0'](observation)",
-                "        if edge_index == 1:",
-                "            return self.known_behaviors['Is above_zero'](observation)",
-            )
-        )
-
-        check.equal(source_code, expected_source_code)
-
-    def test_unrolled_source_codegen(self):
+    def test_source_codegen_by_ref(self):
+        unrolled_source_code = self.behavior.graph.generate_source_code()
         source_code = self.behavior.graph.unrolled_graph.generate_source_code()
         expected_source_code = "\n".join(
             (
@@ -183,6 +167,7 @@ class TestFBBehaviorNameRef:
         )
 
         check.equal(source_code, expected_source_code)
+        check.equal(unrolled_source_code, expected_source_code)
 
     def test_source_codegen_in_all_behavior(self):
         """When the behavior is found in 'all_behaviors'
