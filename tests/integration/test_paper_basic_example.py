@@ -93,6 +93,47 @@ class TestPaperBasicExamples:
             check.less(diff_complexity, 1e-14)
             check.less(diff_saved, 1e-14)
 
+    def test_codegen(self):
+        expected_code = "\n".join(
+            (
+                "class Behavior0(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['feature 0'](observation)",
+                "        if edge_index == 0:",
+                "            return self.actions['action 0'](observation)",
+                "        if edge_index == 1:",
+                "            return self.actions['action 1'](observation)",
+                "class Behavior1(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['feature 1'](observation)",
+                "        if edge_index == 0:",
+                "            return self.known_behaviors['behavior 0'](observation)"
+                "        if edge_index == 1:",
+                "            edge_index_1 = self.feature_conditions['feature 2'](observation)",
+                "            if edge_index_1 == 0:",
+                "                return self.actions['action 0'](observation)",
+                "            if edge_index_1 == 1:",
+                "                return self.actions['action 2'](observation)",
+                "class Behavior2(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['feature 3'](observation)",
+                "        if edge_index == 0:",
+                "            edge_index_1 = self.feature_conditions['feature 4'](observation)",
+                "            if edge_index_1 == 0:",
+                "                return self.actions['action 0'](observation)",
+                "            if edge_index_1 == 1:",
+                "                return self.known_behaviors['behavior 1'](observation)",
+                "        if edge_index == 1:",
+                "            edge_index_1 = self.feature_conditions['feature 5'](observation)",
+                "            if edge_index_1 == 0:",
+                "                return self.known_behaviors['behavior 1'](observation)",
+                "            if edge_index_1 == 1:",
+                "                return self.known_behaviors['behavior 0'](observation)",
+            )
+        )
+        generated_code = self.behaviors[2].graph.generate_source_code()
+        check.equal(generated_code, expected_code)
+
     def test_requirement_graph_edges(self):
         """should give expected requirement_graph edges."""
         expected_requirement_graph = DiGraph()
