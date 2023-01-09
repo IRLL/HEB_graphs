@@ -13,8 +13,6 @@ from hebg.node import Node
 if TYPE_CHECKING:
     from hebg.heb_graph import HEBGraph
 
-BEHAVIOR_SEPARATOR = "\n>"
-
 
 class Behavior(Node):
 

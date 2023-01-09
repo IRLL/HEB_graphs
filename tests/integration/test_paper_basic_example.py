@@ -20,7 +20,7 @@ from hebg import Action, Behavior, FeatureCondition, HEBGraph
 from hebg.metrics.histograms import nodes_histograms
 from hebg.metrics.complexity.complexities import learning_complexity
 from hebg.requirements_graph import build_requirement_graph
-from hebg.heb_graph import BEHAVIOR_SEPARATOR
+from hebg.unrolling import BEHAVIOR_SEPARATOR
 
 from tests.examples.behaviors.report_example import Behavior0, Behavior1, Behavior2
 

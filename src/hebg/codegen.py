@@ -3,7 +3,8 @@ import inspect
 from typing import TYPE_CHECKING, Optional, List, Dict, Set
 
 from hebg.node import Node, Action, FeatureCondition
-from hebg.behavior import Behavior, BEHAVIOR_SEPARATOR
+from hebg.behavior import Behavior
+from hebg.unrolling import BEHAVIOR_SEPARATOR
 from hebg.graph import get_roots, get_successors_with_index
 from hebg.metrics.histograms import nodes_histogram
 
