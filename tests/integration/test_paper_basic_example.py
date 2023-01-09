@@ -81,6 +81,7 @@ class TestPaperBasicExamples:
                 self.feature_conditions[0]: 1,
                 self.feature_conditions[1]: 1,
                 self.feature_conditions[2]: 1,
+                self.behaviors[0]: 1,
             },
             self.behaviors[2]: {
                 self.actions[0]: 6,
@@ -92,12 +93,15 @@ class TestPaperBasicExamples:
                 self.feature_conditions[3]: 1,
                 self.feature_conditions[4]: 1,
                 self.feature_conditions[5]: 1,
+                self.behaviors[0]: 3,
+                self.behaviors[1]: 2,
             },
         }
-        cumulated_histograms = {}
         for behavior in self.behaviors:
-            cumulated_histograms[behavior] = cumulated_graph_histogram(behavior)
-        check.equal(cumulated_histograms, expected_cumulated_histograms)
+            check.equal(
+                cumulated_graph_histogram(behavior.graph),
+                expected_cumulated_histograms[behavior],
+            )
 
     def test_learning_complexity(self):
         """should give expected learning_complexity."""
