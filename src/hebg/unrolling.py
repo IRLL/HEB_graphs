@@ -1,3 +1,9 @@
+"""Module to unroll HEBGraph.
+
+Unrolling means expanding each sub-behavior node as it's own graph in the global HEBGraph.
+Behaviors that do not have a graph (Unexplainable behaviors) should stay as is in the graph.
+
+"""
 from copy import copy
 from typing import TYPE_CHECKING, Dict
 
@@ -29,10 +35,10 @@ def unroll_graph(graph: "HEBGraph", add_prefix=True) -> "HEBGraph":
         if prefix is None:
             return graph
 
-        def rename(x: Node):
-            x_new = copy(x)
-            x_new.name = prefix + x.name
-            return x_new
+        def rename(node: Node):
+            new_node = copy(node)
+            new_node.name = prefix + node.name
+            return new_node
 
         return relabel_nodes(graph, rename, copy=False)
 
@@ -102,33 +108,37 @@ def group_behaviors_points(
     return points_grouped_by_behavior
 
 
-def compose_heb_graphs(G: "HEBGraph", H: "HEBGraph"):
-    """Returns a new graph of G composed with H.
+def compose_heb_graphs(graph_of_reference: "HEBGraph", other_graph: "HEBGraph"):
+    """Returns a new_graph of graph_of_reference composed with other_graph.
 
     Composition is the simple union of the node sets and edge sets.
-    The node sets of G and H do not need to be disjoint.
+    The node sets of the graph_of_reference and other_graph do not need to be disjoint.
 
     Args:
-        G, H : HEBGraphs to compose.
+        graph_of_reference, other_graph : HEBGraphs to compose.
 
     Returns:
-        R: A new HEBGraph with the same type as G.
+        A new HEBGraph with the same type as graph_of_reference.
 
     """
-    R = G.__class__(G.behavior, all_behaviors=G.all_behaviors, any_mode=G.any_mode)
+    new_graph = graph_of_reference.__class__(
+        graph_of_reference.behavior,
+        all_behaviors=graph_of_reference.all_behaviors,
+        any_mode=graph_of_reference.any_mode,
+    )
     # add graph attributes, H attributes take precedent over G attributes
-    R.graph.update(G.graph)
-    R.graph.update(H.graph)
+    new_graph.graph.update(graph_of_reference.graph)
+    new_graph.graph.update(other_graph.graph)
 
-    R.add_nodes_from(G.nodes(data=True))
-    R.add_nodes_from(H.nodes(data=True))
+    new_graph.add_nodes_from(graph_of_reference.nodes(data=True))
+    new_graph.add_nodes_from(other_graph.nodes(data=True))
 
-    if G.is_multigraph():
-        R.add_edges_from(G.edges(keys=True, data=True))
+    if graph_of_reference.is_multigraph():
+        new_graph.add_edges_from(graph_of_reference.edges(keys=True, data=True))
     else:
-        R.add_edges_from(G.edges(data=True))
-    if H.is_multigraph():
-        R.add_edges_from(H.edges(keys=True, data=True))
+        new_graph.add_edges_from(graph_of_reference.edges(data=True))
+    if other_graph.is_multigraph():
+        new_graph.add_edges_from(other_graph.edges(keys=True, data=True))
     else:
-        R.add_edges_from(H.edges(data=True))
-    return R
+        new_graph.add_edges_from(other_graph.edges(data=True))
+    return new_graph
