@@ -1,3 +1,5 @@
+"""Module for code generation from HEBGraph."""
+
 from re import sub
 import inspect
 from typing import TYPE_CHECKING, Optional, List, Dict, Set
@@ -13,6 +15,10 @@ if TYPE_CHECKING:
 
 
 class GeneratedBehavior:
+    """Base class for generated behaviors.
+
+    Used to reduce the overhead of abstracting a behavior."""
+
     def __init__(
         self,
         actions: Dict[str, "Action"] = None,
@@ -27,8 +33,20 @@ class GeneratedBehavior:
 def get_hebg_source(
     graph: "HEBGraph",
     existing_classes: Optional[Set[str]] = None,
-    behaviors_histogram=None,
+    behaviors_histogram: Dict["Behavior", Dict["Node", int]] = None,
 ) -> str:
+    """Builds the generated source code corresponding to the HEBGraph behavior.
+
+    Args:
+        graph (HEBGraph): HEBGraph to generate the source code from.
+        existing_classes (Optional[Set[str]], optional): Set of existing class names.
+            This is used to avoid duplicates. Defaults to None.
+        behaviors_histogram (Dict[Behavior, Dict[Node, int]], optional): Histograms of behaviors.
+            Used to build abstractions only if they are worth it. Defaults to None.
+
+    Returns:
+        str: Python source code corresponding the behavior of the HEBGraph.
+    """
     if existing_classes is None:
         existing_classes = set()
     if behaviors_histogram is None:
@@ -159,6 +177,7 @@ def get_instanciation(node: Node) -> str:
                 attrs[attr_name] = attr
         attrs_str = ", ".join((f"{name}={val}" for name, val in attrs.items()))
         return f"{node.__class__.__name__}({attrs_str})"
+    raise TypeError(f"Unsupported node type: {type(node)} of {node}")
 
 
 def indent_str(indent_level: int, indent_amount: int = 4):
