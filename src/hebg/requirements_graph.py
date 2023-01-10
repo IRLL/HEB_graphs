@@ -11,6 +11,7 @@ from typing import List
 
 from networkx import DiGraph, descendants
 
+from hebg.heb_graph import HEBGraph
 from hebg.graph import compute_levels
 from hebg.node import EmptyNode
 from hebg.behavior import Behavior
@@ -39,51 +40,56 @@ def build_requirement_graph(behaviors: List[Behavior]) -> DiGraph:
 
     requirement_degree = {}
 
-    for behavior, graph in zip(behaviors, heb_graphs):
-        requirement_degree[behavior] = {}
-        for node in graph.nodes():
-            if isinstance(node, EmptyNode):
-                successor = list(graph.successors(node))[0]
-                empty_index = graph.edges[node, successor]["index"]
-                alternatives = graph.predecessors(successor)
-                alternatives = [
-                    alt_node
-                    for alt_node in alternatives
-                    if graph.edges[alt_node, successor]["index"] == empty_index
-                ]
-                cut_graph = deepcopy(graph)
-                for alternative in alternatives:
-                    cut_graph.remove_edge(alternative, successor)
-                for alternative in alternatives:
-                    following_behaviors = [
-                        following_node
-                        for following_node in descendants(cut_graph, alternative)
-                        if isinstance(following_node, Behavior)
-                    ]
-                    for following_behavior in following_behaviors:
-                        try:
-                            requirement_degree[behavior][following_behavior] -= 1
-                        except KeyError:
-                            requirement_degree[behavior][following_behavior] = -1
+    def cut_alternatives_to_empty_node(graph: HEBGraph, node: EmptyNode):
+        successor = list(graph.successors(node))[0]
+        empty_index = graph.edges[node, successor]["index"]
+        alternatives = graph.predecessors(successor)
+        alternatives = [
+            alt_node
+            for alt_node in alternatives
+            if graph.edges[alt_node, successor]["index"] == empty_index
+        ]
+        cut_graph = deepcopy(graph)
+        for alternative in alternatives:
+            cut_graph.remove_edge(alternative, successor)
+        for alternative in alternatives:
+            following_behaviors = [
+                following_node
+                for following_node in descendants(cut_graph, alternative)
+                if isinstance(following_node, Behavior)
+            ]
+            for following_behavior in following_behaviors:
+                if following_behavior not in requirement_degree[graph.behavior]:
+                    requirement_degree[graph.behavior][following_behavior] = 0
+                requirement_degree[graph.behavior][following_behavior] -= 1
 
-    for behavior, graph in zip(behaviors, heb_graphs):
+    for graph in heb_graphs:
+        requirement_degree[graph.behavior] = {}
         for node in graph.nodes():
-            if isinstance(node, Behavior):
-                try:
-                    requirement_degree[behavior][node] += 1
-                except KeyError:
-                    requirement_degree[behavior][node] = 1
+            if not isinstance(node, EmptyNode):
+                continue
+            cut_alternatives_to_empty_node(graph, node)
+
+    for graph in heb_graphs:
+        for node in graph.nodes():
+            if not isinstance(node, Behavior):
+                continue
+            if node not in requirement_degree[graph.behavior]:
+                requirement_degree[graph.behavior][node] = 0
+            requirement_degree[graph.behavior][node] += 1
 
     index = 0
-    for behavior, graph in zip(behaviors, heb_graphs):
+    for graph in heb_graphs:
         for node in graph.nodes():
-            if isinstance(node, Behavior) and requirement_degree[behavior][node] > 0:
-                if node not in requirements_graph.nodes():
-                    requirements_graph.add_node(node)
-                index = len(list(requirements_graph.successors(node))) + 1
-                requirements_graph.add_edge(node, behavior, index=index)
+            if (
+                not isinstance(node, Behavior)
+                or requirement_degree[graph.behavior][node] == 0
+            ):
+                continue
+            if node not in requirements_graph.nodes():
+                requirements_graph.add_node(node)
+            index = len(list(requirements_graph.successors(node))) + 1
+            requirements_graph.add_edge(node, graph.behavior, index=index)
 
-    for edge in requirements_graph.edges():
-        print(edge)
     compute_levels(requirements_graph)
     return requirements_graph
