@@ -48,8 +48,8 @@ def leveled_layout_energy(
             pos[node] = [level, positions[i]]
 
     def energy(pos, nodes_strenght=1, edges_strenght=2):
-        def dist(x, y):
-            x_arr, y_arr = np.array(x), np.array(y)
+        def dist(start, stop):
+            x_arr, y_arr = np.array(start), np.array(stop)
             return np.linalg.norm(x_arr - y_arr)
 
         energy = 0
@@ -86,10 +86,10 @@ def leveled_layout_energy(
         choosen_node = nodes_list[choosen_node_id]
         choosen_level = graph.nodes(data="level")[choosen_node]
         new_pos = [pos_copy[choosen_node][0], np.random.choice(spacing)]
-        for n in nodes_by_level[choosen_level]:
-            if n != choosen_node and np.all(np.isclose(new_pos, pos_copy[n])):
-                pos_copy[choosen_node], pos_copy[n] = (
-                    pos_copy[n],
+        for node in nodes_by_level[choosen_level]:
+            if node != choosen_node and np.all(np.isclose(new_pos, pos_copy[node])):
+                pos_copy[choosen_node], pos_copy[node] = (
+                    pos_copy[node],
                     pos_copy[choosen_node],
                 )
                 return pos_copy

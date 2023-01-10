@@ -33,23 +33,25 @@ def simulated_annealing(
     def prob_keep(temperature, delta_e):
         return min(1, np.exp(delta_e / temperature))
 
-    x = initial
-    energy_pos = energy(x)
+    state = initial
+    energy_pos = energy(state)
     iters_without_new = 0
     for k in range(max_iterations):
-        new_x = neighbor(x)
-        new_e = energy(new_x)
+        new_state = neighbor(state)
+        new_energy = energy(new_state)
         temperature = initial_temperature / (k + 1)
         iters_without_new += 1
-        prob = prob_keep(temperature, energy_pos - new_e)
+        prob = prob_keep(temperature, energy_pos - new_energy)
         if np.random.random() < prob:
             if verbose == 1:
-                print(f"{k}\t({prob:.0%})\t{energy_pos:.2f}->{new_e:.2f}", end="\r")
-            x, energy_pos = new_x, new_e
+                print(
+                    f"{k}\t({prob:.0%})\t{energy_pos:.2f}->{new_energy:.2f}", end="\r"
+                )
+            state, energy_pos = new_state, new_energy
             iters_without_new = 0
 
         if iters_without_new >= max_iters_without_new:
             break
     if verbose == 1:
         print()
-    return x
+    return state
