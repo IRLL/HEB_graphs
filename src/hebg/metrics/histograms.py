@@ -12,7 +12,7 @@ import numpy as np
 from hebg.metrics.complexity.utils import update_sum_dict
 from hebg.behavior import Behavior
 from hebg.graph import compute_levels
-
+from hebg.node import Action, FeatureCondition
 
 if TYPE_CHECKING:
     from hebg import HEBGraph, Node
@@ -146,6 +146,10 @@ def nodes_sub_histograms(
 
     complexities = {}
     nodes_used_nodes = {}
+    for node in graph.nodes:
+        if isinstance(node, (Action, FeatureCondition)):
+            complexities[node] = node.complexity
+            nodes_used_nodes[node] = {node: 1}
 
     for level in range(depth + 1)[::-1]:
         for node in nodes_by_level[level]:
@@ -201,12 +205,12 @@ def _successors_by_index(
     for succ in graph.successors(node):
         succ_complexity = complexities[succ]
         index = int(graph.edges[node, succ]["index"])
-        try:
-            complexities_by_index[index].append(succ_complexity)
-            succ_by_index[index].append(succ)
-        except KeyError:
-            complexities_by_index[index] = [succ_complexity]
-            succ_by_index[index] = [succ]
+        if index not in complexities_by_index:
+            complexities_by_index[index] = []
+        if index not in succ_by_index:
+            succ_by_index[index] = []
+        complexities_by_index[index].append(succ_complexity)
+        succ_by_index[index].append(succ)
     return succ_by_index, complexities_by_index
 
 
