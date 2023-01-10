@@ -11,7 +11,6 @@ import numpy as np
 
 from hebg.metrics.complexity.utils import update_sum_dict
 from hebg.behavior import Behavior
-from hebg.graph import compute_levels
 from hebg.node import Action, FeatureCondition
 
 if TYPE_CHECKING:
@@ -19,7 +18,8 @@ if TYPE_CHECKING:
 
 
 def nodes_histograms(
-    behaviors: List["Behavior"], default_node_complexity: float = 1.0
+    behaviors: List["Behavior"],
+    default_node_complexity: float = 1.0,
 ) -> Dict["Behavior", Dict["Node", int]]:
     """Compute the used nodes histograms for a list of Behavior.
 
@@ -29,9 +29,27 @@ def nodes_histograms(
 
     Return:
         Dictionary of dictionaries of the number of use for each used node, for each behavior.
-
     """
-    behaviors_histograms = {}
+    return behaviors_histograms_and_complexites(behaviors, default_node_complexity)[0]
+
+
+def behaviors_histograms_and_complexites(
+    behaviors: List["Behavior"],
+    default_node_complexity: float = 1.0,
+) -> Tuple[Dict["Behavior", Dict["Node", int]], Dict["Behavior", float]]:
+    """Compute the used nodes histograms for a list of Behavior.
+
+    Args:
+        behaviors: List of Behavior to compute histograms of.
+        default_node_complexity: Default node complexity if Node has no attribute complexity.
+
+    Return:
+        Tuple of two elements:
+        - Dictionary of dictionaries of the number of use for each used node, for each behavior.
+        - Dictionary computed complexity for each behavior.
+    """
+    behaviors_histograms: Dict["Behavior", Dict["Node", int]] = {}
+    behaviors_complexities: Dict["Behavior", float] = {}
     for behavior in behaviors:
         try:
             graph = behavior.graph
@@ -41,10 +59,13 @@ def nodes_histograms(
                 "Skipping histogram computation."
             )
             continue
-        behaviors_histograms[behavior] = nodes_histogram(
-            graph, default_node_complexity=default_node_complexity
-        )[0]
-    return behaviors_histograms
+        histogram, complexity = nodes_histogram(
+            graph,
+            default_node_complexity=default_node_complexity,
+        )
+        behaviors_histograms[behavior] = histogram
+        behaviors_complexities[behavior] = complexity
+    return behaviors_histograms, behaviors_complexities
 
 
 def nodes_histogram(
@@ -64,16 +85,14 @@ def nodes_histogram(
         complexity.
 
     """
-    nodes_by_level = graph.graph["nodes_by_level"]
     nodes_used_nodes, complexities = nodes_sub_histograms(
         graph, default_node_complexity, _behaviors_in_search
     )
-    root = nodes_by_level[0][0]
+    root = graph.graph["nodes_by_level"][0][0]  # Assumes a single root
     return nodes_used_nodes[root], complexities[root]
 
 
 def cumulated_graph_histogram(graph: "HEBGraph", default_node_complexity: float = 1.0):
-    compute_levels(graph)
     histogram, _ = nodes_histogram(graph, default_node_complexity)
     behaviors_histograms = {graph.behavior: histogram}
     sub_behaviors = [
@@ -84,6 +103,7 @@ def cumulated_graph_histogram(graph: "HEBGraph", default_node_complexity: float 
     for i, behavior in enumerate(sub_behaviors):
         if behavior.name in graph.all_behaviors:
             sub_behaviors[i] = graph.all_behaviors[behavior.name]
+
     behaviors_histograms.update(
         nodes_histograms(sub_behaviors, default_node_complexity)
     )

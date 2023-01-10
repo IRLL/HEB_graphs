@@ -38,7 +38,7 @@ class TestPaperBasicExamples:
         ]
         self.behaviors: List[Behavior] = [Behavior0(), Behavior1(), Behavior2()]
 
-        self.expected_used_nodes_all: Dict[Behavior, Dict[Action, int]] = {
+        self.expected_behavior_histograms: Dict[Behavior, Dict[Action, int]] = {
             self.behaviors[0]: {
                 self.actions[0]: 1,
                 self.actions[1]: 1,
@@ -63,8 +63,8 @@ class TestPaperBasicExamples:
 
     def test_histograms(self):
         """should give expected histograms."""
-        used_nodes_all = nodes_histograms(self.behaviors)
-        check.equal(used_nodes_all, self.expected_used_nodes_all)
+        behavior_histograms = nodes_histograms(self.behaviors)
+        check.equal(behavior_histograms, self.expected_behavior_histograms)
 
     def test_cumulated_histograms(self):
         """should give expected cumulated histograms."""
@@ -118,7 +118,7 @@ class TestPaperBasicExamples:
 
         for behavior in self.behaviors:
             c_learning, saved_complexity = learning_complexity(
-                behavior, used_nodes_all=self.expected_used_nodes_all
+                behavior, used_nodes_all=self.expected_behavior_histograms
             )
 
             print(
