@@ -197,6 +197,21 @@ def nodes_histograms_and_complexities(
     default_node_complexity: float = 1.0,
     _behaviors_in_search=None,
 ):
+    """Compute the number of times each node of the graph is present
+    while computing complexities to find the least complex path.
+
+    Args:
+        graph (HEBGraph): HEBGraph to compute the histogram of.
+        default_node_complexity (float, optional): Default node complexity if undefined.
+            Defaults to 1.0.
+        _behaviors_in_search (List[Behavior], optional): List of behaviors already in reccursive
+            pile to avoid infinite cycle. Defaults to None.
+
+    Returns:
+        Tuple[Dict[Node, Dict[Node, int]], Dict[Node, float]]: Tuple of two values:
+        - Dictionary of subnode used for each node. (nodes_used_nodes)
+        - Dictionary of computed smallest path complexities for each node. (complexities)
+    """
     nodes_by_level = graph.graph["nodes_by_level"]
     depth = graph.graph["depth"]
 
