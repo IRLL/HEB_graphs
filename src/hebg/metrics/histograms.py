@@ -90,7 +90,18 @@ def hebgraph_histogram_and_complexity(
     return nodes_histograms[root], nodes_complexities[root]
 
 
-def cumulated_graph_histogram(graph: "HEBGraph", default_node_complexity: float = 1.0):
+def cumulated_hebgraph_histogram(
+    graph: "HEBGraph", default_node_complexity: float = 1.0
+) -> Dict["Node", int]:
+    """Unroll the hebgraph histogram by accumulating sub-behaviors histograms.
+
+    Args:
+        graph (HEBGraph): The HEBgraph to compute the cumulated histogram of.
+        default_node_complexity (float, optional): Default node complexity. Defaults to 1.0.
+
+    Returns:
+        Dict[Node, int]: Cumulated histogram of used nodes with unrolled behaviors.
+    """
     histogram, _ = hebgraph_histogram_and_complexity(graph, default_node_complexity)
     histograms = {graph.behavior: histogram}
     sub_behaviors = [
@@ -147,6 +158,9 @@ def _iterate_cumulation(
         histograms (Dict[Behavior, Dict[Node, int]]): Histograms of knowed behaviors.
         behavior_iteration (Dict[Behavior, int]): Number of iterations already done
             for each behavior.
+
+    Returns:
+        Tuple of three updated dictionaries. (behavior_iteration, histogram, histograms).
     """
     for behavior in behaviors:
         already_iterated = (

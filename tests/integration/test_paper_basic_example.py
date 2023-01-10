@@ -17,7 +17,7 @@ from networkx.classes.digraph import DiGraph
 from networkx import is_isomorphic
 
 from hebg import Action, Behavior, FeatureCondition, HEBGraph
-from hebg.metrics.histograms import behaviors_histograms, cumulated_graph_histogram
+from hebg.metrics.histograms import behaviors_histograms, cumulated_hebgraph_histogram
 from hebg.metrics.complexity.complexities import learning_complexity
 from hebg.requirements_graph import build_requirement_graph
 from hebg.unrolling import BEHAVIOR_SEPARATOR
@@ -63,7 +63,9 @@ class TestPaperBasicExamples:
 
     def test_histograms(self):
         """should give expected histograms."""
-        check.equal(behaviors_histograms(self.behaviors), self.expected_behavior_histograms)
+        check.equal(
+            behaviors_histograms(self.behaviors), self.expected_behavior_histograms
+        )
 
     def test_cumulated_histograms(self):
         """should give expected cumulated histograms."""
@@ -98,7 +100,7 @@ class TestPaperBasicExamples:
         }
         for behavior in self.behaviors:
             check.equal(
-                cumulated_graph_histogram(behavior.graph),
+                cumulated_hebgraph_histogram(behavior.graph),
                 expected_cumulated_histograms[behavior],
             )
 
