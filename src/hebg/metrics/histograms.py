@@ -168,16 +168,15 @@ def _iterate_cumulation(
         )
         n_used = max(0, histogram[behavior] - already_iterated)
         if behavior not in histograms:
+            if behavior.name in graph.all_behaviors:
+                behavior = graph.all_behaviors[behavior.name]
             try:
                 behavior_graph = behavior.graph
             except NotImplementedError:
-                if behavior.name in graph.all_behaviors:
-                    behavior_graph = graph.all_behaviors[behavior.name].graph
-                else:
-                    if behavior not in behavior_iteration:
-                        behavior_iteration[behavior] = 0
-                    behavior_iteration[behavior] += 1
-                    continue
+                if behavior not in behavior_iteration:
+                    behavior_iteration[behavior] = 0
+                behavior_iteration[behavior] += 1
+                continue
             sub_histogram, _ = hebgraph_histogram_and_complexity(
                 behavior_graph, default_node_complexity
             )

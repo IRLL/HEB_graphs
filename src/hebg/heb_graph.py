@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Dict, List, Tuple, Optional, Set
+from typing import Any, Dict, List, Tuple
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -180,9 +180,9 @@ class HEBGraph(DiGraph):
         """Roots of the behavior graph (nodes without predecessors)."""
         return get_roots(self)
 
-    def generate_source_code(self, existing_classes: Optional[Set[str]] = None) -> str:
+    def generate_source_code(self) -> str:
         """Generated source code of the behavior from graph."""
-        return get_hebg_source(self, existing_classes)
+        return get_hebg_source(self)
 
     def draw(self, ax: Axes, **kwargs) -> Tuple[Axes, Dict[Node, Tuple[float, float]]]:
         """Draw the HEBGraph on the given Axis.
