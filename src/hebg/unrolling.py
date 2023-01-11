@@ -30,55 +30,66 @@ def unroll_graph(graph: "HEBGraph", add_prefix=True) -> "HEBGraph":
 
     """
 
-    def add_prefix_to_graph(graph: "HEBGraph", prefix: str) -> None:
-        """Rename graph to obtain disjoint node labels."""
-        if prefix is None:
-            return graph
-
-        def rename(node: Node):
-            new_node = copy(node)
-            new_node.name = prefix + node.name
-            return new_node
-
-        return relabel_nodes(graph, rename, copy=False)
-
     unrolled_graph: "HEBGraph" = copy(graph)
     for node in unrolled_graph.nodes():
-        node: Node = node  # Add typechecking
-        node_graph: "HEBGraph" = None
-
-        if node.type == "behavior":
-            node: Behavior = node  # Add typechecking
-            try:
-                try:
-                    node_graph = node.graph.unrolled_graph
-                except NotImplementedError:
-                    if str(node) in graph.all_behaviors:
-                        noderef_graph = graph.all_behaviors[str(node)].graph
-                        node_graph = unroll_graph(noderef_graph, add_prefix=add_prefix)
-                    else:
-                        # If we don't find any reference, we keep it as is.
-                        continue
-
-                # Relabel graph nodes to obtain disjoint node labels (if more that one node).
-                if add_prefix and len(node_graph.nodes()) > 1:
-                    add_prefix_to_graph(node_graph, str(node) + BEHAVIOR_SEPARATOR)
-
-                # Replace the behavior node by the unrolled behavior's graph
-                unrolled_graph = compose_heb_graphs(unrolled_graph, node_graph)
-                for edge_u, _, data in unrolled_graph.in_edges(node, data=True):
-                    for root in node_graph.roots:
-                        unrolled_graph.add_edge(edge_u, root, **data)
-                for _, edge_v, data in unrolled_graph.out_edges(node):
-                    for root in node_graph.roots:
-                        unrolled_graph.add_edge(root, edge_v, **data)
-
-                unrolled_graph.remove_node(node)
-            except NotImplementedError:
-                pass
+        if not isinstance(node, Behavior):
+            continue
+        unrolled_graph = unroll_behavior(unrolled_graph, node, add_prefix)
 
     compute_levels(unrolled_graph)
     return unrolled_graph
+
+
+def unroll_behavior(
+    graph: "HEBGraph", behavior: Behavior, add_prefix: bool
+) -> "HEBGraph":
+    """Unroll a behavior node in a given HEBGraph
+
+    Args:
+        graph (HEBGraph): HEBGraph to unroll the behavior in.
+        behavior (Behavior): Behavior node to unroll, must be in the given graph.
+        add_prefix (bool): If True, adds a name prefix to keep nodes different.
+
+    Returns:
+        HEBGraph: Initial graph with unrolled behavior.
+    """
+    # Look for name reference.
+    if str(behavior) in graph.all_behaviors:
+        behavior = graph.all_behaviors[behavior.name]
+    try:
+        node_graph = unroll_graph(behavior.graph, add_prefix=add_prefix)
+    except NotImplementedError:
+        # If we cannot unroll, we keep it as is
+        return graph
+
+    # Relabel graph nodes to obtain disjoint node labels (if more that one node).
+    if add_prefix and len(node_graph.nodes()) > 1:
+        add_prefix_to_graph(node_graph, behavior.name + BEHAVIOR_SEPARATOR)
+
+    # Replace the behavior node by the unrolled behavior's graph
+    graph = compose_heb_graphs(graph, node_graph)
+    for edge_u, _, data in graph.in_edges(behavior, data=True):
+        for root in node_graph.roots:
+            graph.add_edge(edge_u, root, **data)
+    for _, edge_v, data in graph.out_edges(behavior):
+        for root in node_graph.roots:
+            graph.add_edge(root, edge_v, **data)
+
+    graph.remove_node(behavior)
+    return graph
+
+
+def add_prefix_to_graph(graph: "HEBGraph", prefix: str) -> None:
+    """Rename graph to obtain disjoint node labels."""
+    if prefix is None:
+        return graph
+
+    def rename(node: Node):
+        new_node = copy(node)
+        new_node.name = prefix + node.name
+        return new_node
+
+    return relabel_nodes(graph, rename, copy=False)
 
 
 def group_behaviors_points(
