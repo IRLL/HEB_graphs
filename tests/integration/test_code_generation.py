@@ -31,7 +31,11 @@ class TestABehavior:
                 "        return self.actions['action 42'](observation)",
             )
         )
-        check.equal(source_code, expected_source_code)
+        check.equal(
+            source_code,
+            expected_source_code,
+            msg=_unidiff_output(source_code, expected_source_code),
+        )
 
     def test_exec_codegen(self):
         check_execution_for_values(self.behavior, "Action42Behavior", (1, -1))
@@ -60,7 +64,11 @@ class TestFABehavior:
             )
         )
 
-        check.equal(source_code, expected_source_code)
+        check.equal(
+            source_code,
+            expected_source_code,
+            msg=_unidiff_output(source_code, expected_source_code),
+        )
 
     def test_exec_codegen(self):
         check_execution_for_values(self.behavior, "IsAboveZero", (1, -1))
@@ -95,7 +103,11 @@ class TestFFABehavior:
             )
         )
 
-        check.equal(source_code, expected_source_code)
+        check.equal(
+            source_code,
+            expected_source_code,
+            msg=_unidiff_output(source_code, expected_source_code),
+        )
 
     def test_exec_codegen(self):
         check_execution_for_values(
@@ -134,7 +146,11 @@ class TestFBBehavior:
             )
         )
 
-        check.equal(source_code, expected_source_code)
+        check.equal(
+            source_code,
+            expected_source_code,
+            msg=_unidiff_output(source_code, expected_source_code),
+        )
 
     def test_exec_codegen(self):
         check_execution_for_values(self.behavior, "IsBetween0And1", (-1, 0, 1, 2))
@@ -166,8 +182,16 @@ class TestFBBehaviorNameRef:
             )
         )
 
-        check.equal(source_code, expected_source_code)
-        check.equal(unrolled_source_code, expected_source_code)
+        check.equal(
+            source_code,
+            expected_source_code,
+            msg=_unidiff_output(source_code, expected_source_code),
+        )
+        check.equal(
+            unrolled_source_code,
+            expected_source_code,
+            msg=_unidiff_output(unrolled_source_code, expected_source_code),
+        )
 
     def test_source_codegen_in_all_behavior(self):
         """When the behavior is found in 'all_behaviors'
@@ -193,7 +217,11 @@ class TestFBBehaviorNameRef:
             )
         )
 
-        check.equal(source_code, expected_source_code)
+        check.equal(
+            source_code,
+            expected_source_code,
+            msg=_unidiff_output(source_code, expected_source_code),
+        )
 
     def test_exec_codegen(self):
         """When the behavior is found in 'all_behaviors'
@@ -252,7 +280,11 @@ class TestNestedBehaviorReuse:
             )
         )
 
-        check.equal(source_code, expected_source_code)
+        check.equal(
+            source_code,
+            expected_source_code,
+            msg=_unidiff_output(source_code, expected_source_code),
+        )
 
 
 class TestFBBBehavior:
@@ -333,3 +365,18 @@ def separate_nodes_by_type(behavior: Behavior):
         node.name: node for node in behavior.graph.nodes if isinstance(node, Behavior)
     }
     return actions, feature_conditions, behaviors
+
+
+def _unidiff_output(expected: str, actual: str):
+    """
+    Helper function. Returns a string containing the unified diff of two multiline strings.
+    """
+
+    import difflib
+
+    expected = [line for line in expected.split("\n")]
+    actual = [line for line in actual.split("\n")]
+
+    diff = difflib.unified_diff(expected, actual)
+
+    return "\n".join(diff)
