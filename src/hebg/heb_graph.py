@@ -9,18 +9,16 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any, Dict, List, Tuple
 
-import matplotlib.patches as mpatches
-import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
-from matplotlib.legend_handler import HandlerPatch
-from networkx import DiGraph, draw_networkx_edges
 
-from hebg.draw_utils import draw_convex_hull
-from hebg.graph import draw_networkx_nodes_images, get_roots, get_successors_with_index
-from hebg.layouts import staircase_layout
+from networkx import DiGraph
+
+from hebg.draw_utils import draw_hebgraph
+from hebg.graph import get_roots, get_successors_with_index
+
 from hebg.codegen import get_hebg_source
-from hebg.unrolling import unroll_graph, group_behaviors_points
+from hebg.unrolling import unroll_graph
 from hebg.node import Node
 from hebg.behavior import Behavior
 
@@ -184,7 +182,9 @@ class HEBGraph(DiGraph):
         """Generated source code of the behavior from graph."""
         return get_hebg_source(self)
 
-    def draw(self, ax: Axes, **kwargs) -> Tuple[Axes, Dict[Node, Tuple[float, float]]]:
+    def draw(
+        self, ax: "Axes", **kwargs
+    ) -> Tuple["Axes", Dict[Node, Tuple[float, float]]]:
         """Draw the HEBGraph on the given Axis.
 
         Args:
@@ -197,86 +197,4 @@ class HEBGraph(DiGraph):
             The resulting matplotlib Axis drawn on and a dictionary of each node position.
 
         """
-        fontcolor = kwargs.get("fontcolor", "black")
-        pos = kwargs.get("pos")
-        if len(list(self.nodes())) > 0:
-            if pos is None:
-                pos = staircase_layout(self)
-            draw_networkx_nodes_images(self, pos, ax=ax, img_zoom=0.5)
-
-            draw_networkx_edges(
-                self,
-                pos,
-                ax=ax,
-                arrowsize=20,
-                arrowstyle="-|>",
-                min_source_margin=0,
-                min_target_margin=10,
-                node_shape="s",
-                node_size=1500,
-                edge_color=[color for _, _, color in self.edges(data="color")],
-            )
-
-            used_node_types = [node_type for _, node_type in self.nodes(data="type")]
-            legend_patches = [
-                mpatches.Patch(
-                    facecolor="none", edgecolor=color, label=node_type.capitalize()
-                )
-                for node_type, color in self.NODES_COLORS.items()
-                if node_type in used_node_types and node_type in self.NODES_COLORS
-            ]
-            used_edge_indexes = [index for _, _, index in self.edges(data="index")]
-            legend_arrows = [
-                mpatches.FancyArrow(
-                    *(0, 0, 1, 0),
-                    facecolor=color,
-                    edgecolor="none",
-                    label=str(index) if index > 1 else f"{str(bool(index))} ({index})",
-                )
-                for index, color in self.EDGES_COLORS.items()
-                if index in used_edge_indexes and index in self.EDGES_COLORS
-            ]
-
-            # Draw the legend
-            legend = ax.legend(
-                fancybox=True,
-                framealpha=0,
-                fontsize="x-large",
-                loc="upper right",
-                handles=legend_patches + legend_arrows,
-                handler_map={
-                    # Patch arrows with fancy arrows in legend
-                    mpatches.FancyArrow: HandlerPatch(
-                        patch_func=lambda width, height, **kwargs: mpatches.FancyArrow(
-                            *(0, 0.5 * height, width, 0),
-                            width=0.2 * height,
-                            length_includes_head=True,
-                            head_width=height,
-                            overhang=0.5,
-                        )
-                    ),
-                },
-            )
-            plt.setp(legend.get_texts(), color=fontcolor)
-
-            if kwargs.get("draw_hulls", False):
-                grouped_points = group_behaviors_points(pos, self)
-                if not kwargs.get("show_all_hulls", False):
-                    key_count = {key[-1]: 0 for key in grouped_points}
-                    for key in grouped_points:
-                        key_count[key[-1]] += 1
-                    grouped_points = {
-                        key: points
-                        for key, points in grouped_points.items()
-                        if key_count[key[-1]] > 1
-                        and (len(key) == 1 or key[-1] != key[-2])
-                    }
-
-                for group_key, points in grouped_points.items():
-                    stretch = 0.5 - 0.05 * (len(group_key) - 1)
-                    if len(points) >= 3:
-                        draw_convex_hull(
-                            points, ax, stretch=stretch, lw=3, color="orange"
-                        )
-
-        return ax, pos
+        return draw_hebgraph(self, ax, **kwargs)
