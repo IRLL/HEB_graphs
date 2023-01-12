@@ -1,7 +1,7 @@
 """Module for code generation from HEBGraph."""
 
 from re import sub
-import inspect
+
 from typing import TYPE_CHECKING, List, Dict, Set, Tuple
 
 from hebg.node import Node, Action, FeatureCondition
