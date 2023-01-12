@@ -65,6 +65,7 @@ def get_behavior_class_codelines(
     class_codelines = []
     # Other behaviors dependencies
     if add_dependencies:
+        class_codelines += ["from hebg.codegen import GeneratedBehavior", ""]
         for _behavior, dependency_codelines in dependencies_codelines.items():
             class_codelines += dependency_codelines
 
