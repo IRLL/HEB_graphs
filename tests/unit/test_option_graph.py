@@ -142,37 +142,6 @@ class TestHEBGraph:
 
         check.equal(self.heb_graph.roots, ["A", "B", "C"])
 
-    def test_draw(self, mocker: MockerFixture):
-        """should draw itself on a matplotlib Axes."""
-        patches = [
-            mocker.patch("hebg.heb_graph.staircase_layout"),
-            mocker.patch("hebg.heb_graph.draw_networkx_nodes_images"),
-            mocker.patch("hebg.heb_graph.draw_networkx_edges"),
-            mocker.patch(
-                "hebg.heb_graph.HEBGraph.nodes",
-                return_value=[("node_0", "empty")],
-            ),
-            mocker.patch("hebg.heb_graph.HEBGraph.edges"),
-            mocker.patch("hebg.heb_graph.plt.setp"),
-            mocker.patch("hebg.heb_graph.draw_convex_hull"),
-        ]
-
-        class DummyLegend:
-            """DummyLegend"""
-
-            def get_texts(self, *args, **kwargs):
-                pass
-
-        class DummyAxes:
-            """DummyAxes"""
-
-            def legend(self, *args, **kwargs):
-                return DummyLegend()
-
-        self.heb_graph.draw(DummyAxes())
-        for patch in patches[:-1]:
-            check.is_true(patch.called)
-
 
 class TestHEBGraphGetAnyAction:
 

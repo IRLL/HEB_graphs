@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import List
+from typing import List, Dict
 
 from networkx import DiGraph, descendants
 
@@ -40,35 +40,14 @@ def build_requirement_graph(behaviors: List[Behavior]) -> DiGraph:
 
     requirement_degree = {}
 
-    def cut_alternatives_to_empty_node(graph: HEBGraph, node: EmptyNode):
-        successor = list(graph.successors(node))[0]
-        empty_index = graph.edges[node, successor]["index"]
-        alternatives = graph.predecessors(successor)
-        alternatives = [
-            alt_node
-            for alt_node in alternatives
-            if graph.edges[alt_node, successor]["index"] == empty_index
-        ]
-        cut_graph = deepcopy(graph)
-        for alternative in alternatives:
-            cut_graph.remove_edge(alternative, successor)
-        for alternative in alternatives:
-            following_behaviors = [
-                following_node
-                for following_node in descendants(cut_graph, alternative)
-                if isinstance(following_node, Behavior)
-            ]
-            for following_behavior in following_behaviors:
-                if following_behavior not in requirement_degree[graph.behavior]:
-                    requirement_degree[graph.behavior][following_behavior] = 0
-                requirement_degree[graph.behavior][following_behavior] -= 1
-
     for graph in heb_graphs:
         requirement_degree[graph.behavior] = {}
         for node in graph.nodes():
             if not isinstance(node, EmptyNode):
                 continue
-            cut_alternatives_to_empty_node(graph, node)
+            requirement_degree = _cut_alternatives_to_empty_node(
+                graph, node, requirement_degree
+            )
 
     for graph in heb_graphs:
         for node in graph.nodes():
@@ -93,3 +72,33 @@ def build_requirement_graph(behaviors: List[Behavior]) -> DiGraph:
 
     compute_levels(requirements_graph)
     return requirements_graph
+
+
+def _cut_alternatives_to_empty_node(
+    graph: HEBGraph,
+    node: EmptyNode,
+    requirement_degree: Dict[Behavior, Dict[Behavior, int]],
+) -> Dict[Behavior, Dict[Behavior, int]]:
+    successor = list(graph.successors(node))[0]
+    empty_index = graph.edges[node, successor]["index"]
+    alternatives = graph.predecessors(successor)
+    alternatives = [
+        alt_node
+        for alt_node in alternatives
+        if graph.edges[alt_node, successor]["index"] == empty_index
+    ]
+    cut_graph = deepcopy(graph)
+    for alternative in alternatives:
+        cut_graph.remove_edge(alternative, successor)
+    for alternative in alternatives:
+        following_behaviors = [
+            following_node
+            for following_node in descendants(cut_graph, alternative)
+            if isinstance(following_node, Behavior)
+        ]
+        for following_behavior in following_behaviors:
+            if following_behavior not in requirement_degree[graph.behavior]:
+                requirement_degree[graph.behavior][following_behavior] = 0
+            requirement_degree[graph.behavior][following_behavior] -= 1
+
+    return requirement_degree

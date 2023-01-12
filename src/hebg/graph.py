@@ -4,11 +4,15 @@
 
 """ Additional utility functions for networkx graphs. """
 
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict
 
 from matplotlib.axes import Axes
 from matplotlib.offsetbox import AnnotationBbox, OffsetImage
 from networkx import DiGraph
+
+if TYPE_CHECKING:
+    from hebg.heb_graph import HEBGraph
+    from hebg.node import Node
 
 
 def get_roots(graph: DiGraph):
@@ -193,3 +197,17 @@ def draw_networkx_nodes_images(
                 bbox=kwargs.get("bbox"),
                 clip_on=True,
             )
+
+
+def get_successors_with_index(graph: "HEBGraph", node: "Node", next_edge_index: int):
+    succs = graph.successors(node)
+    next_nodes = []
+    for next_node in succs:
+        if int(graph.edges[node, next_node]["index"]) == next_edge_index:
+            next_nodes.append(next_node)
+    if len(next_nodes) == 0:
+        raise ValueError(
+            f"FeatureCondition {node} returned index {next_edge_index}"
+            f" but {next_edge_index} was not found as an edge index"
+        )
+    return next_nodes

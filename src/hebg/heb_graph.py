@@ -6,23 +6,22 @@
 
 from __future__ import annotations
 
-from copy import copy, deepcopy
+from copy import deepcopy
 from typing import Any, Dict, List, Tuple
 
-import matplotlib.patches as mpatches
-import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
-from matplotlib.legend_handler import HandlerPatch
-from networkx import DiGraph, draw_networkx_edges, relabel_nodes
 
-from hebg.draw_utils import draw_convex_hull
-from hebg.graph import draw_networkx_nodes_images, get_roots
-from hebg.layouts import staircase_layout
+from networkx import DiGraph
+
+
+from hebg.graph import get_roots, get_successors_with_index
+from hebg.codegen import get_hebg_source
+from hebg.unrolling import unroll_graph
+from hebg.draw import draw_hebgraph
+
 from hebg.node import Node
 from hebg.behavior import Behavior
-
-BEHAVIOR_SEPARATOR = "\n>"
 
 
 class HEBGraph(DiGraph):
@@ -141,63 +140,8 @@ class HEBGraph(DiGraph):
 
         """
         if self._unrolled_graph is None:
-            self._unrolled_graph = self.build_unrolled_graph()
+            self._unrolled_graph = unroll_graph(self)
         return self._unrolled_graph
-
-    def build_unrolled_graph(self) -> HEBGraph:
-        """Build the the unrolled HEBGraph.
-
-        The HEBGraph as the same behavior but every behavior node is recursively replaced
-        by it's own HEBGraph if it can be computed.
-
-        Returns:
-            This HEBGraph's unrolled HEBGraph.
-
-        """
-
-        def add_prefix(graph, prefix: str) -> None:
-            """Rename graph to obtain disjoint node labels."""
-            if prefix is None:
-                return graph
-
-            def rename(x: Node):
-                x_new = copy(x)
-                x_new.name = prefix + x.name
-                return x_new
-
-            return relabel_nodes(graph, rename, copy=False)
-
-        unrolled_graph: HEBGraph = copy(self)
-        for node in unrolled_graph.nodes():
-            node: Node = node  # Add typechecking
-            node_graph: HEBGraph = None
-
-            if node.type == "behavior":
-                node: Behavior = node  # Add typechecking
-                try:
-                    try:
-                        node_graph = node.graph.unrolled_graph
-                    except NotImplementedError:
-                        node_graph = self.all_behaviors[str(node)].graph.unrolled_graph
-
-                    # Relabel graph nodes to obtain disjoint node labels (if more that one node).
-                    if len(node_graph.nodes()) > 1:
-                        add_prefix(node_graph, str(node) + BEHAVIOR_SEPARATOR)
-
-                    # Replace the behavior node by the unrolled behavior's graph
-                    unrolled_graph = compose_heb_graphs(unrolled_graph, node_graph)
-                    for edge_u, _, data in unrolled_graph.in_edges(node, data=True):
-                        for root in node_graph.roots:
-                            unrolled_graph.add_edge(edge_u, root, **data)
-                    for _, edge_v, data in unrolled_graph.out_edges(node):
-                        for root in node_graph.roots:
-                            unrolled_graph.add_edge(root, edge_v, **data)
-
-                    unrolled_graph.remove_node(node)
-                except NotImplementedError:
-                    pass
-
-        return unrolled_graph
 
     def _get_action(self, node: Node, observation, behaviors_in_search: list):
         # Behavior
@@ -215,16 +159,7 @@ class HEBGraph(DiGraph):
         # Feature Condition
         if node.type == "feature_condition":
             next_edge_index = int(node(observation))
-            succs = self.successors(node)
-            next_nodes = []
-            for next_node in succs:
-                if int(self.edges[node, next_node]["index"]) == next_edge_index:
-                    next_nodes.append(next_node)
-            if len(next_nodes) == 0:
-                raise ValueError(
-                    f"FeatureCondition {node} returned index {next_edge_index}"
-                    f" but {next_edge_index} was not found as an edge index"
-                )
+            next_nodes = get_successors_with_index(self, node, next_edge_index)
             return self._get_any_action(next_nodes, observation, behaviors_in_search)
         # Empty
         if node.type == "empty":
@@ -244,7 +179,13 @@ class HEBGraph(DiGraph):
         """Roots of the behavior graph (nodes without predecessors)."""
         return get_roots(self)
 
-    def draw(self, ax: Axes, **kwargs) -> Tuple[Axes, Dict[Node, Tuple[float, float]]]:
+    def generate_source_code(self) -> str:
+        """Generated source code of the behavior from graph."""
+        return get_hebg_source(self)
+
+    def draw(
+        self, ax: "Axes", **kwargs
+    ) -> Tuple["Axes", Dict[Node, Tuple[float, float]]]:
         """Draw the HEBGraph on the given Axis.
 
         Args:
@@ -257,144 +198,4 @@ class HEBGraph(DiGraph):
             The resulting matplotlib Axis drawn on and a dictionary of each node position.
 
         """
-        fontcolor = kwargs.get("fontcolor", "black")
-        pos = kwargs.get("pos")
-        if len(list(self.nodes())) > 0:
-            if pos is None:
-                pos = staircase_layout(self)
-            draw_networkx_nodes_images(self, pos, ax=ax, img_zoom=0.5)
-
-            draw_networkx_edges(
-                self,
-                pos,
-                ax=ax,
-                arrowsize=20,
-                arrowstyle="-|>",
-                min_source_margin=0,
-                min_target_margin=10,
-                node_shape="s",
-                node_size=1500,
-                edge_color=[color for _, _, color in self.edges(data="color")],
-            )
-
-            used_node_types = [node_type for _, node_type in self.nodes(data="type")]
-            legend_patches = [
-                mpatches.Patch(
-                    facecolor="none", edgecolor=color, label=node_type.capitalize()
-                )
-                for node_type, color in self.NODES_COLORS.items()
-                if node_type in used_node_types and node_type in self.NODES_COLORS
-            ]
-            used_edge_indexes = [index for _, _, index in self.edges(data="index")]
-            legend_arrows = [
-                mpatches.FancyArrow(
-                    *(0, 0, 1, 0),
-                    facecolor=color,
-                    edgecolor="none",
-                    label=str(index) if index > 1 else f"{str(bool(index))} ({index})",
-                )
-                for index, color in self.EDGES_COLORS.items()
-                if index in used_edge_indexes and index in self.EDGES_COLORS
-            ]
-
-            # Draw the legend
-            legend = ax.legend(
-                fancybox=True,
-                framealpha=0,
-                fontsize="x-large",
-                loc="upper right",
-                handles=legend_patches + legend_arrows,
-                handler_map={
-                    # Patch arrows with fancy arrows in legend
-                    mpatches.FancyArrow: HandlerPatch(
-                        patch_func=lambda width, height, **kwargs: mpatches.FancyArrow(
-                            *(0, 0.5 * height, width, 0),
-                            width=0.2 * height,
-                            length_includes_head=True,
-                            head_width=height,
-                            overhang=0.5,
-                        )
-                    ),
-                },
-            )
-            plt.setp(legend.get_texts(), color=fontcolor)
-
-            if kwargs.get("draw_hulls", False):
-                grouped_points = group_behaviors_points(pos, self)
-                if not kwargs.get("show_all_hulls", False):
-                    key_count = {key[-1]: 0 for key in grouped_points}
-                    for key in grouped_points:
-                        key_count[key[-1]] += 1
-                    grouped_points = {
-                        key: points
-                        for key, points in grouped_points.items()
-                        if key_count[key[-1]] > 1
-                        and (len(key) == 1 or key[-1] != key[-2])
-                    }
-
-                for group_key, points in grouped_points.items():
-                    stretch = 0.5 - 0.05 * (len(group_key) - 1)
-                    if len(points) >= 3:
-                        draw_convex_hull(
-                            points, ax, stretch=stretch, lw=3, color="orange"
-                        )
-
-        return ax, pos
-
-
-def compose_heb_graphs(G: HEBGraph, H: HEBGraph):
-    """Returns a new graph of G composed with H.
-
-    Composition is the simple union of the node sets and edge sets.
-    The node sets of G and H do not need to be disjoint.
-
-    Args:
-        G, H : HEBGraphs to compose.
-
-    Returns:
-        R: A new HEBGraph with the same type as G.
-
-    """
-    R = HEBGraph(G.behavior, all_behaviors=G.all_behaviors, any_mode=G.any_mode)
-    # add graph attributes, H attributes take precedent over G attributes
-    R.graph.update(G.graph)
-    R.graph.update(H.graph)
-
-    R.add_nodes_from(G.nodes(data=True))
-    R.add_nodes_from(H.nodes(data=True))
-
-    if G.is_multigraph():
-        R.add_edges_from(G.edges(keys=True, data=True))
-    else:
-        R.add_edges_from(G.edges(data=True))
-    if H.is_multigraph():
-        R.add_edges_from(H.edges(keys=True, data=True))
-    else:
-        R.add_edges_from(H.edges(data=True))
-    return R
-
-
-def group_behaviors_points(
-    pos: Dict[Node, tuple], graph: HEBGraph
-) -> Dict[tuple, list]:
-    """Group nodes positions of an HEBGraph by sub-behavior.
-
-    Args:
-        pos (Dict[Node, tuple]): Positions of nodes.
-        graph (HEBGraph): Graph.
-
-    Returns:
-        Dict[tuple, list]: A dictionary of nodes grouped by their behavior's hierarchy.
-    """
-    points_grouped_by_behavior: Dict[tuple, list] = {}
-    for node in graph.nodes():
-        groups = str(node).split(BEHAVIOR_SEPARATOR)
-        if len(groups) > 1:
-            for i in range(len(groups[:-1])):
-                key = tuple(groups[: -1 - i])
-                point = pos[node]
-                try:
-                    points_grouped_by_behavior[key].append(point)
-                except KeyError:
-                    points_grouped_by_behavior[key] = [point]
-    return points_grouped_by_behavior
+        return draw_hebgraph(self, ax, **kwargs)

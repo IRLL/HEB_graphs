@@ -17,10 +17,12 @@ from networkx.classes.digraph import DiGraph
 from networkx import is_isomorphic
 
 from hebg import Action, Behavior, FeatureCondition, HEBGraph
-from hebg.metrics.complexity.histograms import nodes_histograms
+from hebg.metrics.histograms import behaviors_histograms, cumulated_hebgraph_histogram
 from hebg.metrics.complexity.complexities import learning_complexity
 from hebg.requirements_graph import build_requirement_graph
-from hebg.heb_graph import BEHAVIOR_SEPARATOR
+from hebg.unrolling import BEHAVIOR_SEPARATOR
+
+from tests.examples.behaviors.report_example import Behavior0, Behavior1, Behavior2
 
 
 class TestPaperBasicExamples:
@@ -30,60 +32,13 @@ class TestPaperBasicExamples:
     def setup(self):
         """Initialize variables."""
 
-        class Behavior0(Behavior):
-            """Behavior 0"""
-
-            def __init__(self) -> None:
-                super().__init__("behavior 0")
-
-            def build_graph(self) -> HEBGraph:
-                graph = HEBGraph(self)
-                feature = FeatureCondition("feature 0", complexity=1)
-                graph.add_edge(feature, Action(0, complexity=1), index=False)
-                graph.add_edge(feature, Action(1, complexity=1), index=True)
-                return graph
-
-        class Behavior1(Behavior):
-            """Behavior 1"""
-
-            def __init__(self) -> None:
-                super().__init__("behavior 1")
-
-            def build_graph(self) -> HEBGraph:
-                graph = HEBGraph(self)
-                feature_1 = FeatureCondition("feature 1", complexity=1)
-                feature_2 = FeatureCondition("feature 2", complexity=1)
-                graph.add_edge(feature_1, Behavior0(), index=False)
-                graph.add_edge(feature_1, feature_2, index=True)
-                graph.add_edge(feature_2, Action(0, complexity=1), index=False)
-                graph.add_edge(feature_2, Action(2, complexity=1), index=True)
-                return graph
-
-        class Behavior2(Behavior):
-            """Behavior 2"""
-
-            def __init__(self) -> None:
-                super().__init__("behavior 2")
-
-            def build_graph(self) -> HEBGraph:
-                graph = HEBGraph(self)
-                feature_3 = FeatureCondition("feature 3", complexity=1)
-                feature_4 = FeatureCondition("feature 4", complexity=1)
-                feature_5 = FeatureCondition("feature 5", complexity=1)
-                graph.add_edge(feature_3, feature_4, index=False)
-                graph.add_edge(feature_3, feature_5, index=True)
-                graph.add_edge(feature_4, Action(0, complexity=1), index=False)
-                graph.add_edge(feature_4, Behavior1(), index=True)
-                graph.add_edge(feature_5, Behavior1(), index=False)
-                graph.add_edge(feature_5, Behavior0(), index=True)
-                return graph
-
         self.actions: List[Action] = [Action(i, complexity=1) for i in range(3)]
         self.feature_conditions: List[FeatureCondition] = [
             FeatureCondition(f"feature {i}", complexity=1) for i in range(6)
         ]
         self.behaviors: List[Behavior] = [Behavior0(), Behavior1(), Behavior2()]
-        self.expected_used_nodes_all: Dict[Behavior, Dict[Action, int]] = {
+
+        self.expected_behavior_histograms: Dict[Behavior, Dict[Action, int]] = {
             self.behaviors[0]: {
                 self.actions[0]: 1,
                 self.actions[1]: 1,
@@ -106,10 +61,48 @@ class TestPaperBasicExamples:
             },
         }
 
-    def test_nodes_histograms(self):
-        """should give expected nodes_histograms results."""
-        used_nodes_all = nodes_histograms(self.behaviors)
-        check.equal(used_nodes_all, self.expected_used_nodes_all)
+    def test_histograms(self):
+        """should give expected histograms."""
+        check.equal(
+            behaviors_histograms(self.behaviors), self.expected_behavior_histograms
+        )
+
+    def test_cumulated_histograms(self):
+        """should give expected cumulated histograms."""
+        expected_cumulated_histograms = {
+            self.behaviors[0]: {
+                self.actions[0]: 1,
+                self.actions[1]: 1,
+                self.feature_conditions[0]: 1,
+            },
+            self.behaviors[1]: {
+                self.actions[0]: 2,
+                self.actions[2]: 1,
+                self.actions[1]: 1,
+                self.feature_conditions[0]: 1,
+                self.feature_conditions[1]: 1,
+                self.feature_conditions[2]: 1,
+                self.behaviors[0]: 1,
+            },
+            self.behaviors[2]: {
+                self.actions[0]: 6,
+                self.actions[1]: 3,
+                self.actions[2]: 2,
+                self.feature_conditions[0]: 3,
+                self.feature_conditions[1]: 2,
+                self.feature_conditions[2]: 2,
+                self.feature_conditions[3]: 1,
+                self.feature_conditions[4]: 1,
+                self.feature_conditions[5]: 1,
+                self.behaviors[0]: 3,
+                self.behaviors[1]: 2,
+            },
+        }
+        for behavior in self.behaviors:
+            check.equal(
+                cumulated_hebgraph_histogram(behavior.graph),
+                expected_cumulated_histograms[behavior],
+            )
 
     def test_learning_complexity(self):
         """should give expected learning_complexity."""
@@ -126,7 +119,7 @@ class TestPaperBasicExamples:
 
         for behavior in self.behaviors:
             c_learning, saved_complexity = learning_complexity(
-                behavior, used_nodes_all=self.expected_used_nodes_all
+                behavior, used_nodes_all=self.expected_behavior_histograms
             )
 
             print(
@@ -137,6 +130,53 @@ class TestPaperBasicExamples:
             diff_saved = abs(saved_complexity - expected_saved_complexities[behavior])
             check.less(diff_complexity, 1e-14)
             check.less(diff_saved, 1e-14)
+
+    def test_codegen(self):
+        expected_code = "\n".join(
+            (
+                "from hebg.codegen import GeneratedBehavior",
+                "",
+                "class Behavior0(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['feature 0'](observation)",
+                "        if edge_index == 0:",
+                "            return self.actions['action 0'](observation)",
+                "        if edge_index == 1:",
+                "            return self.actions['action 1'](observation)",
+                "class Behavior1(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['feature 1'](observation)",
+                "        if edge_index == 0:",
+                "            return self.known_behaviors['behavior 0'](observation)",
+                "        if edge_index == 1:",
+                "            edge_index_1 = self.feature_conditions['feature 2'](observation)",
+                "            if edge_index_1 == 0:",
+                "                return self.actions['action 0'](observation)",
+                "            if edge_index_1 == 1:",
+                "                return self.actions['action 2'](observation)",
+                "class Behavior2(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['feature 3'](observation)",
+                "        if edge_index == 0:",
+                "            edge_index_1 = self.feature_conditions['feature 4'](observation)",
+                "            if edge_index_1 == 0:",
+                "                return self.actions['action 0'](observation)",
+                "            if edge_index_1 == 1:",
+                "                return self.known_behaviors['behavior 1'](observation)",
+                "        if edge_index == 1:",
+                "            edge_index_1 = self.feature_conditions['feature 5'](observation)",
+                "            if edge_index_1 == 0:",
+                "                return self.known_behaviors['behavior 1'](observation)",
+                "            if edge_index_1 == 1:",
+                "                return self.known_behaviors['behavior 0'](observation)",
+                "BEHAVIOR_TO_NAME = {",
+                "    'behavior 0': Behavior0,",
+                "    'behavior 1': Behavior1,",
+                "}",
+            )
+        )
+        generated_code = self.behaviors[2].graph.generate_source_code()
+        check.equal(generated_code, expected_code)
 
     def test_requirement_graph_edges(self):
         """should give expected requirement_graph edges."""
