@@ -2,7 +2,7 @@
 
 from re import sub
 import inspect
-from typing import TYPE_CHECKING, List, Dict, Set
+from typing import TYPE_CHECKING, List, Dict, Set, Tuple
 
 from hebg.node import Node, Action, FeatureCondition
 from hebg.behavior import Behavior
@@ -48,7 +48,20 @@ def get_behavior_class_codelines(
     graph: "HEBGraph",
     behaviors_histogram: Dict["Behavior", Dict["Node", int]] = None,
     add_dependencies: bool = True,
-):
+) -> List[str]:
+    """Generate codelines of the whole GeneratedBehavior from a HEBGraph.
+
+    Args:
+        graph (HEBGraph): HEBGraph to generate the behavior from.
+        behaviors_histogram (Dict[Behavior, Dict[Node, int]], optional): Histogram of uses
+            of all behaviors needed for the given graph. Defaults to None.
+        add_dependencies (bool, optional): If True, codelines will include other GeneratedBehavior
+            from sub-behaviors of the given HEBGraph and a hashmap to map behavior name
+            to coresponding GeneratedBehavior. Defaults to True.
+
+    Returns:
+        List[str]: Codelines generated of the HEBGraph GeneratedBehavior.
+    """
     if behaviors_histogram is None:
         behaviors_histogram = cumulated_hebgraph_histogram(graph)
 
@@ -70,7 +83,7 @@ def get_behavior_class_codelines(
             class_codelines += dependency_codelines
 
     # Class overhead
-    behavior_class_name = to_camel_case(graph.behavior.name.capitalize())
+    behavior_class_name = _to_camel_case(graph.behavior.name.capitalize())
     class_codelines.append(f"class {behavior_class_name}(GeneratedBehavior):")
     # Call function
     class_codelines += get_behavior_call_codelines(
@@ -87,7 +100,23 @@ def get_dependencies_codelines(
     graph: "HEBGraph",
     behaviors_histogram: Dict["Behavior", Dict["Node", int]],
     add_dependencies_codelines: bool = True,
-):
+) -> Tuple[Dict["Behavior", List[str]], Set["Behavior"], Dict[str, str]]:
+    """Parse dependencies of the given HEBGraph behavior's.
+
+    Args:
+        graph (HEBGraph): HEBGraph to parse dependecies from.
+        behaviors_histogram (Dict[Behavior, Dict[Node, int]]): _description_
+        add_dependencies_codelines (bool, optional): _description_. Defaults to True.
+
+    Returns:
+        Tuple of three elements:
+        - dependencies_codelines (Dict[Behavior, List[str]]): Codelines of the GeneratedBehavior for
+            each of the behavior used in the HEBGraph if they can be computed, else a comment.
+        - behaviors_incall_codelines (Set[Behavior]): Set of behaviors that should be directly
+            unrolled in the call function (because the abstraction is not worth it).
+        - hashmap_codelines (List[str]): Codelines of the map between behavior names
+            and coresponding GeneratedBehavior.
+    """
     dependencies_codelines: Dict["Behavior", List[str]] = {}
     behaviors_incall_codelines: Set["Behavior"] = set()
     dependencies_hashmap: Dict[str, str] = {}
@@ -114,14 +143,12 @@ def get_dependencies_codelines(
                 dependencies_codelines[behavior] = get_behavior_class_codelines(
                     sub_graph, behaviors_histogram, add_dependencies=False
                 )
-                dependencies_hashmap[behavior.name] = to_camel_case(
+                dependencies_hashmap[behavior.name] = _to_camel_case(
                     behavior.name.capitalize()
                 )
         elif n_used == 1:
             dependencies_codelines[behavior] = []
             behaviors_incall_codelines.add(behavior)
-        else:
-            raise NotImplementedError
 
     hashmap_codelines = []
     if dependencies_hashmap:
@@ -140,7 +167,20 @@ def get_behavior_call_codelines(
     behaviors_incall_codelines: Set["Behavior"],
     indent: int = 1,
     with_overhead=True,
-):
+) -> List[str]:
+    """Generate the codelines of a GeneratedBehavior call function.
+
+    Args:
+        graph (HEBGraph): HEBGraph from which to generate the behavior of.
+        behaviors_incall_codelines (Set[Behavior]): Set of behavior to unroll directly
+            instead of refering to.
+        indent (int, optional): Indentation level. Defaults to 1.
+        with_overhead (bool, optional): If True, adds the call function definition.
+            Defaults to True.
+
+    Returns:
+        List[str]: Codelines of the GeneratedBehavior call function.
+    """
     call_codelines = []
     if with_overhead:
         call_codelines.append(indent_str(indent) + "def __call__(self, observation):")
@@ -159,7 +199,21 @@ def get_node_call_codelines(
     node: Node,
     indent: int,
     behaviors_incall_codelines: Set["Behavior"],
-):
+) -> List[str]:
+    """Generate codelines for an HEBGraph node recursively using the succesors.
+
+    Args:
+        graph (HEBGraph): HEBGraph containing the node.
+        node (Node): Node to generate the call of.
+        indent (int): Indentation level.
+        behaviors_incall_codelines (Set[Behavior]): Set of behavior to unroll directly
+            instead of refering to.
+    Raises:
+        NotImplementedError: Node is not an Action, FeatureCondition or Behavior.
+
+    Returns:
+        List[str]: Codelines of the node call.
+    """
     node_codelines = []
     if isinstance(node, Action):
         action_name = node.name.split(BEHAVIOR_SEPARATOR)[-1]
@@ -186,7 +240,6 @@ def get_node_call_codelines(
                 )
         return node_codelines
     if isinstance(node, Behavior):
-
         if node in behaviors_incall_codelines:
             if node.name in graph.all_behaviors:
                 node = graph.all_behaviors[node.name]
@@ -201,11 +254,20 @@ def get_node_call_codelines(
     raise NotImplementedError
 
 
-def indent_str(indent_level: int, indent_amount: int = 4):
+def indent_str(indent_level: int, indent_amount: int = 4) -> str:
+    """Gives a string indentation from a given indent level.
+
+    Args:
+        indent_level (int): Level of indentation.
+        indent_amount (int, optional): Number of spaces per indent. Defaults to 4.
+
+    Returns:
+        str: Indentation string.
+    """
     return " " * indent_level * indent_amount
 
 
-def to_camel_case(text: str) -> str:
+def _to_camel_case(text: str) -> str:
     s = (
         text.replace("-", " ")
         .replace("_", " ")
@@ -222,7 +284,7 @@ def to_camel_case(text: str) -> str:
     return s[0] + "".join(i.capitalize() for i in s[1:])
 
 
-def to_snake_case(text: str) -> str:
+def _to_snake_case(text: str) -> str:
     text = text.replace("-", " ").replace("?", "")
     return "_".join(
         sub("([A-Z][a-z]+)", r" \1", sub("([A-Z]+)", r" \1", text)).split()
