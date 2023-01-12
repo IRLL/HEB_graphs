@@ -167,6 +167,10 @@ class TestPaperBasicExamples:
                 "                return self.known_behaviors['behavior 1'](observation)",
                 "            if edge_index_1 == 1:",
                 "                return self.known_behaviors['behavior 0'](observation)",
+                "BEHAVIOR_TO_NAME = {",
+                "   'behavior 0': Behavior0,",
+                "   'behavior 1': Behavior1,",
+                "}",
             )
         )
         generated_code = self.behaviors[2].graph.generate_source_code()

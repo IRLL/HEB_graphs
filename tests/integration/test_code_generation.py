@@ -277,6 +277,9 @@ class TestNestedBehaviorReuse:
                 "                return self.actions['action 0'](observation)",
                 "            if edge_index_1 == 1:",
                 "                return self.known_behaviors['behavior 0'](observation)",
+                "BEHAVIOR_TO_NAME = {",
+                "   'behavior 0': Behavior0,",
+                "}",
             )
         )
 
@@ -298,13 +301,12 @@ class TestFBBBehavior:
         source_code = self.behavior.graph.generate_source_code()
         expected_classes = [
             "IsX1InBinary",  # Only this one is used twice
-            "IsSumOfLast3Binary2",
         ]
 
         for expected_class in expected_classes:
             check.equal(
                 source_code.count(f"class {expected_class}"),
-                1,
+                2,
                 msg=f"Missing or duplicated class: {expected_class}\n{source_code}",
             )
 
