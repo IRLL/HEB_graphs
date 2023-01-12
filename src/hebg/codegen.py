@@ -138,17 +138,18 @@ def get_dependencies_codelines(
                 ]
             continue
 
-        if n_used > 1:
-            if add_dependencies_codelines:
-                dependencies_codelines[behavior] = get_behavior_class_codelines(
-                    sub_graph, behaviors_histogram, add_dependencies=False
-                )
-                dependencies_hashmap[behavior.name] = _to_camel_case(
-                    behavior.name.capitalize()
-                )
-        elif n_used == 1:
+        if n_used == 1 or len(sub_graph.nodes()) == 1:
             dependencies_codelines[behavior] = []
             behaviors_incall_codelines.add(behavior)
+            continue
+
+        if add_dependencies_codelines:
+            dependencies_codelines[behavior] = get_behavior_class_codelines(
+                sub_graph, behaviors_histogram, add_dependencies=False
+            )
+            dependencies_hashmap[behavior.name] = _to_camel_case(
+                behavior.name.capitalize()
+            )
 
     hashmap_codelines = []
     if dependencies_hashmap:
