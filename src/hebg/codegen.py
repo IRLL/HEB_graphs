@@ -97,10 +97,11 @@ def get_dependencies_codelines(
             continue
         if behavior.name in graph.all_behaviors:
             behavior = graph.all_behaviors[behavior.name]
-        # If subgraph cannot be computed, we simply have a ref
+
         try:
             sub_graph = behavior.graph
         except NotImplementedError:
+            # If subgraph cannot be computed, we simply have a ref
             if add_dependencies_codelines:
                 dependencies_codelines[behavior] = [
                     f"# Require '{behavior.name}' behavior to be given."
