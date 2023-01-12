@@ -27,7 +27,7 @@ class GeneratedBehavior:
     ):
         self.actions = actions if actions is not None else {}
         self.feature_conditions = feature_conditions if actions is not None else {}
-        self.known_behaviors = behaviors if actions is not None else {}
+        self.known_behaviors = behaviors if behaviors is not None else {}
 
 
 def get_hebg_source(graph: "HEBGraph") -> str:
