@@ -52,7 +52,11 @@ def get_behavior_class_codelines(
     if behaviors_histogram is None:
         behaviors_histogram = cumulated_hebgraph_histogram(graph)
 
-    dependencies_codelines, behaviors_incall_codelines = get_dependencies_codelines(
+    (
+        dependencies_codelines,
+        behaviors_incall_codelines,
+        hashmap_codelines,
+    ) = get_dependencies_codelines(
         graph,
         behaviors_histogram,
         add_dependencies_codelines=add_dependencies,
@@ -63,6 +67,7 @@ def get_behavior_class_codelines(
     if add_dependencies:
         for _behavior, dependency_codelines in dependencies_codelines.items():
             class_codelines += dependency_codelines
+
     # Class overhead
     behavior_class_name = to_camel_case(graph.behavior.name.capitalize())
     class_codelines.append(f"class {behavior_class_name}(GeneratedBehavior):")
@@ -71,6 +76,9 @@ def get_behavior_class_codelines(
         graph,
         behaviors_incall_codelines=behaviors_incall_codelines,
     )
+    # Dependencies hashmap
+    if add_dependencies:
+        class_codelines += hashmap_codelines
     return class_codelines
 
 
@@ -81,6 +89,7 @@ def get_dependencies_codelines(
 ):
     dependencies_codelines: Dict["Behavior", List[str]] = {}
     behaviors_incall_codelines: Set["Behavior"] = set()
+    dependencies_hashmap: Dict[str, str] = {}
     for behavior, n_used in sorted(
         behaviors_histogram.items(), key=lambda x: x[1], reverse=True
     ):
@@ -103,13 +112,25 @@ def get_dependencies_codelines(
                 dependencies_codelines[behavior] = get_behavior_class_codelines(
                     sub_graph, behaviors_histogram, add_dependencies=False
                 )
+                dependencies_hashmap[behavior.name] = to_camel_case(
+                    behavior.name.capitalize()
+                )
         elif n_used == 1:
             dependencies_codelines[behavior] = []
             behaviors_incall_codelines.add(behavior)
         else:
             raise NotImplementedError
 
-    return dependencies_codelines, behaviors_incall_codelines
+    hashmap_codelines = []
+    if dependencies_hashmap:
+        hashmap_codelines = ["BEHAVIOR_TO_NAME = {"]
+        hashmap_codelines += [
+            f"    '{name}': {class_name},"
+            for name, class_name in dependencies_hashmap.items()
+        ]
+        hashmap_codelines += ["}"]
+
+    return dependencies_codelines, behaviors_incall_codelines, hashmap_codelines
 
 
 def get_behavior_call_codelines(
