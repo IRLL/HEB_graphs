@@ -168,8 +168,8 @@ class TestPaperBasicExamples:
                 "            if edge_index_1 == 1:",
                 "                return self.known_behaviors['behavior 0'](observation)",
                 "BEHAVIOR_TO_NAME = {",
-                "   'behavior 0': Behavior0,",
-                "   'behavior 1': Behavior1,",
+                "    'behavior 0': Behavior0,",
+                "    'behavior 1': Behavior1,",
                 "}",
             )
         )
