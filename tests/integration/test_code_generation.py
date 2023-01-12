@@ -4,7 +4,6 @@ import pytest
 import pytest_check as check
 
 from hebg import Action, FeatureCondition, Behavior
-from hebg.codegen import GeneratedBehavior
 
 from tests.examples.behaviors import (
     FundamentalBehavior,
@@ -26,6 +25,8 @@ class TestABehavior:
         source_code = self.behavior.graph.generate_source_code()
         expected_source_code = "\n".join(
             (
+                "from hebg.codegen import GeneratedBehavior",
+                "",
                 "class Action42Behavior(GeneratedBehavior):",
                 "    def __call__(self, observation):",
                 "        return self.actions['action 42'](observation)",
@@ -54,6 +55,8 @@ class TestFABehavior:
         source_code = self.behavior.graph.generate_source_code()
         expected_source_code = "\n".join(
             (
+                "from hebg.codegen import GeneratedBehavior",
+                "",
                 "class IsAboveZero(GeneratedBehavior):",
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['Greater or equal to 0 ?'](observation)",
@@ -85,6 +88,8 @@ class TestFFABehavior:
         source_code = self.behavior.graph.generate_source_code()
         expected_source_code = "\n".join(
             (
+                "from hebg.codegen import GeneratedBehavior",
+                "",
                 "class ScalarClassification101(GeneratedBehavior):",
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['Greater or equal to 0 ?'](observation)",
@@ -132,6 +137,8 @@ class TestFBBehavior:
         source_code = self.behavior.graph.generate_source_code()
         expected_source_code = "\n".join(
             (
+                "from hebg.codegen import GeneratedBehavior",
+                "",
                 "class IsBetween0And1(GeneratedBehavior):",
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
@@ -171,6 +178,8 @@ class TestFBBehaviorNameRef:
         source_code = self.behavior.graph.unrolled_graph.generate_source_code()
         expected_source_code = "\n".join(
             (
+                "from hebg.codegen import GeneratedBehavior",
+                "",
                 "# Require 'Is above_zero' behavior to be given.",
                 "class IsBetween0And1(GeneratedBehavior):",
                 "    def __call__(self, observation):",
@@ -203,6 +212,8 @@ class TestFBBehaviorNameRef:
         source_code = self.behavior.graph.generate_source_code()
         expected_source_code = "\n".join(
             (
+                "from hebg.codegen import GeneratedBehavior",
+                "",
                 "class IsBetween0And1(GeneratedBehavior):",
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
@@ -259,6 +270,8 @@ class TestNestedBehaviorReuse:
         source_code = self.behavior.graph.generate_source_code()
         expected_source_code = "\n".join(
             (
+                "from hebg.codegen import GeneratedBehavior",
+                "",
                 "class Behavior0(GeneratedBehavior):",
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['fc1'](observation)",

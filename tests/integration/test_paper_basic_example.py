@@ -134,6 +134,8 @@ class TestPaperBasicExamples:
     def test_codegen(self):
         expected_code = "\n".join(
             (
+                "from hebg.codegen import GeneratedBehavior",
+                "",
                 "class Behavior0(GeneratedBehavior):",
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['feature 0'](observation)",
