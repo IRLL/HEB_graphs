@@ -201,24 +201,6 @@ def get_node_call_codelines(
     raise NotImplementedError
 
 
-def get_instanciation(node: Node) -> str:
-    if isinstance(node, Action):
-        return f"{node.__class__.__name__}({node.action})"
-    if isinstance(node, FeatureCondition):
-        node_init_signature = inspect.signature(node.__init__)
-        needed_attrs = list(node_init_signature.parameters.keys())
-        attrs = {}
-        for attr_name in needed_attrs:
-            attr = getattr(node, attr_name)
-            if isinstance(attr, str):
-                attrs[attr_name] = f'"{attr}"'
-            if isinstance(attr, (int, float)):
-                attrs[attr_name] = attr
-        attrs_str = ", ".join((f"{name}={val}" for name, val in attrs.items()))
-        return f"{node.__class__.__name__}({attrs_str})"
-    raise TypeError(f"Unsupported node type: {type(node)} of {node}")
-
-
 def indent_str(indent_level: int, indent_amount: int = 4):
     return " " * indent_level * indent_amount
 
