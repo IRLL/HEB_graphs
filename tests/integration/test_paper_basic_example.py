@@ -140,9 +140,9 @@ class TestPaperBasicExamples:
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['feature 0'](observation)",
                 "        if edge_index == 0:",
-                "            return self.actions['action 0'](observation)",
+                "            return self.actions['Action(0)'](observation)",
                 "        if edge_index == 1:",
-                "            return self.actions['action 1'](observation)",
+                "            return self.actions['Action(1)'](observation)",
                 "class Behavior1(GeneratedBehavior):",
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['feature 1'](observation)",
@@ -151,16 +151,16 @@ class TestPaperBasicExamples:
                 "        if edge_index == 1:",
                 "            edge_index_1 = self.feature_conditions['feature 2'](observation)",
                 "            if edge_index_1 == 0:",
-                "                return self.actions['action 0'](observation)",
+                "                return self.actions['Action(0)'](observation)",
                 "            if edge_index_1 == 1:",
-                "                return self.actions['action 2'](observation)",
+                "                return self.actions['Action(2)'](observation)",
                 "class Behavior2(GeneratedBehavior):",
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['feature 3'](observation)",
                 "        if edge_index == 0:",
                 "            edge_index_1 = self.feature_conditions['feature 4'](observation)",
                 "            if edge_index_1 == 0:",
-                "                return self.actions['action 0'](observation)",
+                "                return self.actions['Action(0)'](observation)",
                 "            if edge_index_1 == 1:",
                 "                return self.known_behaviors['behavior 1'](observation)",
                 "        if edge_index == 1:",
@@ -218,10 +218,10 @@ class TestPaperBasicExamples:
         expected_graph_1 = HEBGraph(self.behaviors[1])
         feature_0 = FeatureCondition(lname(self.behaviors[0], "feature 0"))
         expected_graph_1.add_edge(
-            feature_0, Action(0, lname(self.behaviors[0], "action 0")), index=False
+            feature_0, Action(0, lname(self.behaviors[0], "Action(0)")), index=False
         )
         expected_graph_1.add_edge(
-            feature_0, Action(1, lname(self.behaviors[0], "action 1")), index=True
+            feature_0, Action(1, lname(self.behaviors[0], "Action(1)")), index=True
         )
         feature_1 = FeatureCondition("feature 1")
         feature_2 = FeatureCondition("feature 2")
@@ -243,12 +243,12 @@ class TestPaperBasicExamples:
         )
         expected_graph_2.add_edge(
             feature_0,
-            Action(0, lname(self.behaviors[1], self.behaviors[0], "action 0")),
+            Action(0, lname(self.behaviors[1], self.behaviors[0], "Action(0)")),
             index=False,
         )
         expected_graph_2.add_edge(
             feature_0,
-            Action(1, lname(self.behaviors[1], self.behaviors[0], "action 1")),
+            Action(1, lname(self.behaviors[1], self.behaviors[0], "Action(1)")),
             index=True,
         )
         feature_1 = FeatureCondition(lname(self.behaviors[1], "feature 1"))
@@ -256,10 +256,10 @@ class TestPaperBasicExamples:
         expected_graph_2.add_edge(feature_1, feature_0, index=False)
         expected_graph_2.add_edge(feature_1, feature_2, index=True)
         expected_graph_2.add_edge(
-            feature_2, Action(0, lname(self.behaviors[1], "action 0")), index=False
+            feature_2, Action(0, lname(self.behaviors[1], "Action(0)")), index=False
         )
         expected_graph_2.add_edge(
-            feature_2, Action(2, lname(self.behaviors[1], "action 2")), index=True
+            feature_2, Action(2, lname(self.behaviors[1], "Action(2)")), index=True
         )
 
         expected_graph_2.add_edge(feature_4, feature_1, index=True)
@@ -267,12 +267,12 @@ class TestPaperBasicExamples:
         feature_0_0 = FeatureCondition(lname(self.behaviors[0], "feature 0"))
         expected_graph_2.add_edge(
             feature_0_0,
-            Action(0, lname(self.behaviors[0], "action 0")),
+            Action(0, lname(self.behaviors[0], "Action(0)")),
             index=False,
         )
         expected_graph_2.add_edge(
             feature_0_0,
-            Action(1, lname(self.behaviors[0], "action 1")),
+            Action(1, lname(self.behaviors[0], "Action(1)")),
             index=True,
         )
 

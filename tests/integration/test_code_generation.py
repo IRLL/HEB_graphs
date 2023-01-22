@@ -29,7 +29,7 @@ class TestABehavior:
                 "",
                 "class Action42Behavior(GeneratedBehavior):",
                 "    def __call__(self, observation):",
-                "        return self.actions['action 42'](observation)",
+                "        return self.actions['Action(42)'](observation)",
             )
         )
         check.equal(
@@ -61,9 +61,9 @@ class TestFABehavior:
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['Greater or equal to 0 ?'](observation)",
                 "        if edge_index == 0:",
-                "            return self.actions['action 0'](observation)",
+                "            return self.actions['Action(0)'](observation)",
                 "        if edge_index == 1:",
-                "            return self.actions['action 1'](observation)",
+                "            return self.actions['Action(1)'](observation)",
             )
         )
 
@@ -96,15 +96,15 @@ class TestFFABehavior:
                 "        if edge_index == 0:",
                 "            edge_index_1 = self.feature_conditions['Greater or equal to -1 ?'](observation)",
                 "            if edge_index_1 == 0:",
-                "                return self.actions['action 0'](observation)",
+                "                return self.actions['Action(0)'](observation)",
                 "            if edge_index_1 == 1:",
-                "                return self.actions['action 1'](observation)",
+                "                return self.actions['Action(1)'](observation)",
                 "        if edge_index == 1:",
                 "            edge_index_1 = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
                 "            if edge_index_1 == 0:",
-                "                return self.actions['action 3'](observation)",
+                "                return self.actions['Action(3)'](observation)",
                 "            if edge_index_1 == 1:",
-                "                return self.actions['action 2'](observation)",
+                "                return self.actions['Action(2)'](observation)",
             )
         )
 
@@ -143,13 +143,13 @@ class TestFBBehavior:
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
                 "        if edge_index == 0:",
-                "            return self.actions['action 0'](observation)",
+                "            return self.actions['Action(0)'](observation)",
                 "        if edge_index == 1:",
                 "            edge_index_1 = self.feature_conditions['Greater or equal to 0 ?'](observation)",
                 "            if edge_index_1 == 0:",
-                "                return self.actions['action 0'](observation)",
+                "                return self.actions['Action(0)'](observation)",
                 "            if edge_index_1 == 1:",
-                "                return self.actions['action 1'](observation)",
+                "                return self.actions['Action(1)'](observation)",
             )
         )
 
@@ -186,7 +186,7 @@ class TestFBBehaviorNameRef:
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
                 "        if edge_index == 0:",
-                "            return self.actions['action 0'](observation)",
+                "            return self.actions['Action(0)'](observation)",
                 "        if edge_index == 1:",
                 "            return self.known_behaviors['Is above_zero'](observation)",
             )
@@ -219,13 +219,13 @@ class TestFBBehaviorNameRef:
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['Lesser or equal to 1 ?'](observation)",
                 "        if edge_index == 0:",
-                "            return self.actions['action 0'](observation)",
+                "            return self.actions['Action(0)'](observation)",
                 "        if edge_index == 1:",
                 "            edge_index_1 = self.feature_conditions['Greater or equal to 0 ?'](observation)",
                 "            if edge_index_1 == 0:",
-                "                return self.actions['action 0'](observation)",
+                "                return self.actions['Action(0)'](observation)",
                 "            if edge_index_1 == 1:",
-                "                return self.actions['action 1'](observation)",
+                "                return self.actions['Action(1)'](observation)",
             )
         )
 
@@ -277,9 +277,9 @@ class TestNestedBehaviorReuse:
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['fc1'](observation)",
                 "        if edge_index == 0:",
-                "            return self.actions['action 0'](observation)",
+                "            return self.actions['Action(0)'](observation)",
                 "        if edge_index == 1:",
-                "            return self.actions['action 1'](observation)",
+                "            return self.actions['Action(1)'](observation)",
                 "class Behavior2(GeneratedBehavior):",
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['fc3'](observation)",
@@ -288,7 +288,7 @@ class TestNestedBehaviorReuse:
                 "        if edge_index == 1:",
                 "            edge_index_1 = self.feature_conditions['fc2'](observation)",
                 "            if edge_index_1 == 0:",
-                "                return self.actions['action 0'](observation)",
+                "                return self.actions['Action(0)'](observation)",
                 "            if edge_index_1 == 1:",
                 "                return self.known_behaviors['behavior 0'](observation)",
                 "BEHAVIOR_TO_NAME = {",
@@ -329,13 +329,13 @@ class TestFundamentalBehaviorReuse:
                 "    def __call__(self, observation):",
                 "        edge_index = self.feature_conditions['fc3'](observation)",
                 "        if edge_index == 0:",
-                "            return self.actions['action 1'](observation)",
+                "            return self.actions['Action(1)'](observation)",
                 "        if edge_index == 1:",
                 "            edge_index_1 = self.feature_conditions['fc2'](observation)",
                 "            if edge_index_1 == 0:",
-                "                return self.actions['action 0'](observation)",
+                "                return self.actions['Action(0)'](observation)",
                 "            if edge_index_1 == 1:",
-                "                return self.actions['action 1'](observation)",
+                "                return self.actions['Action(1)'](observation)",
             )
         )
 

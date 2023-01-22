@@ -78,7 +78,7 @@ class Action(Node):
 
     def _get_name(self, name):
         """Get the default name of the action if None is given."""
-        return f"action {self.action}" if name is None else name
+        return f"Action({self.action})" if name is None else name
 
     def __call__(self, observation: Any) -> Any:
         return self.action
