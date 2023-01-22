@@ -21,7 +21,7 @@ license-files = ['LICEN[CS]E*', 'COPYING*', 'NOTICE*', 'AUTHORS*']
 [project.scripts]
 
 [tool.setuptools.dynamic]
-readme = { file = ["README.md"] }
+readme = { file = ["README.rst"] }
 dependencies = { file = ["requirements.txt"] }
 
 [tool.setuptools_scm]
