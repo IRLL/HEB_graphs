@@ -1,28 +1,20 @@
 HEBG - Hierachical Explainable Behaviors using Graphs
 =====================================================
 
-.. image:: https://github.com/IRLL/HEB_graphs/actions/workflows/python-tests.yml/badge.svg
-   :alt: Pytest badge
-   :target: https://github.com/IRLL/HEB_graphs/actions/workflows/python-tests.yml
+.. image:: https://app.codacy.com/project/badge/Grade/ec4b296d18f4412398d64a66224c66dd
+   :alt: [Codacy - Grade]
+   :target: https://www.codacy.com/gh/IRLL/HEB_graphs/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=IRLL/HEB_graphs&amp;utm_campaign=Badge_Grade
 
+.. image:: https://app.codacy.com/project/badge/Coverage/ec4b296d18f4412398d64a66224c66dd
+   :alt: [Codacy - Coverage]
+   :target: https://www.codacy.com/gh/IRLL/HEB_graphs/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=IRLL/HEB_graphs&amp;utm_campaign=Badge_Coverage
 
-.. image:: https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/MathisFederico/00ce73155619a4544884ca6d251954b3/raw/pylint_badge.json
-   :alt: Pylint badge
-   :target: https://github.com/IRLL/HEB_graphs/actions/workflows/python-pylint.yml
-
-
-.. image:: https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/MathisFederico/00ce73155619a4544884ca6d251954b3/raw/unit_coverage_badge.json
-   :alt: Unit coverage badge
-   :target: https://github.com/IRLL/HEB_graphs/actions/workflows/python-coverage.yml
-
-
-.. image:: https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/MathisFederico/00ce73155619a4544884ca6d251954b3/raw/integration_coverage_badge.json
-   :alt: Integration coverage badge
-   :target: https://github.com/IRLL/HEB_graphs/actions/workflows/python-coverage.yml
-
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :alt: [CodeStyle - Black]
+   :target: https://github.com/psf/black
 
 .. image:: https://img.shields.io/github/license/MathisFederico/Crafting?style=plastic
-   :alt: Licence - GPLv3
+   :alt: [Licence - GPLv3]
    :target: https://www.gnu.org/licenses/
 
 
