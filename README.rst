@@ -113,7 +113,7 @@ Here is an example to show how could we hierarchicaly build an explanable behavi
          graph.add_edge(is_a_cat_around, is_hand_near_cat, index=int(True))
 
          graph.add_edge(is_hand_near_cat, MoveSlowlyYourHandNearTheCat(), index=int(False))
-         graph.add_edge(is_hand_near_cat, PetTheCat(), index=int(True))
+         graph.add_edge(is_hand_near_cat, Pet(), index=int(True))
 
          return graph
 
