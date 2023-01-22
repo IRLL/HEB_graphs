@@ -6,8 +6,7 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 
 import numpy as np
 from matplotlib.axes import Axes
@@ -143,16 +142,20 @@ class HEBGraph(DiGraph):
             self._unrolled_graph = unroll_graph(self)
         return self._unrolled_graph
 
-    def _get_action(self, node: Node, observation, behaviors_in_search: list):
+    def _get_action(self, node: Node, observation: Any, behaviors_in_search: List[str]):
         # Behavior
         if node.type == "behavior":
-            if str(node) in behaviors_in_search:
+
+            # To avoid cycling definitions
+            if node.name in behaviors_in_search:
                 return "Impossible"
-            try:
-                return node(observation, behaviors_in_search)
-            except NotImplementedError:
-                # Search in all_behaviors, used to avoid cycling definitions
-                return self.all_behaviors[str(node)](observation, behaviors_in_search)
+
+            # Search for name reference in all_behaviors
+            if node.name in self.all_behaviors:
+                node = self.all_behaviors[node.name]
+
+            return node(observation, behaviors_in_search)
+
         # Action
         if node.type == "action":
             return node(observation)
@@ -167,10 +170,13 @@ class HEBGraph(DiGraph):
             return self._get_action(next_node, observation, behaviors_in_search)
         raise ValueError(f"Unknowed value {node.type} for node.type with node: {node}.")
 
-    def __call__(self, observation, behaviors_in_search=None) -> Any:
-        behaviors_in_search = (
-            [] if behaviors_in_search is None else deepcopy(behaviors_in_search)
-        )
+    def __call__(
+        self,
+        observation,
+        behaviors_in_search: Optional[List[str]] = None,
+    ) -> Any:
+        if behaviors_in_search is None:
+            behaviors_in_search = []
         behaviors_in_search.append(self.behavior.name)
         return self._get_any_action(self.roots, observation, behaviors_in_search)
 
