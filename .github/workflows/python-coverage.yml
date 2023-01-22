@@ -19,7 +19,7 @@ jobs:
         pip install -r requirements-dev.txt
     - name: Build coverage using pytest-cov
       run: |
-        pytest --cov=crafting --cov-report=xml tests
+        pytest --cov=src --cov-report=xml tests
     - name: Codacy Coverage Reporter
       uses: codacy/codacy-coverage-reporter-action@v1.3.0
       with:
