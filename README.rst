@@ -59,14 +59,14 @@ Here is an example to show how could we hierarchicaly build an explanable behavi
    No:
       LookForACat
    ```
-   
+
    """
 
    from hebg import HEBGraph, Action, FeatureCondition, Behavior
 
-   class PetTheCat(Action):
+   class Pet(Action):
       def __init__(self) -> None:
-         super().__init__(action=0, name="Pet the cat")
+         super().__init__(action="Pet")
 
    class IsThereACatAround(FeatureCondition):
       def __init__(self) -> None:
@@ -90,14 +90,14 @@ Here is an example to show how could we hierarchicaly build an explanable behavi
    class MoveSlowlyYourHandNearTheCat(Behavior):
       def __init__(self) -> None:
          super().__init__(name="Move slowly your hand near the cat")
-      def __call__(self, observation) -> Action:
+      def __call__(self, observation, *args, **kwargs) -> Action:
          # Could be a very complex function that returns actions from any given observation
          return Action("Move hand to cat")
 
    class LookForACat(Behavior):
       def __init__(self) -> None:
          super().__init__(name="Look for a nearby cat")
-      def __call__(self, observation) -> Action:
+      def __call__(self, observation, *args, **kwargs) -> Action:
          # Could be a very complex function that returns actions from any given observation
          return Action("Move to a cat")
 
@@ -107,14 +107,14 @@ Here is an example to show how could we hierarchicaly build an explanable behavi
       def build_graph(self) -> HEBGraph:
          graph = HEBGraph(self)
          is_a_cat_around = IsThereACatAround()
-         is_hand_near_cat = IsYourHandNearTheCat(hand='hand')
+         is_hand_near_cat = IsYourHandNearTheCat(hand="hand")
 
          graph.add_edge(is_a_cat_around, LookForACat(), index=int(False))
          graph.add_edge(is_a_cat_around, is_hand_near_cat, index=int(True))
 
          graph.add_edge(is_hand_near_cat, MoveSlowlyYourHandNearTheCat(), index=int(False))
          graph.add_edge(is_hand_near_cat, PetTheCat(), index=int(True))
-         
+
          return graph
 
    if __name__ == "__main__":

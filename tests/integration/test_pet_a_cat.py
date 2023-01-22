@@ -26,7 +26,7 @@ from hebg import HEBGraph, Action, FeatureCondition, Behavior
 
 class PetTheCat(Action):
     def __init__(self) -> None:
-        super().__init__(action=0, name="Pet the cat")
+        super().__init__(action="Pet")
 
 
 class IsThereACatAround(FeatureCondition):
@@ -118,7 +118,7 @@ class TestPetACat:
                 ("Is there a cat around ?", "Look for a nearby cat", 0),
                 ("Is there a cat around ?", "Is hand near the cat ?", 1),
                 ("Is hand near the cat ?", "Move slowly your hand near the cat", 0),
-                ("Is hand near the cat ?", "Pet the cat", 1),
+                ("Is hand near the cat ?", "Action(Pet)", 1),
             },
         )
 
