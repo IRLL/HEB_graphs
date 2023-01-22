@@ -173,6 +173,7 @@ class TestFBBehaviorNameRef:
         actions = {0: Action(0), 1: Behavior("Is above_zero")}
         self.behavior = F_A_Behavior("Is between 0 and 1 ?", feature_condition, actions)
 
+    @pytest.mark.filterwarnings("ignore:Could not load graph for behavior")
     def test_source_codegen_by_ref(self):
         unrolled_source_code = self.behavior.graph.generate_source_code()
         source_code = self.behavior.graph.unrolled_graph.generate_source_code()
