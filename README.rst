@@ -18,6 +18,14 @@ HEBG - Hierachical Explainable Behaviors using Graphs
    :target: https://www.gnu.org/licenses/
 
 
+Installation
+------------
+
+```bash
+pip install hebg
+```
+
+
 Contributing to HEBG
 --------------------
 
