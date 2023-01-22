@@ -331,10 +331,14 @@ class TestHEBGraphGetAction:
                 raise NotImplementedError
 
         true_node = DummyTrueBehavior()
-        self.heb_graph.all_behaviors = {str(true_node): true_node}
+        self.heb_graph.all_behaviors = {true_node.name: true_node}
 
         node_in_graph = DummyBehaviorInGraph()
-        action = self.heb_graph._get_action(node_in_graph, None, [])
+        action = self.heb_graph._get_action(
+            node_in_graph,
+            observation=None,
+            behaviors_in_search=[],
+        )
         check.equal(action, expected_action)
 
     def test_feature_condition(self, mocker: MockerFixture):
