@@ -1,6 +1,3 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
 name: Python coverage
 
 on: ["push"]
@@ -10,51 +7,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.9
+    - name: Set up Python 3.10
       uses: actions/setup-python@v1
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install dependencies
       run: |
+        git submodule update --init --recursive
         python -m pip install --upgrade pip
-        pip install .
-    - name: Build unit coverage using pytest-cov
-      run: |
+        pip install -e .
         pip install -r requirements-dev.txt
-        pytest --cov=hebg --cov-report=xml tests/unit
-        score=$(python coverage_score.py --score)
-        color=$(python coverage_score.py --color)
-        echo "COVERAGE_UNIT_SCORE=$score"
-        echo "COVERAGE_UNIT_COLOR=$color"
-        echo "COVERAGE_UNIT_SCORE=$score" >> $GITHUB_ENV
-        echo "COVERAGE_UNIT_COLOR=$color" >> $GITHUB_ENV
-    - name: Create unit coverage badge
-      uses: schneegans/dynamic-badges-action@v1.1.0
-      with:
-        auth: ${{ secrets.GIST_SECRET }}
-        gistID: 00ce73155619a4544884ca6d251954b3
-        filename: unit_coverage_badge.json
-        label: Unit coverage
-        message: ${{ env.COVERAGE_UNIT_SCORE }}
-        color: ${{ env.COVERAGE_UNIT_COLOR }}
-        style: plastic
-    - name: Build integration coverage using pytest-cov
+    - name: Build coverage using pytest-cov
       run: |
-        pip install -r requirements-dev.txt
-        pytest --cov=hebg --cov-report=xml tests/integration
-        score=$(python coverage_score.py --score)
-        color=$(python coverage_score.py --color)
-        echo "COVERAGE_INTEGRATION_SCORE=$score"
-        echo "COVERAGE_INTEGRATION_COLOR=$color"
-        echo "COVERAGE_INTEGRATION_SCORE=$score" >> $GITHUB_ENV
-        echo "COVERAGE_INTEGRATION_COLOR=$color" >> $GITHUB_ENV
-    - name: Create integration coverage badge
-      uses: schneegans/dynamic-badges-action@v1.1.0
+        pytest --cov=crafting --cov-report=xml tests
+    - name: Codacy Coverage Reporter
+      uses: codacy/codacy-coverage-reporter-action@v1.3.0
       with:
-        auth: ${{ secrets.GIST_SECRET }}
-        gistID: 00ce73155619a4544884ca6d251954b3
-        filename: integration_coverage_badge.json
-        label: Integration coverage
-        message: ${{ env.COVERAGE_INTEGRATION_SCORE }}
-        color: ${{ env.COVERAGE_INTEGRATION_COLOR }}
-        style: plastic
+        project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        coverage-reports: coverage.xml
