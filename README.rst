@@ -18,13 +18,129 @@ HEBG - Hierachical Explainable Behaviors using Graphs
    :target: https://www.gnu.org/licenses/
 
 
+This package is meant to build programatic hierarchical behaviors as graphs
+to compare them to human explanations of behavior.
+
+We take the definition of "behavior" as a function from observation to action.
+
+Features
+--------
+
+
+
 Installation
 ------------
 
-```bash
-pip install hebg
-```
 
+.. code-block:: sh
+
+   pip install hebg
+
+
+Usage
+-----
+
+Here is an example to show how could we hierarchicaly build an explanable behavior to pet a cat.
+
+.. code-block:: py3
+
+   """
+   
+   Here is the hierarchical structure that we would want:
+
+   ```
+   IsThereACatAround ?
+   Yes:
+      IsYourHandNearTheCat ?
+      Yes:
+         PetTheCat
+      No:
+         MoveSlowlyYourHandNearTheCat
+   No:
+      LookForACat
+   ```
+   
+   """
+
+   from hebg import HEBGraph, Action, FeatureCondition, Behavior
+
+   class PetTheCat(Action):
+      def __init__(self) -> None:
+         super().__init__(action=0, name="Pet the cat")
+
+   class IsThereACatAround(FeatureCondition):
+      def __init__(self) -> None:
+         super().__init__(name="Is there a cat around ?")
+      def __call__(self, observation):
+         # Could be a very complex function that returns 1 is there is a cat around else 0.
+         if "cat" in observation:
+            return int(True) # 1
+         return int(False) # 0
+
+   class IsYourHandNearTheCat(FeatureCondition):
+      def __init__(self, hand) -> None:
+         super().__init__(name="Is hand near the cat ?")
+         self.hand = hand
+      def __call__(self, observation):
+         # Could be a very complex function that returns 1 is the hand is near the cat else 0.
+         if observation["cat"] == observation[self.hand]:
+            return int(True) # 1
+         return int(False) # 0
+
+   class MoveSlowlyYourHandNearTheCat(Behavior):
+      def __init__(self) -> None:
+         super().__init__(name="Move slowly your hand near the cat")
+      def __call__(self, observation) -> Action:
+         # Could be a very complex function that returns actions from any given observation
+         return Action("Move hand to cat")
+
+   class LookForACat(Behavior):
+      def __init__(self) -> None:
+         super().__init__(name="Look for a nearby cat")
+      def __call__(self, observation) -> Action:
+         # Could be a very complex function that returns actions from any given observation
+         return Action("Move to a cat")
+
+   class PetACat(Behavior):
+      def __init__(self) -> None:
+         super().__init__(name="pet the cat")
+      def build_graph(self) -> HEBGraph:
+         graph = HEBGraph(self)
+         is_a_cat_around = IsThereACatAround()
+         is_hand_near_cat = IsYourHandNearTheCat(hand='hand')
+
+         graph.add_edge(is_a_cat_around, LookForACat(), index=int(False))
+         graph.add_edge(is_a_cat_around, is_hand_near_cat, index=int(True))
+
+         graph.add_edge(is_hand_near_cat, MoveSlowlyYourHandNearTheCat(), index=int(False))
+         graph.add_edge(is_hand_near_cat, PetTheCat(), index=int(True))
+         
+         return graph
+
+   if __name__ == "__main__":
+      pet_a_cat_behavior = PetACat()
+      observation = {
+         "cat": "sofa",
+         "hand": "computer",
+      }
+
+      # Call on observation
+      action = pet_a_cat_behavior(observation)
+      print(action)  # Action("Move hand to cat")
+
+      # Obtain networkx graph
+      graph = pet_a_cat_behavior.graph
+      print(list(graph.edges(data="index")))
+
+      # Draw graph using matplotlib
+      import matplotlib.pyplot as plt
+      fig, ax = plt.subplots()
+      graph.draw(ax)
+      plt.show()
+
+
+.. image:: docs/images/PetACatGraph.png
+   :align: center
 
 Contributing to HEBG
 --------------------
