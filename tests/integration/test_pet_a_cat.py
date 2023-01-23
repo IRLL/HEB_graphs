@@ -22,6 +22,7 @@ import pytest_check as check
 import matplotlib.pyplot as plt
 
 from hebg import HEBGraph, Action, FeatureCondition, Behavior
+from tests.integration.test_code_generation import _unidiff_output
 
 
 class PetTheCat(Action):
@@ -91,7 +92,7 @@ class PetACat(Behavior):
 
 
 class TestPetACat:
-    """PetACat"""
+    """PetACat example"""
 
     @pytest.fixture(autouse=True)
     def setup_method(self):
@@ -126,3 +127,27 @@ class TestPetACat:
         """should be able to draw without error"""
         _, ax = plt.subplots()
         self.pet_a_cat_behavior.graph.draw(ax)
+
+    def test_codegen(self):
+        """should generate expected source code"""
+        code = self.pet_a_cat_behavior.graph.generate_source_code()
+        expected_code = "\n".join(
+            (
+                "from hebg.codegen import GeneratedBehavior",
+                "",
+                "# Require 'Look for a nearby cat' behavior to be given.",
+                "# Require 'Move slowly your hand near the cat' behavior to be given.",
+                "class PetTheCat(GeneratedBehavior):",
+                "    def __call__(self, observation):",
+                "        edge_index = self.feature_conditions['Is there a cat around ?'](observation)",
+                "        if edge_index == 0:",
+                "            return self.known_behaviors['Look for a nearby cat'](observation)",
+                "        if edge_index == 1:",
+                "            edge_index_1 = self.feature_conditions['Is hand near the cat ?'](observation)",
+                "            if edge_index_1 == 0:",
+                "                return self.known_behaviors['Move slowly your hand near the cat'](observation)",
+                "            if edge_index_1 == 1:",
+                "                return self.actions['Action(Pet)'](observation)",
+            )
+        )
+        check.equal(code, expected_code, _unidiff_output(code, expected_code))

@@ -40,6 +40,9 @@ Installation
 Usage
 -----
 
+Build a HEBGraph
+~~~~~~~~~~~~~~~~
+
 Here is an example to show how could we hierarchicaly build an explanable behavior to pet a cat.
 
 .. code-block:: py3
@@ -141,6 +144,39 @@ Here is an example to show how could we hierarchicaly build an explanable behavi
 
 .. image:: docs/images/PetACatGraph.png
    :align: center
+
+Python code generation from graph
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Once you have a HEBGraph, you can use it to generate a working python code that
+replicates the HEBGraph's behavior:
+
+.. code-block:: py3
+
+   code = pet_a_cat_behavior.graph.generate_source_code()
+   with open("pet_a_cat.py", "w") as pyfile:
+      pyfile.write(code)
+
+Will generate the code bellow:
+
+.. code-block:: py3
+
+   from hebg.codegen import GeneratedBehavior
+
+   # Require 'Look for a nearby cat' behavior to be given.
+   # Require 'Move slowly your hand near the cat' behavior to be given.
+   class PetTheCat(GeneratedBehavior):
+      def __call__(self, observation):
+         edge_index = self.feature_conditions['Is there a cat around ?'](observation)
+         if edge_index == 0:
+               return self.known_behaviors['Look for a nearby cat'](observation)
+         if edge_index == 1:
+               edge_index_1 = self.feature_conditions['Is hand near the cat ?'](observation)
+               if edge_index_1 == 0:
+                  return self.known_behaviors['Move slowly your hand near the cat'](observation)
+               if edge_index_1 == 1:
+                  return self.actions['Action(Pet)'](observation)
+
 
 Contributing to HEBG
 --------------------
