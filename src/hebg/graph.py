@@ -194,7 +194,7 @@ def draw_networkx_nodes_images(
                 horizontalalignment=kwargs.get("horizontalalignment", "center"),
                 verticalalignment=kwargs.get("verticalalignment", "center"),
                 transform=ax.transData,
-                bbox=kwargs.get("bbox"),
+                bbox=dict(facecolor="none", edgecolor=color),
                 clip_on=True,
             )
 
