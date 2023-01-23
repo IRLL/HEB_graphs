@@ -60,34 +60,32 @@ Here is an example to show how could we hierarchicaly build an explanable behavi
    Here is the hierarchical structure that we would want:
 
    ```
-   IsThereACatAround ?
-   Yes:
+   PetACat:
+      IsThereACatAround ?
+      -> Yes:
+         PetNearbyCat
+      -> No:
+         LookForACat
+
+   PetNearbyCat:
       IsYourHandNearTheCat ?
-      Yes:
-         PetTheCat
-      No:
-         MoveSlowlyYourHandNearTheCat
-   No:
-      LookForACat
+      -> Yes:
+         Pet
+      -> No:
+         MoveYourHandNearTheCat
    ```
 
    """
 
    from hebg import HEBGraph, Action, FeatureCondition, Behavior
+   from hebg.unrolling import unroll_graph
 
+   # Add a fundamental action
    class Pet(Action):
       def __init__(self) -> None:
          super().__init__(action="Pet")
 
-   class IsThereACatAround(FeatureCondition):
-      def __init__(self) -> None:
-         super().__init__(name="Is there a cat around ?")
-      def __call__(self, observation):
-         # Could be a very complex function that returns 1 is there is a cat around else 0.
-         if "cat" in observation:
-            return int(True) # 1
-         return int(False) # 0
-
+   # Add a condition on the observation
    class IsYourHandNearTheCat(FeatureCondition):
       def __init__(self, hand) -> None:
          super().__init__(name="Is hand near the cat ?")
@@ -95,16 +93,39 @@ Here is an example to show how could we hierarchicaly build an explanable behavi
       def __call__(self, observation):
          # Could be a very complex function that returns 1 is the hand is near the cat else 0.
          if observation["cat"] == observation[self.hand]:
-            return int(True) # 1
-         return int(False) # 0
+               return int(True)  # 1
+         return int(False)  # 0
 
-   class MoveSlowlyYourHandNearTheCat(Behavior):
+   # Add an unexplainable Behavior (without a graph, but a function that can be called).
+   class MoveYourHandNearTheCat(Behavior):
       def __init__(self) -> None:
          super().__init__(name="Move slowly your hand near the cat")
       def __call__(self, observation, *args, **kwargs) -> Action:
          # Could be a very complex function that returns actions from any given observation
          return Action("Move hand to cat")
 
+   # Add a sub-behavior
+   class PetNearbyCat(Behavior):
+      def __init__(self) -> None:
+         super().__init__(name="Pet nearby cat")
+      def build_graph(self) -> HEBGraph:
+         graph = HEBGraph(self)
+         is_hand_near_cat = IsYourHandNearTheCat(hand="hand")
+         graph.add_edge(is_hand_near_cat, MoveYourHandNearTheCat(), index=int(False))
+         graph.add_edge(is_hand_near_cat, Pet(), index=int(True))
+         return graph
+
+   # Add an other condition on observation
+   class IsThereACatAround(FeatureCondition):
+      def __init__(self) -> None:
+         super().__init__(name="Is there a cat around ?")
+      def __call__(self, observation):
+         # Could be a very complex function that returns 1 is there is a cat around else 0.
+         if "cat" in observation:
+               return int(True)  # 1
+         return int(False)  # 0
+
+   # Add an other unexplainable Behavior (without a graph, but a function that can be called).
    class LookForACat(Behavior):
       def __init__(self) -> None:
          super().__init__(name="Look for a nearby cat")
@@ -112,20 +133,15 @@ Here is an example to show how could we hierarchicaly build an explanable behavi
          # Could be a very complex function that returns actions from any given observation
          return Action("Move to a cat")
 
+   # Finally, add the main Behavior
    class PetACat(Behavior):
       def __init__(self) -> None:
-         super().__init__(name="pet the cat")
+         super().__init__(name="Pet a cat")
       def build_graph(self) -> HEBGraph:
          graph = HEBGraph(self)
          is_a_cat_around = IsThereACatAround()
-         is_hand_near_cat = IsYourHandNearTheCat(hand="hand")
-
          graph.add_edge(is_a_cat_around, LookForACat(), index=int(False))
-         graph.add_edge(is_a_cat_around, is_hand_near_cat, index=int(True))
-
-         graph.add_edge(is_hand_near_cat, MoveSlowlyYourHandNearTheCat(), index=int(False))
-         graph.add_edge(is_hand_near_cat, Pet(), index=int(True))
-
+         graph.add_edge(is_a_cat_around, PetNearbyCat(), index=int(True))
          return graph
 
    if __name__ == "__main__":
@@ -152,6 +168,33 @@ Here is an example to show how could we hierarchicaly build an explanable behavi
 
 .. image:: docs/images/PetACatGraph.png
    :align: center
+
+Unrolling HEBGraph
+~~~~~~~~~~~~~~~~~~
+
+When ploting an HEBGraph of a behavior, only the graph of the behavior itself is shown.
+To see the full hierarchical graph (including sub-behaviors), we need to unroll the graph as such:
+
+.. code-block:: py3
+
+   from hebg.unrolling import unroll_graph
+
+   unrolled_graph = unroll_graph(pet_a_cat_behavior.graph, add_prefix=False)
+   
+   # Is also a networkx graph
+   print(list(unrolled_graph.edges(data="index")))
+
+   # Draw graph using matplotlib
+   import matplotlib.pyplot as plt
+   fig, ax = plt.subplots()
+   unrolled_graph.draw(ax)
+   plt.show()
+
+
+.. image:: docs/images/PetACatGraphUnrolled.png
+   :align: center
+
+Note that unexplainable behaviors (the one without graphs) are kept as is.
 
 Python code generation from graph
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
