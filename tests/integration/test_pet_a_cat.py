@@ -157,6 +157,7 @@ class TestPetACat:
         unrolled_graph.draw(ax)
         plt.close(fig)
 
+    @pytest.mark.filterwarnings("ignore:Could not load graph for behavior")
     def test_codegen(self):
         """should generate expected source code"""
         code = self.pet_a_cat_behavior.graph.generate_source_code()
