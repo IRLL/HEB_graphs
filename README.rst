@@ -1,6 +1,18 @@
 HEBG - Hierachical Explainable Behaviors using Graphs
 =====================================================
 
+.. image:: https://badge.fury.io/py/hebg.svg
+   :alt: [Fury - PyPi stable version]
+   :target: https://badge.fury.io/py/hebg
+
+.. image:: https://static.pepy.tech/badge/hebg
+   :alt: [PePy - Downloads]
+   :target: https://pepy.tech/project/hebg
+
+.. image:: https://static.pepy.tech/badge/hebg/week
+   :alt: [PePy - Downloads per week]
+   :target: https://pepy.tech/project/hebg
+
 .. image:: https://app.codacy.com/project/badge/Grade/ec4b296d18f4412398d64a66224c66dd
    :alt: [Codacy - Grade]
    :target: https://www.codacy.com/gh/IRLL/HEB_graphs/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=IRLL/HEB_graphs&amp;utm_campaign=Badge_Grade
