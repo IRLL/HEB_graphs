@@ -167,6 +167,8 @@ def _iterate_cumulation(
             behavior_iteration[behavior] if behavior in behavior_iteration else 0
         )
         n_used = max(0, histogram[behavior] - already_iterated)
+        if n_used == 0:
+            continue
         if behavior not in histograms:
             if behavior.name in graph.all_behaviors:
                 behavior = graph.all_behaviors[behavior.name]
