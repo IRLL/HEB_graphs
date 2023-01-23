@@ -23,10 +23,6 @@ to compare them to human explanations of behavior.
 
 We take the definition of "behavior" as a function from observation to action.
 
-Features
---------
-
-
 
 Installation
 ------------
