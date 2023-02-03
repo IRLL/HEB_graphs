@@ -21,5 +21,7 @@ class TestLoop:
             unrolled_graph = unroll_graph(behavior.graph)
             if draw:
                 fig, ax = plt.subplots()
+                plt.setp(ax.spines.values(), color="orange")
                 unrolled_graph.draw(ax)
+                plt.title(behavior.name, fontdict={"color": "orange"})
                 plt.show()
