@@ -13,4 +13,4 @@ class TestLoop:
 
     def test_unrolling(self):
         for behavior in self.behaviors:
-            unrolled_graph = behavior.graph.unrolled_graph
+            behavior.graph.unrolled_graph

@@ -5,7 +5,7 @@ Behaviors that do not have a graph (Unexplainable behaviors) should stay as is i
 
 """
 from copy import copy
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING, Dict, Optional
 
 from networkx import relabel_nodes
 
@@ -19,7 +19,11 @@ if TYPE_CHECKING:
     from hebg.heb_graph import HEBGraph
 
 
-def unroll_graph(graph: "HEBGraph", add_prefix=True) -> "HEBGraph":
+def unroll_graph(
+    graph: "HEBGraph",
+    add_prefix=True,
+    _unrolled_behaviors: Optional[Dict[str, Optional["HEBGraph"]]] = None,
+) -> "HEBGraph":
     """Build the the unrolled HEBGraph.
 
     The HEBGraph as the same behavior but every behavior node is recursively replaced
@@ -29,19 +33,29 @@ def unroll_graph(graph: "HEBGraph", add_prefix=True) -> "HEBGraph":
         This HEBGraph's unrolled HEBGraph.
 
     """
-
+    if _unrolled_behaviors is None:
+        _unrolled_behaviors = {}
+    _unrolled_behaviors[graph.behavior.name] = None
     unrolled_graph: "HEBGraph" = copy(graph)
     for node in unrolled_graph.nodes():
         if not isinstance(node, Behavior):
             continue
-        unrolled_graph = unroll_behavior(unrolled_graph, node, add_prefix)
+        unrolled_graph = unroll_behavior(
+            unrolled_graph,
+            node,
+            add_prefix,
+            _unrolled_behaviors,
+        )
 
     compute_levels(unrolled_graph)
     return unrolled_graph
 
 
 def unroll_behavior(
-    graph: "HEBGraph", behavior: Behavior, add_prefix: bool
+    graph: "HEBGraph",
+    behavior: Behavior,
+    add_prefix: bool,
+    _unrolled_behaviors: Dict[str, Optional["HEBGraph"]],
 ) -> "HEBGraph":
     """Unroll a behavior node in a given HEBGraph
 
@@ -54,12 +68,12 @@ def unroll_behavior(
         HEBGraph: Initial graph with unrolled behavior.
     """
     # Look for name reference.
-    if str(behavior) in graph.all_behaviors:
+    if behavior.name in graph.all_behaviors:
         behavior = graph.all_behaviors[behavior.name]
-    try:
-        node_graph = unroll_graph(behavior.graph, add_prefix=add_prefix)
-    except NotImplementedError:
-        # If we cannot unroll, we keep it as is
+
+    node_graph = unrolled_behavior_graph(behavior, add_prefix, _unrolled_behaviors)
+    if node_graph is None:
+        # If we cannot get the node's graph, we keep it as is.
         return graph
 
     # Relabel graph nodes to obtain disjoint node labels (if more that one node).
@@ -77,6 +91,38 @@ def unroll_behavior(
 
     graph.remove_node(behavior)
     return graph
+
+
+def unrolled_behavior_graph(
+    behavior: Behavior,
+    add_prefix: bool,
+    _unrolled_behaviors: Dict[str, Optional["HEBGraph"]],
+) -> Optional["HEBGraph"]:
+    """Get the unrolled sub-graph of a behavior.
+
+    Args:
+        behavior (Behavior): Behavior to get the unrolled graph of.
+        add_prefix (bool): If True, adds a prefix in sub-hierarchies to have distinct nodes.
+        _unrolled_behaviors (Dict[str, Optional[HEBGraph]]): Dictionary of already computed
+            unrolled graphs, both to save compute and prevent recursion loops.
+
+    Returns:
+        Optional[HEBGraph]: Unrolled graph of a behavior, None if it cannot be computed.
+    """
+    if behavior.name in _unrolled_behaviors:
+        # If we have aleardy unrolled this behavior, we reuse it's graph
+        return _unrolled_behaviors[behavior.name]
+
+    try:
+        node_graph = unroll_graph(
+            behavior.graph,
+            add_prefix=add_prefix,
+            _unrolled_behaviors=_unrolled_behaviors,
+        )
+        _unrolled_behaviors[behavior.name] = node_graph
+        return node_graph
+    except NotImplementedError:
+        return None
 
 
 def add_prefix_to_graph(graph: "HEBGraph", prefix: str) -> None:
