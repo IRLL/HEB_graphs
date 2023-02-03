@@ -162,8 +162,8 @@ def draw_networkx_nodes_images(
 
     """
     for n in graph:
-        img = graph.nodes[n]["image"]
-        color = graph.nodes[n]["color"]
+        img = graph.nodes(data="image", default=None)[n]
+        color = graph.nodes(data="color", default="black")[n]
         if img is not None:
             min_dim = min(img.shape[:2])
             min_ax_shape = min(ax._position.width, ax._position.height)
