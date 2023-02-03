@@ -6,9 +6,9 @@
 
 from typing import TYPE_CHECKING, Dict, Tuple
 
+from hebg.behavior import Behavior
 from hebg.metrics.complexity.utils import update_sum_dict
 from hebg.node import Action
-from hebg.behavior import Behavior
 
 if TYPE_CHECKING:
     from hebg.node import Node

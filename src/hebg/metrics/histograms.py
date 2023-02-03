@@ -8,9 +8,8 @@ from warnings import warn
 
 import numpy as np
 
-
-from hebg.metrics.complexity.utils import update_sum_dict
 from hebg.behavior import Behavior
+from hebg.metrics.complexity.utils import update_sum_dict
 from hebg.node import Action, FeatureCondition
 
 if TYPE_CHECKING:

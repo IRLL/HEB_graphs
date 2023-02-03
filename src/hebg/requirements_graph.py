@@ -7,14 +7,14 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import List, Dict
+from typing import Dict, List
 
 from networkx import DiGraph, descendants
 
-from hebg.heb_graph import HEBGraph
-from hebg.graph import compute_levels
-from hebg.node import EmptyNode
 from hebg.behavior import Behavior
+from hebg.graph import compute_levels
+from hebg.heb_graph import HEBGraph
+from hebg.node import EmptyNode
 
 
 def build_requirement_graph(behaviors: List[Behavior]) -> DiGraph:

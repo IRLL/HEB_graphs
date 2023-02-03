@@ -1,14 +1,13 @@
 """Module for code generation from HEBGraph."""
 
 from re import sub
+from typing import TYPE_CHECKING, Dict, List, Set, Tuple
 
-from typing import TYPE_CHECKING, List, Dict, Set, Tuple
-
-from hebg.node import Node, Action, FeatureCondition
 from hebg.behavior import Behavior
-from hebg.unrolling import BEHAVIOR_SEPARATOR
 from hebg.graph import get_roots, get_successors_with_index
 from hebg.metrics.histograms import cumulated_hebgraph_histogram
+from hebg.node import Action, FeatureCondition, Node
+from hebg.unrolling import BEHAVIOR_SEPARATOR
 
 if TYPE_CHECKING:
     from hebg.heb_graph import HEBGraph

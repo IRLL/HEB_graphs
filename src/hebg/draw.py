@@ -1,24 +1,22 @@
 import math
 from typing import TYPE_CHECKING, Dict, Optional, Tuple
 
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.legend import Legend
+from matplotlib.legend_handler import HandlerPatch
+from networkx import draw_networkx_edges
 from scipy.spatial import ConvexHull  # pylint: disable=no-name-in-module
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from matplotlib.legend_handler import HandlerPatch
-from matplotlib.legend import Legend
-from matplotlib.axes import Axes
-
-from networkx import draw_networkx_edges
-
-from hebg.unrolling import group_behaviors_points
-from hebg.layouts import staircase_layout
 from hebg.graph import draw_networkx_nodes_images
+from hebg.layouts import staircase_layout
+from hebg.unrolling import group_behaviors_points
 
 if TYPE_CHECKING:
-    from hebg.node import Node
     from hebg.heb_graph import HEBGraph
+    from hebg.node import Node
 
 
 def draw_hebgraph(

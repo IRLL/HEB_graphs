@@ -6,21 +6,18 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from matplotlib.axes import Axes
-
 from networkx import DiGraph
 
-
-from hebg.graph import get_roots, get_successors_with_index
-from hebg.codegen import get_hebg_source
-from hebg.unrolling import unroll_graph
-from hebg.draw import draw_hebgraph
-
-from hebg.node import Node
 from hebg.behavior import Behavior
+from hebg.codegen import get_hebg_source
+from hebg.draw import draw_hebgraph
+from hebg.graph import get_roots, get_successors_with_index
+from hebg.node import Node
+from hebg.unrolling import unroll_graph
 
 
 class HEBGraph(DiGraph):

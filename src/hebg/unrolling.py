@@ -9,9 +9,9 @@ from typing import TYPE_CHECKING, Dict, Optional
 
 from networkx import relabel_nodes
 
-from hebg.node import Node
 from hebg.behavior import Behavior
 from hebg.graph import compute_levels
+from hebg.node import Node
 
 BEHAVIOR_SEPARATOR = ">"
 
