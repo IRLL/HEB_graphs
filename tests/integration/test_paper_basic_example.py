@@ -20,7 +20,7 @@ from hebg import Action, Behavior, FeatureCondition, HEBGraph
 from hebg.metrics.histograms import behaviors_histograms, cumulated_hebgraph_histogram
 from hebg.metrics.complexity.complexities import learning_complexity
 from hebg.requirements_graph import build_requirement_graph
-from hebg.unrolling import BEHAVIOR_SEPARATOR
+from hebg.unrolling import BEHAVIOR_SEPARATOR, unroll_graph
 
 from tests.examples.behaviors.report_example import Behavior0, Behavior1, Behavior2
 
@@ -285,7 +285,7 @@ class TestPaperBasicExamples:
             self.behaviors[2]: expected_graph_2,
         }
         for behavior in self.behaviors:
-            unrolled_graph = behavior.graph.unrolled_graph
+            unrolled_graph = unroll_graph(behavior.graph, add_prefix=True)
             check.is_true(is_isomorphic(unrolled_graph, expected_graph[behavior]))
 
             # fig, axes = plt.subplots(1, 2)

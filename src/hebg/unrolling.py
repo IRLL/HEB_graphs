@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 def unroll_graph(
     graph: "HEBGraph",
-    add_prefix=True,
+    add_prefix=False,
     _unrolled_behaviors: Optional[Dict[str, Optional["HEBGraph"]]] = None,
 ) -> "HEBGraph":
     """Build the the unrolled HEBGraph.

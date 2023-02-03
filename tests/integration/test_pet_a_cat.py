@@ -153,7 +153,7 @@ class TestPetACat:
     def test_draw_unrolled(self):
         """should be able to draw without error"""
         fig, ax = plt.subplots()
-        unrolled_graph = unroll_graph(self.pet_a_cat_behavior.graph, add_prefix=False)
+        unrolled_graph = unroll_graph(self.pet_a_cat_behavior.graph)
         unrolled_graph.draw(ax)
         plt.close(fig)
 

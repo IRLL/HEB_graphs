@@ -18,7 +18,7 @@ class TestLoop:
     def test_unrolling(self):
         draw = False
         for behavior in self.behaviors:
-            unrolled_graph = unroll_graph(behavior.graph, add_prefix=False)
+            unrolled_graph = unroll_graph(behavior.graph)
             if draw:
                 fig, ax = plt.subplots()
                 unrolled_graph.draw(ax)
