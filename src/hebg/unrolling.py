@@ -5,12 +5,11 @@ Behaviors that do not have a graph (Unexplainable behaviors) should stay as is i
 
 """
 from copy import copy
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING, Dict, Tuple, Optional
 
 from networkx import relabel_nodes
 
 from hebg.behavior import Behavior
-from hebg.graph import compute_levels
 from hebg.node import Node
 
 BEHAVIOR_SEPARATOR = ">"
@@ -22,47 +21,71 @@ if TYPE_CHECKING:
 def unroll_graph(
     graph: "HEBGraph",
     add_prefix=False,
-    _unrolled_behaviors: Optional[Dict[str, Optional["HEBGraph"]]] = None,
+    cut_looping_alternatives: bool = False,
 ) -> "HEBGraph":
     """Build the the unrolled HEBGraph.
 
     The HEBGraph as the same behavior but every behavior node is recursively replaced
     by it's own HEBGraph if it can be computed.
 
-    Returns:
-        This HEBGraph's unrolled HEBGraph.
+    Args:
+        graph (HEBGraph): HEBGraph to unroll the behavior in.
+        add_prefix (bool, optional): If True, adds a name prefix to keep nodes different.
+            Defaults to False.
+        cut_looping_alternatives (bool, optional): If True, cut the looping alternatives.
+            Defaults to False.
 
+    Returns:
+        HEBGraph: This HEBGraph's unrolled HEBGraph.
     """
+    unrolled_graph, _is_looping = _unroll_graph(
+        graph,
+        add_prefix=add_prefix,
+        cut_looping_alternatives=cut_looping_alternatives,
+    )
+    return unrolled_graph
+
+
+def _unroll_graph(
+    graph: "HEBGraph",
+    add_prefix=False,
+    cut_looping_alternatives: bool = False,
+    _unrolled_behaviors: Optional[Dict[str, Optional["HEBGraph"]]] = None,
+) -> Tuple["HEBGraph", bool]:
     if _unrolled_behaviors is None:
         _unrolled_behaviors = {}
+    is_looping = False
     _unrolled_behaviors[graph.behavior.name] = None
     unrolled_graph: "HEBGraph" = copy(graph)
     for node in unrolled_graph.nodes():
         if not isinstance(node, Behavior):
             continue
-        unrolled_graph = unroll_behavior(
+        unrolled_graph, behavior_is_looping = _unroll_behavior(
             unrolled_graph,
             node,
             add_prefix,
+            cut_looping_alternatives,
             _unrolled_behaviors,
         )
+        if behavior_is_looping:
+            is_looping = True
+    return unrolled_graph, is_looping
 
-    compute_levels(unrolled_graph)
-    return unrolled_graph
 
-
-def unroll_behavior(
+def _unroll_behavior(
     graph: "HEBGraph",
     behavior: Behavior,
     add_prefix: bool,
+    cut_looping_alternatives: bool,
     _unrolled_behaviors: Dict[str, Optional["HEBGraph"]],
-) -> "HEBGraph":
+) -> Tuple["HEBGraph", bool]:
     """Unroll a behavior node in a given HEBGraph
 
     Args:
         graph (HEBGraph): HEBGraph to unroll the behavior in.
         behavior (Behavior): Behavior node to unroll, must be in the given graph.
         add_prefix (bool): If True, adds a name prefix to keep nodes different.
+        cut_looping_alternatives (bool): If True, cut the looping alternatives.
 
     Returns:
         HEBGraph: Initial graph with unrolled behavior.
@@ -71,14 +94,19 @@ def unroll_behavior(
     if behavior.name in graph.all_behaviors:
         behavior = graph.all_behaviors[behavior.name]
 
-    node_graph = unrolled_behavior_graph(behavior, add_prefix, _unrolled_behaviors)
-    if node_graph is None:
+    node_graph, is_looping = _unrolled_behavior_graph(
+        behavior,
+        add_prefix,
+        cut_looping_alternatives,
+        _unrolled_behaviors,
+    )
+    if node_graph is None or (is_looping and cut_looping_alternatives):
         # If we cannot get the node's graph, we keep it as is.
-        return graph
+        return graph, is_looping
 
     # Relabel graph nodes to obtain disjoint node labels (if more that one node).
     if add_prefix and len(node_graph.nodes()) > 1:
-        add_prefix_to_graph(node_graph, behavior.name + BEHAVIOR_SEPARATOR)
+        _add_prefix_to_graph(node_graph, behavior.name + BEHAVIOR_SEPARATOR)
 
     # Replace the behavior node by the unrolled behavior's graph
     graph = compose_heb_graphs(graph, node_graph)
@@ -90,12 +118,13 @@ def unroll_behavior(
             graph.add_edge(root, edge_v, **data)
 
     graph.remove_node(behavior)
-    return graph
+    return graph, is_looping
 
 
-def unrolled_behavior_graph(
+def _unrolled_behavior_graph(
     behavior: Behavior,
     add_prefix: bool,
+    cut_looping_alternatives: bool,
     _unrolled_behaviors: Dict[str, Optional["HEBGraph"]],
 ) -> Optional["HEBGraph"]:
     """Get the unrolled sub-graph of a behavior.
@@ -103,6 +132,7 @@ def unrolled_behavior_graph(
     Args:
         behavior (Behavior): Behavior to get the unrolled graph of.
         add_prefix (bool): If True, adds a prefix in sub-hierarchies to have distinct nodes.
+        cut_looping_alternatives (bool): If True, cut the looping alternatives.
         _unrolled_behaviors (Dict[str, Optional[HEBGraph]]): Dictionary of already computed
             unrolled graphs, both to save compute and prevent recursion loops.
 
@@ -111,21 +141,23 @@ def unrolled_behavior_graph(
     """
     if behavior.name in _unrolled_behaviors:
         # If we have aleardy unrolled this behavior, we reuse it's graph
-        return _unrolled_behaviors[behavior.name]
+        is_looping = _unrolled_behaviors[behavior.name] is None
+        return _unrolled_behaviors[behavior.name], is_looping
 
     try:
-        node_graph = unroll_graph(
+        node_graph, is_looping = _unroll_graph(
             behavior.graph,
             add_prefix=add_prefix,
+            cut_looping_alternatives=cut_looping_alternatives,
             _unrolled_behaviors=_unrolled_behaviors,
         )
         _unrolled_behaviors[behavior.name] = node_graph
-        return node_graph
+        return node_graph, is_looping
     except NotImplementedError:
-        return None
+        return None, False
 
 
-def add_prefix_to_graph(graph: "HEBGraph", prefix: str) -> None:
+def _add_prefix_to_graph(graph: "HEBGraph", prefix: str) -> None:
     """Rename graph to obtain disjoint node labels."""
     if prefix is None:
         return graph
