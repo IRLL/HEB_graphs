@@ -27,29 +27,34 @@ def draw_hebgraph(
     draw_hulls: bool = False,
     show_all_hulls: bool = False,
 ) -> Tuple["Axes", Dict["Node", Tuple[float, float]]]:
-    if len(list(graph.nodes())) > 0:
-        if pos is None:
-            pos = staircase_layout(graph)
-        draw_networkx_nodes_images(graph, pos, ax=ax, img_zoom=0.5)
+    if len(list(graph.nodes())) == 0:
+        return
 
-        draw_networkx_edges(
-            graph,
-            pos,
-            ax=ax,
-            arrowsize=20,
-            arrowstyle="-|>",
-            min_source_margin=0,
-            min_target_margin=10,
-            node_shape="s",
-            node_size=1500,
-            edge_color=[color for _, _, color in graph.edges(data="color")],
-        )
+    ax.set_title(graph.behavior.name, fontdict={"color": "orange"})
+    plt.setp(ax.spines.values(), color="orange")
 
-        legend = draw_graph_legend(graph, ax)
-        plt.setp(legend.get_texts(), color=fontcolor)
+    if pos is None:
+        pos = staircase_layout(graph)
+    draw_networkx_nodes_images(graph, pos, ax=ax, img_zoom=0.5)
 
-        if draw_hulls:
-            group_and_draw_hulls(graph, pos, ax, show_all_hulls=show_all_hulls)
+    draw_networkx_edges(
+        graph,
+        pos,
+        ax=ax,
+        arrowsize=20,
+        arrowstyle="-|>",
+        min_source_margin=0,
+        min_target_margin=10,
+        node_shape="s",
+        node_size=1500,
+        edge_color=[color for _, _, color in graph.edges(data="color")],
+    )
+
+    legend = draw_graph_legend(graph, ax)
+    plt.setp(legend.get_texts(), color=fontcolor)
+
+    if draw_hulls:
+        group_and_draw_hulls(graph, pos, ax, show_all_hulls=show_all_hulls)
 
 
 def draw_graph_legend(graph: "HEBGraph", ax: Axes) -> Legend:
