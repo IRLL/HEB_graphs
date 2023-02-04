@@ -51,3 +51,20 @@ class TestLoop:
         expected_graph.add_edge("Has axe", "Cut tree with axe")
         expected_graph.add_edge("Has axe", "Get new axe")
         check.is_true(nx.is_isomorphic(unrolled_graph, expected_graph))
+
+    def test_unroll_gather_wood_cutting_alternatives(self):
+        draw = False
+        unrolled_graph = unroll_graph(
+            self.gather_wood.graph,
+            cut_looping_alternatives=True,
+        )
+        if draw:
+            _, ax = plt.subplots()
+            unrolled_graph.draw(ax)
+            plt.show()
+
+        expected_graph = nx.DiGraph()
+        expected_graph.add_edge("Has axe", "Punch tree")
+        expected_graph.add_edge("Has axe", "Cut tree with axe")
+        expected_graph.add_edge("Has axe", "Get new axe")
+        check.is_true(nx.is_isomorphic(unrolled_graph, expected_graph))
