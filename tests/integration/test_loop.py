@@ -50,7 +50,7 @@ class TestLoop:
         check.is_true(nx.is_isomorphic(unrolled_graph, expected_graph))
 
     def test_unroll_gather_wood_cutting_alternatives(self):
-        draw = True
+        draw = False
         unrolled_graph = unroll_graph(
             self.gather_wood.graph,
             cut_looping_alternatives=True,
@@ -69,7 +69,7 @@ class TestLoop:
         check.is_true(nx.is_isomorphic(unrolled_graph, expected_graph))
 
     def test_unroll_get_new_axe_cutting_alternatives(self):
-        draw = True
+        draw = False
         unrolled_graph = unroll_graph(
             self.get_new_axe.graph,
             cut_looping_alternatives=True,

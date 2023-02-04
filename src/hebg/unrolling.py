@@ -5,17 +5,16 @@ Behaviors that do not have a graph (Unexplainable behaviors) should stay as is i
 
 """
 from copy import copy
-from typing import TYPE_CHECKING, Dict, Tuple, Optional
+from typing import TYPE_CHECKING, Dict, List, Tuple, Optional, Union
 
 from networkx import relabel_nodes
 
 from hebg.behavior import Behavior
-from hebg.node import Node
 
 BEHAVIOR_SEPARATOR = ">"
 
 if TYPE_CHECKING:
-    from hebg.heb_graph import HEBGraph
+    from hebg import HEBGraph, Node, Action
 
 
 def unroll_graph(
@@ -50,33 +49,49 @@ def _unroll_graph(
     graph: "HEBGraph",
     add_prefix=False,
     cut_looping_alternatives: bool = False,
+    _current_alternatives: Optional[List[Union["Action", "Behavior"]]] = None,
     _unrolled_behaviors: Optional[Dict[str, Optional["HEBGraph"]]] = None,
 ) -> Tuple["HEBGraph", bool]:
     if _unrolled_behaviors is None:
         _unrolled_behaviors = {}
+    if _current_alternatives is None:
+        _current_alternatives = []
+
     is_looping = False
     _unrolled_behaviors[graph.behavior.name] = None
+
     unrolled_graph: "HEBGraph" = copy(graph)
-    for node in unrolled_graph.nodes():
+    for node in list(unrolled_graph.nodes()):
         if not isinstance(node, Behavior):
             continue
+        new_alternatives = []
+        for pred, _node, data in graph.in_edges(node, data=True):
+            index = data["index"]
+            for _pred, alternative, alt_index in graph.out_edges(pred, data="index"):
+                if index == alt_index and alternative != node:
+                    new_alternatives.append(alternative)
+        if new_alternatives:
+            _current_alternatives = new_alternatives
         unrolled_graph, behavior_is_looping = _unroll_behavior(
             unrolled_graph,
             node,
             add_prefix,
             cut_looping_alternatives,
+            _current_alternatives,
             _unrolled_behaviors,
         )
         if behavior_is_looping:
             is_looping = True
+
     return unrolled_graph, is_looping
 
 
 def _unroll_behavior(
     graph: "HEBGraph",
-    behavior: Behavior,
+    behavior: "Behavior",
     add_prefix: bool,
     cut_looping_alternatives: bool,
+    _current_alternatives: List[Union["Action", "Behavior"]],
     _unrolled_behaviors: Dict[str, Optional["HEBGraph"]],
 ) -> Tuple["HEBGraph", bool]:
     """Unroll a behavior node in a given HEBGraph
@@ -98,9 +113,20 @@ def _unroll_behavior(
         behavior,
         add_prefix,
         cut_looping_alternatives,
+        _current_alternatives,
         _unrolled_behaviors,
     )
-    if node_graph is None or (is_looping and cut_looping_alternatives):
+
+    if is_looping and cut_looping_alternatives:
+        if not _current_alternatives:
+            return graph, is_looping
+        for alternative in _current_alternatives:
+            for last_condition, _, data in graph.in_edges(behavior, data=True):
+                graph.add_edge(last_condition, alternative, **data)
+        graph.remove_node(behavior)
+        return graph, False
+
+    if node_graph is None:
         # If we cannot get the node's graph, we keep it as is.
         return graph, is_looping
 
@@ -113,18 +139,16 @@ def _unroll_behavior(
     for edge_u, _, data in graph.in_edges(behavior, data=True):
         for root in node_graph.roots:
             graph.add_edge(edge_u, root, **data)
-    for _, edge_v, data in graph.out_edges(behavior):
-        for root in node_graph.roots:
-            graph.add_edge(root, edge_v, **data)
 
     graph.remove_node(behavior)
     return graph, is_looping
 
 
 def _unrolled_behavior_graph(
-    behavior: Behavior,
+    behavior: "Behavior",
     add_prefix: bool,
     cut_looping_alternatives: bool,
+    _current_alternatives: List[Union["Action", "Behavior"]],
     _unrolled_behaviors: Dict[str, Optional["HEBGraph"]],
 ) -> Optional["HEBGraph"]:
     """Get the unrolled sub-graph of a behavior.
@@ -149,6 +173,7 @@ def _unrolled_behavior_graph(
             behavior.graph,
             add_prefix=add_prefix,
             cut_looping_alternatives=cut_looping_alternatives,
+            _current_alternatives=_current_alternatives,
             _unrolled_behaviors=_unrolled_behaviors,
         )
         _unrolled_behaviors[behavior.name] = node_graph
@@ -162,7 +187,7 @@ def _add_prefix_to_graph(graph: "HEBGraph", prefix: str) -> None:
     if prefix is None:
         return graph
 
-    def rename(node: Node):
+    def rename(node: "Node"):
         new_node = copy(node)
         new_node.name = prefix + node.name
         return new_node
@@ -171,7 +196,7 @@ def _add_prefix_to_graph(graph: "HEBGraph", prefix: str) -> None:
 
 
 def group_behaviors_points(
-    pos: Dict[Node, tuple],
+    pos: Dict["Node", tuple],
     graph: "HEBGraph",
 ) -> Dict[tuple, list]:
     """Group nodes positions of an HEBGraph by sub-behavior.
