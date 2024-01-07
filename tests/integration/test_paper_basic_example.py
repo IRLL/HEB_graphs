@@ -126,10 +126,9 @@ class TestPaperBasicExamples:
                 f"{behavior}: {c_learning}|{expected_learning_complexities[behavior]}"
                 f" {saved_complexity}|{expected_saved_complexities[behavior]}"
             )
-            diff_complexity = abs(c_learning - expected_learning_complexities[behavior])
-            diff_saved = abs(saved_complexity - expected_saved_complexities[behavior])
-            check.less(diff_complexity, 1e-14)
-            check.less(diff_saved, 1e-14)
+
+            check.almost_equal(c_learning, expected_learning_complexities[behavior])
+            check.almost_equal(saved_complexity, expected_saved_complexities[behavior])
 
     def test_codegen(self):
         expected_code = "\n".join(

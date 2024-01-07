@@ -5,7 +5,7 @@ import networkx as nx
 from hebg import HEBGraph
 from hebg.unrolling import unroll_graph
 
-from tests.examples.behaviors.loop import build_looping_behaviors
+from tests.examples.behaviors.loop_with_alternative import build_looping_behaviors
 
 import matplotlib.pyplot as plt
 
