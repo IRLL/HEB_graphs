@@ -1,7 +1,0 @@
-black
-pytest
-pytest-cov
-pytest-mock
-pytest-check
-pylint
-pylint-pytest

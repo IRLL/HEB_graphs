@@ -1,0 +1,31 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+    - id: check-yaml
+    - id: end-of-file-fixer
+    - id: trailing-whitespace
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.11
+    hooks:
+      - id: ruff
+        args: [ --fix ]
+      - id: ruff-format
+  - repo: local
+    hooks:
+      - id: pytest-fast-check
+        name: pytest-fast-check
+        entry: ./venv/Scripts/python.exe -m pytest -m "not slow"
+        stages: ["commit"]
+        language: system
+        pass_filenames: false
+        always_run: true
+  - repo: local
+    hooks:
+      - id: pytest-check
+        name: pytest-check
+        entry: ./venv/Scripts/python.exe -m pytest
+        stages: ["push"]
+        language: system
+        pass_filenames: false
+        always_run: true
