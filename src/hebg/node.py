@@ -15,7 +15,6 @@ def bytecode_complexity(obj):
 
 
 class Node:
-
     NODE_TYPES = ("action", "feature_condition", "behavior", "empty")
 
     def __init__(

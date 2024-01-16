@@ -25,7 +25,7 @@ def staircase_layout(graph: nx.DiGraph, center=None):
     """
 
     def place_successors(pos, pos_by_level, node, level) -> int:
-        if not level in pos_by_level:
+        if level not in pos_by_level:
             pos_by_level[level] = pos_by_level[level - 1]
         pos_by_level[level] = max(pos[node][0], pos_by_level[level])
         succs = list(graph.successors(node))

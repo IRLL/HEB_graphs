@@ -4,3 +4,5 @@
 """ Module for utility computation methods. """
 
 from hebg.metrics.utility.binary_utility import binary_graphbased_utility
+
+__all__ = ["binary_graphbased_utility"]

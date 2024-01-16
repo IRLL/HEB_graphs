@@ -15,7 +15,6 @@ def simulated_annealing(
     max_iters_without_new: int = np.inf,
     verbose: bool = 1,
 ):
-
     """Perform simulated annealing metaheuristic on an energy using a neighboring.
 
     See https://en.wikipedia.org/wiki/Simulated_annealing for more details.
