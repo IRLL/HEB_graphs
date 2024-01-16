@@ -5,7 +5,6 @@
 """ Unit tests for the hebg.behavior module. """
 
 from copy import deepcopy
-from networkx.algorithms.shortest_paths.unweighted import predecessor
 
 import pytest
 import pytest_check as check
@@ -120,10 +119,10 @@ class TestHEBGraph:
         """should return roots action on call."""
         roots = "roots"
         observation = "obs"
-        mocker.patch("hebg.heb_graph.HEBGraph._get_any_action")
+        mocker.patch("hebg.heb_graph.HEBGraph._get_options")
         mocker.patch("hebg.heb_graph.HEBGraph.roots", roots)
         self.heb_graph(observation)
-        args, _ = HEBGraph._get_any_action.call_args
+        args, _ = HEBGraph._get_options.call_args
         check.equal(args[0], roots)
         check.equal(args[1], observation)
         check.equal(args[2], [self.behavior.name])
@@ -160,7 +159,7 @@ class TestHEBGraphGetAnyAction:
 
         _actions = deepcopy(actions)
 
-        def mocked_get_action(*args):
+        def mocked_get_action(*args, **kwargs):
             return _actions.pop(0)
 
         mocker.patch("hebg.heb_graph.HEBGraph._get_action", mocked_get_action)
@@ -174,7 +173,7 @@ class TestHEBGraphGetAnyAction:
 
         _actions = deepcopy(actions)
 
-        def mocked_get_action(*args):
+        def mocked_get_action(*args, **kwargs):
             return _actions.pop(0)
 
         mocker.patch("hebg.heb_graph.HEBGraph._get_action", mocked_get_action)
@@ -190,7 +189,7 @@ class TestHEBGraphGetAnyAction:
 
         _actions = deepcopy(actions)
 
-        def mocked_get_action(*args):
+        def mocked_get_action(*args, **kwargs):
             return _actions.pop(0)
 
         expected_actions = {"first": (0,), "last": (3,), "random": (0, 2, 3)}

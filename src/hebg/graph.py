@@ -4,7 +4,7 @@
 
 """ Additional utility functions for networkx graphs. """
 
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, List
 
 from matplotlib.axes import Axes
 from matplotlib.offsetbox import AnnotationBbox, OffsetImage
@@ -93,7 +93,7 @@ def compute_levels(graph: DiGraph):
 
         min_level_by_index = []
         for index, level_list in pred_level_by_index.items():
-            level_list_wo_none = [l for l in level_list if l is not None]
+            level_list_wo_none = [lvl for lvl in level_list if lvl is not None]
             if len(level_list_wo_none) == 0:
                 return False
             min_level_by_index.append(min(level_list_wo_none))
@@ -199,7 +199,9 @@ def draw_networkx_nodes_images(
             )
 
 
-def get_successors_with_index(graph: "HEBGraph", node: "Node", next_edge_index: int):
+def get_successors_with_index(
+    graph: "HEBGraph", node: "Node", next_edge_index: int
+) -> List["Node"]:
     succs = graph.successors(node)
     next_nodes = []
     for next_node in succs:

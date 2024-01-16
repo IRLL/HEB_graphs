@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, TypeVar
 
 import numpy as np
 from matplotlib.axes import Axes
@@ -18,6 +18,9 @@ from hebg.draw import draw_hebgraph
 from hebg.graph import get_roots, get_successors_with_index
 from hebg.node import Node
 from hebg.unrolling import unroll_graph
+
+
+Action = TypeVar("Action")
 
 
 class HEBGraph(DiGraph):
@@ -72,6 +75,7 @@ class HEBGraph(DiGraph):
         self.all_behaviors = all_behaviors if all_behaviors is not None else {}
 
         self._unrolled_graph = None
+        self.last_call_behaviors_stack = None
 
         assert any_mode in self.ANY_MODES, f"Unknowed any_mode: {any_mode}"
         self.any_mode = any_mode
@@ -103,24 +107,61 @@ class HEBGraph(DiGraph):
                 color = "black"
         super().add_edge(u_of_edge, v_of_edge, index=index, color=color, **attr)
 
-    def _get_any_action(
-        self, nodes: List[Node], observation, behaviors_in_search: list
-    ):
+    def _get_options(
+        self,
+        nodes: List[Node],
+        observation,
+        behaviors_in_search: list,
+        last_call_behaviors_stack: Optional[list] = None,
+        parent_name: Optional[str] = None,
+    ) -> List[Action]:
         actions = []
         for node in nodes:
-            action = self._get_action(node, observation, behaviors_in_search)
-            if action is None:
+            node_action = self._get_action(
+                node,
+                observation,
+                behaviors_in_search,
+                last_call_behaviors_stack=last_call_behaviors_stack,
+            )
+            if node_action is None:
                 return None
-            actions.append(action)
-        actions = [action for action in actions if action != "Impossible"]
+            actions.append(node_action)
+
+        options = remove_duplicate_actions(
+            [action for action in actions if action != "Impossible"]
+        )
+
+        if parent_name is None:
+            parent_name = self.behavior.name
+        if (
+            (len(nodes) > 1 or self.behavior.name)
+            and options
+            and last_call_behaviors_stack is not None
+        ):
+            last_call_behaviors_stack.insert(
+                0, (self.behavior.name, [n.name for n in self.roots], options)
+            )
+
+        return options
+
+    def _choose_action(self, actions: Optional[List[Action]]) -> Action:
+        if actions is None:
+            return None
         if len(actions) == 0:
             return "Impossible"
-        if self.any_mode == "first":
+        if self.any_mode == "first" or len(actions) == 1:
             return actions[0]
         if self.any_mode == "last":
             return actions[-1]
         if self.any_mode == "random":
             return np.random.choice(actions)
+
+    def _get_any_action(
+        self, nodes: List[Node], observation, behaviors_in_search: list
+    ):
+        return self._choose_action(
+            self._get_options(nodes, observation, behaviors_in_search)
+        )
 
     @property
     def unrolled_graph(self) -> HEBGraph:
@@ -139,10 +180,15 @@ class HEBGraph(DiGraph):
             self._unrolled_graph = unroll_graph(self)
         return self._unrolled_graph
 
-    def _get_action(self, node: Node, observation: Any, behaviors_in_search: List[str]):
+    def _get_action(
+        self,
+        node: Node,
+        observation: Any,
+        behaviors_in_search: List[str],
+        last_call_behaviors_stack: Optional[list] = None,
+    ):
         # Behavior
         if node.type == "behavior":
-
             # To avoid cycling definitions
             if node.name in behaviors_in_search:
                 return "Impossible"
@@ -151,7 +197,7 @@ class HEBGraph(DiGraph):
             if node.name in self.all_behaviors:
                 node = self.all_behaviors[node.name]
 
-            return node(observation, behaviors_in_search)
+            return node(observation, behaviors_in_search, last_call_behaviors_stack)
 
         # Action
         if node.type == "action":
@@ -160,22 +206,43 @@ class HEBGraph(DiGraph):
         if node.type == "feature_condition":
             next_edge_index = int(node(observation))
             next_nodes = get_successors_with_index(self, node, next_edge_index)
-            return self._get_any_action(next_nodes, observation, behaviors_in_search)
+            options = self._get_options(
+                next_nodes,
+                observation,
+                behaviors_in_search,
+                last_call_behaviors_stack=last_call_behaviors_stack,
+                parent_name=node.name,
+            )
+            return self._choose_action(options)
         # Empty
         if node.type == "empty":
             next_node = self.successors(node).__next__()
-            return self._get_action(next_node, observation, behaviors_in_search)
+            return self._get_action(
+                next_node,
+                observation,
+                behaviors_in_search,
+                last_call_behaviors_stack=last_call_behaviors_stack,
+            )
         raise ValueError(f"Unknowed value {node.type} for node.type with node: {node}.")
 
     def __call__(
         self,
         observation,
         behaviors_in_search: Optional[List[str]] = None,
+        last_call_behaviors_stack: Optional[list] = None,
     ) -> Any:
         if behaviors_in_search is None:
             behaviors_in_search = []
+            last_call_behaviors_stack = []
         behaviors_in_search.append(self.behavior.name)
-        return self._get_any_action(self.roots, observation, behaviors_in_search)
+        options = self._get_options(
+            self.roots,
+            observation,
+            behaviors_in_search,
+            last_call_behaviors_stack=last_call_behaviors_stack,
+        )
+        self.last_call_behaviors_stack = last_call_behaviors_stack
+        return self._choose_action(options)
 
     @property
     def roots(self) -> List[Node]:
@@ -202,3 +269,9 @@ class HEBGraph(DiGraph):
 
         """
         return draw_hebgraph(self, ax, **kwargs)
+
+
+def remove_duplicate_actions(actions: List[Action]) -> List[Action]:
+    seen = set()
+    seen_add = seen.add
+    return [a for a in actions if not (a in seen or seen_add(a))]
