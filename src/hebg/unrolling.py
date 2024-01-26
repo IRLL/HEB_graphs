@@ -1,3 +1,6 @@
+# HEBGraph for explainable hierarchical reinforcement learning
+# Copyright (C) 2021-2024 Mathïs FEDERICO <https://www.gnu.org/licenses/>
+
 """Module to unroll HEBGraph.
 
 Unrolling means expanding each sub-behavior node as it's own graph in the global HEBGraph.

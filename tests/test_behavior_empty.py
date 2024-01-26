@@ -1,5 +1,5 @@
 # HEBGraph for explainable hierarchical reinforcement learning
-# Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
+# Copyright (C) 2021-2024 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
 """ Behavior of HEBGraphs with empty nodes. """
 
@@ -12,7 +12,6 @@ from tests.examples.behaviors import (
     F_E_A_Behavior,
     E_E_A_Behavior,
 )
-from tests.examples.feature_conditions import ThresholdFeatureCondition
 
 
 def test_e_a_graph():

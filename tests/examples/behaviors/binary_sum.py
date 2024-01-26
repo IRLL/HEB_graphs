@@ -1,4 +1,4 @@
-from hebg import Action, Behavior
+from hebg import Action
 from tests.examples.behaviors import F_A_Behavior
 from tests.examples.feature_conditions import IsDivisibleFeatureCondition
 
