@@ -1,5 +1,5 @@
 # HEBGraph for explainable hierarchical reinforcement learning
-# Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
+# Copyright (C) 2021-2024 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 # pylint: disable=arguments-differ
 
 """Module containing the HEBGraph base class."""
@@ -74,7 +74,7 @@ class HEBGraph(DiGraph):
         self.all_behaviors = all_behaviors if all_behaviors is not None else {}
 
         self._unrolled_graph = None
-        self.last_call_behaviors_stack = None
+        self.call_graph: Optional[DiGraph] = None
 
         assert any_mode in self.ANY_MODES, f"Unknowed any_mode: {any_mode}"
         self.any_mode = any_mode
@@ -110,8 +110,7 @@ class HEBGraph(DiGraph):
         self,
         nodes: List[Node],
         observation,
-        behaviors_in_search: list,
-        last_call_behaviors_stack: Optional[list] = None,
+        call_graph: DiGraph,
         parent_name: Optional[str] = None,
     ) -> List[Action]:
         actions = []
@@ -119,8 +118,7 @@ class HEBGraph(DiGraph):
             node_action = self._get_action(
                 node,
                 observation,
-                behaviors_in_search,
-                last_call_behaviors_stack=last_call_behaviors_stack,
+                call_graph=call_graph,
             )
             if node_action is None:
                 return None
@@ -132,14 +130,13 @@ class HEBGraph(DiGraph):
 
         if parent_name is None:
             parent_name = self.behavior.name
-        if (
-            (len(nodes) > 1 or self.behavior.name)
-            and options
-            and last_call_behaviors_stack is not None
-        ):
-            last_call_behaviors_stack.insert(
-                0, (self.behavior.name, [n.name for n in self.roots], options)
-            )
+        # if (
+        #     (len(nodes) > 1 or self.behavior.name)
+        #     and options
+        # ):
+        #     call_graph.add_node(
+        #         parent_name, options
+        #     )
 
         return options
 
@@ -183,20 +180,19 @@ class HEBGraph(DiGraph):
         self,
         node: Node,
         observation: Any,
-        behaviors_in_search: List[str],
-        last_call_behaviors_stack: Optional[list] = None,
+        call_graph: DiGraph,
     ):
         # Behavior
         if node.type == "behavior":
             # To avoid cycling definitions
-            if node.name in behaviors_in_search:
+            if node.name in call_graph.nodes():
                 return "Impossible"
 
             # Search for name reference in all_behaviors
             if node.name in self.all_behaviors:
                 node = self.all_behaviors[node.name]
 
-            return node(observation, behaviors_in_search, last_call_behaviors_stack)
+            return node(observation, call_graph)
 
         # Action
         if node.type == "action":
@@ -208,39 +204,26 @@ class HEBGraph(DiGraph):
             options = self._get_options(
                 next_nodes,
                 observation,
-                behaviors_in_search,
-                last_call_behaviors_stack=last_call_behaviors_stack,
+                call_graph=call_graph,
                 parent_name=node.name,
             )
             return self._choose_action(options)
         # Empty
         if node.type == "empty":
             next_node = self.successors(node).__next__()
-            return self._get_action(
-                next_node,
-                observation,
-                behaviors_in_search,
-                last_call_behaviors_stack=last_call_behaviors_stack,
-            )
+            return self._get_action(next_node, observation, call_graph=call_graph)
         raise ValueError(f"Unknowed value {node.type} for node.type with node: {node}.")
 
     def __call__(
         self,
         observation,
-        behaviors_in_search: Optional[List[str]] = None,
-        last_call_behaviors_stack: Optional[list] = None,
+        call_graph: Optional[DiGraph] = None,
     ) -> Any:
-        if behaviors_in_search is None:
-            behaviors_in_search = []
-            last_call_behaviors_stack = []
-        behaviors_in_search.append(self.behavior.name)
-        options = self._get_options(
-            self.roots,
-            observation,
-            behaviors_in_search,
-            last_call_behaviors_stack=last_call_behaviors_stack,
-        )
-        self.last_call_behaviors_stack = last_call_behaviors_stack
+        if call_graph is None:
+            call_graph = DiGraph()
+        self.call_graph = call_graph
+        self.call_graph.add_node(self.behavior.name, action=None)
+        options = self._get_options(self.roots, observation, call_graph=call_graph)
         return self._choose_action(options)
 
     @property

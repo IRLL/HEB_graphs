@@ -27,7 +27,7 @@ import matplotlib.pyplot as plt
 
 from hebg import HEBGraph, Action, FeatureCondition, Behavior
 from hebg.unrolling import unroll_graph
-from tests.integration.test_code_generation import _unidiff_output
+from tests.test_code_generation import _unidiff_output
 
 
 class Pet(Action):
