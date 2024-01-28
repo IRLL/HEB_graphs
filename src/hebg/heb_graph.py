@@ -5,6 +5,7 @@
 """Module containing the HEBGraph base class."""
 
 from __future__ import annotations
+from enum import Enum
 
 from typing import Any, Dict, List, Optional, Tuple, TypeVar
 
@@ -45,7 +46,6 @@ class HEBGraph(DiGraph):
         behavior: The Behavior object from which this graph is built.
         all_behaviors: A dictionary of behavior, this can be used to avoid cirular definitions using
             the behavior names as anchor instead of the behavior object itself.
-        any_mode: How to choose path, when multiple path are valid.
         incoming_graph_data: Additional data to include in the graph.
 
     """
@@ -60,14 +60,12 @@ class HEBGraph(DiGraph):
         5: "cyan",
         6: "gray",
     }
-    ANY_MODES = ("first", "last", "random")
 
     def __init__(
         self,
         behavior: Behavior,
         all_behaviors: Dict[str, Behavior] = None,
         incoming_graph_data=None,
-        any_mode: str = "first",
         **attr,
     ):
         self.behavior = behavior
@@ -75,9 +73,6 @@ class HEBGraph(DiGraph):
 
         self._unrolled_graph = None
         self.call_graph: Optional[DiGraph] = None
-
-        assert any_mode in self.ANY_MODES, f"Unknowed any_mode: {any_mode}"
-        self.any_mode = any_mode
 
         super().__init__(incoming_graph_data=incoming_graph_data, **attr)
 
@@ -106,59 +101,6 @@ class HEBGraph(DiGraph):
                 color = "black"
         super().add_edge(u_of_edge, v_of_edge, index=index, color=color, **attr)
 
-    def _get_options(
-        self,
-        nodes: List[Node],
-        observation,
-        call_graph: DiGraph,
-        parent_name: Optional[str] = None,
-    ) -> List[Action]:
-        actions = []
-        for node in nodes:
-            node_action = self._get_action(
-                node,
-                observation,
-                call_graph=call_graph,
-            )
-            if node_action is None:
-                return None
-            actions.append(node_action)
-
-        options = remove_duplicate_actions(
-            [action for action in actions if action != "Impossible"]
-        )
-
-        if parent_name is None:
-            parent_name = self.behavior.name
-        # if (
-        #     (len(nodes) > 1 or self.behavior.name)
-        #     and options
-        # ):
-        #     call_graph.add_node(
-        #         parent_name, options
-        #     )
-
-        return options
-
-    def _choose_action(self, actions: Optional[List[Action]]) -> Action:
-        if actions is None:
-            return None
-        if len(actions) == 0:
-            return "Impossible"
-        if self.any_mode == "first" or len(actions) == 1:
-            return actions[0]
-        if self.any_mode == "last":
-            return actions[-1]
-        if self.any_mode == "random":
-            return np.random.choice(actions)
-
-    def _get_any_action(
-        self, nodes: List[Node], observation, behaviors_in_search: list
-    ):
-        return self._choose_action(
-            self._get_options(nodes, observation, behaviors_in_search)
-        )
-
     @property
     def unrolled_graph(self) -> HEBGraph:
         """Access to the unrolled behavior graph.
@@ -176,16 +118,31 @@ class HEBGraph(DiGraph):
             self._unrolled_graph = unroll_graph(self)
         return self._unrolled_graph
 
+    def __call__(
+        self,
+        observation,
+        call_graph: Optional[DiGraph] = None,
+    ) -> Any:
+        if call_graph is None:
+            call_graph = DiGraph()
+            call_graph.graph["frontiere"] = []
+            call_graph.add_node(self.behavior.name, order=0)
+        self.call_graph = call_graph
+        return self._split_call_between_nodes(
+            self.roots, observation, call_graph=call_graph
+        )
+
     def _get_action(
         self,
         node: Node,
         observation: Any,
         call_graph: DiGraph,
+        parent_name: str,
     ):
         # Behavior
         if node.type == "behavior":
             # To avoid cycling definitions
-            if node.name in call_graph.nodes():
+            if len(list(call_graph.successors(node.name))) > 0:
                 return "Impossible"
 
             # Search for name reference in all_behaviors
@@ -197,34 +154,63 @@ class HEBGraph(DiGraph):
         # Action
         if node.type == "action":
             return node(observation)
+
         # Feature Condition
         if node.type == "feature_condition":
             next_edge_index = int(node(observation))
             next_nodes = get_successors_with_index(self, node, next_edge_index)
-            options = self._get_options(
-                next_nodes,
+            return self._split_call_between_nodes(
+                next_nodes, observation, call_graph=call_graph, parent_name=node.name
+            )
+        # Empty
+        if node.type == "empty":
+            return self._split_call_between_nodes(
+                list(self.successors(node)),
                 observation,
                 call_graph=call_graph,
                 parent_name=node.name,
             )
-            return self._choose_action(options)
-        # Empty
-        if node.type == "empty":
-            next_node = self.successors(node).__next__()
-            return self._get_action(next_node, observation, call_graph=call_graph)
         raise ValueError(f"Unknowed value {node.type} for node.type with node: {node}.")
 
-    def __call__(
+    def _split_call_between_nodes(
         self,
+        nodes: List[Node],
         observation,
-        call_graph: Optional[DiGraph] = None,
-    ) -> Any:
-        if call_graph is None:
-            call_graph = DiGraph()
-        self.call_graph = call_graph
-        self.call_graph.add_node(self.behavior.name, action=None)
-        options = self._get_options(self.roots, observation, call_graph=call_graph)
-        return self._choose_action(options)
+        call_graph: DiGraph,
+        parent_name: Optional[Node] = None,
+    ) -> List[Action]:
+        if parent_name is None:
+            parent_name = self.behavior.name
+
+        frontiere: List[Node] = call_graph.graph["frontiere"]
+        frontiere.extend(nodes)
+
+        for node in nodes:
+            call_graph.add_edge(
+                parent_name, node.name, status=CallEdgeStatus.UNEXPLORED.value
+            )
+            node_data = call_graph.nodes[node.name]
+            parent_data = call_graph.nodes[parent_name]
+            if "order" not in node_data:
+                node_data["order"] = parent_data["order"] + 1
+
+        action = "Impossible"
+        while action == "Impossible" and len(frontiere) > 0:
+            lesser_complex_node = frontiere.pop(
+                np.argmin([node.cost for node in frontiere])
+            )
+
+            action = self._get_action(
+                lesser_complex_node, observation, call_graph, parent_name=parent_name
+            )
+
+            call_graph.edges[parent_name, lesser_complex_node.name]["status"] = (
+                CallEdgeStatus.FAILURE.value
+                if action == "Impossible"
+                else CallEdgeStatus.CALLED.value
+            )
+
+        return action
 
     @property
     def roots(self) -> List[Node]:
@@ -251,6 +237,12 @@ class HEBGraph(DiGraph):
 
         """
         return draw_hebgraph(self, ax, **kwargs)
+
+
+class CallEdgeStatus(Enum):
+    UNEXPLORED = "unexplored"
+    CALLED = "called"
+    FAILURE = "failure"
 
 
 def remove_duplicate_actions(actions: List[Action]) -> List[Action]:

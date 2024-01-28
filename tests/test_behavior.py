@@ -8,16 +8,11 @@ import pytest_check as check
 from pytest_mock import MockerFixture
 
 from hebg.behavior import Behavior
+from hebg.heb_graph import HEBGraph
 from hebg.node import Action
 
-from tests.examples.behaviors import (
-    FundamentalBehavior,
-    AA_Behavior,
-    F_A_Behavior,
-    F_F_A_Behavior,
-    AF_A_Behavior,
-    F_AA_Behavior,
-)
+from tests.examples.behaviors import FundamentalBehavior, F_A_Behavior, F_F_A_Behavior
+from tests.examples.behaviors.loop_with_alternative import build_looping_behaviors
 from tests.examples.feature_conditions import ThresholdFeatureCondition
 
 
@@ -62,57 +57,78 @@ class TestBehavior:
         check.is_false(self.node.build_graph.called)
 
 
-def test_a_graph():
-    """(A) Fundamental behaviors (single action) should work properly."""
-    action_id = 42
-    behavior = FundamentalBehavior(Action(action_id))
-    check.equal(behavior(None), action_id)
+class TestPathfinding:
+    def test_fundamental_behavior(self):
+        """Fundamental behavior (single action) should return its action."""
+        action_id = 42
+        behavior = FundamentalBehavior(Action(action_id))
+        check.equal(behavior(None), action_id)
+
+    def test_feature_condition_single(self):
+        """Feature condition should orient path properly."""
+        feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
+        actions = {0: Action(0), 1: Action(1)}
+        behavior = F_A_Behavior("F_A", feature_condition, actions)
+        check.equal(behavior(1), 1)
+        check.equal(behavior(-1), 0)
+
+    def test_feature_conditions_chained(self):
+        """Feature condition should orient path properly in double chain."""
+        behavior = F_F_A_Behavior("F_F_A")
+        check.equal(behavior(-2), 0)
+        check.equal(behavior(-1), 1)
+        check.equal(behavior(1), 2)
+        check.equal(behavior(2), 3)
+
+    def test_looping_resolve(self):
+        """Loops with alternatives should be ignored."""
+        _gather_wood, get_axe = build_looping_behaviors()
+        check.equal(get_axe({}), "Punch tree")
 
 
-def test_f_a_graph():
-    """(F-A) Feature condition should orient path properly."""
-    feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
-    actions = {0: Action(0), 1: Action(1)}
-    behavior = F_A_Behavior("F_A", feature_condition, actions)
-    check.equal(behavior(1), 1)
-    check.equal(behavior(-1), 0)
+class TestCostBehavior:
+    def test_choose_root_of_lesser_cost(self):
+        """Should choose root of lesser cost."""
 
+        expected_action = "EXPECTED"
 
-def test_f_f_a_graph():
-    """(F-F-A) Feature condition should orient path properly in double chain."""
-    behavior = F_F_A_Behavior("F_F_A")
-    check.equal(behavior(-2), 0)
-    check.equal(behavior(-1), 1)
-    check.equal(behavior(1), 2)
-    check.equal(behavior(2), 3)
+        class AAA_Behavior(Behavior):
+            def __init__(self) -> None:
+                super().__init__("AAA")
 
+            def build_graph(self) -> HEBGraph:
+                graph = HEBGraph(self)
+                graph.add_node(Action(0, cost=2))
+                graph.add_node(Action(expected_action, cost=1))
+                graph.add_node(Action(2, cost=3))
+                return graph
 
-def test_aa_graph():
-    """(AA) Should choose between roots depending on 'any_mode'."""
-    behavior = AA_Behavior("AA", any_mode="first")
-    check.equal(behavior(None), 0)
+        behavior = AAA_Behavior()
+        check.equal(behavior(None), expected_action)
 
-    behavior = AA_Behavior("AA", any_mode="last")
-    check.equal(behavior(None), 1)
+    def test_not_path_of_least_cost(self):
+        """Should choose path of larger complexity if individual costs lead to it."""
 
+        class AF_A_Behavior(Behavior):
 
-def test_af_a_graph():
-    """(AF-A) Should choose between roots depending on 'any_mode'."""
-    behavior = AF_A_Behavior("AF_A", any_mode="first")
-    check.equal(behavior(1), 0)
-    check.equal(behavior(-1), 0)
+            """Double root with feature condition and action"""
 
-    behavior = AF_A_Behavior("AF_A", any_mode="last")
-    check.equal(behavior(1), 1)
-    check.equal(behavior(-1), 2)
+            def __init__(self) -> None:
+                super().__init__("AF_A")
 
+            def build_graph(self) -> HEBGraph:
+                graph = HEBGraph(self)
 
-def test_f_af_a_graph():
-    """(F-AA) Should choose between condition edges depending on 'any_mode'."""
-    behavior = F_AA_Behavior("F_AA", any_mode="first")
-    check.equal(behavior(1), 0)
-    check.equal(behavior(-1), 1)
+                graph.add_node(Action(0, cost=1.5))
+                feature_condition = ThresholdFeatureCondition(
+                    relation=">=", threshold=0, cost=1.0
+                )
 
-    behavior = F_AA_Behavior("F_AA", any_mode="last")
-    check.equal(behavior(1), 0)
-    check.equal(behavior(-1), 2)
+                graph.add_edge(feature_condition, Action(1, cost=1.0), index=int(True))
+                graph.add_edge(feature_condition, Action(2, cost=1.0), index=int(False))
+
+                return graph
+
+        behavior = AF_A_Behavior()
+        check.equal(behavior(1), 1)
+        check.equal(behavior(-1), 2)

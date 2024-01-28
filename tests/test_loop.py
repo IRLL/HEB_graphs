@@ -2,15 +2,13 @@ import pytest
 import pytest_check as check
 
 import networkx as nx
-from hebg import HEBGraph
 from hebg.unrolling import unroll_graph
+from tests import plot_graph
 
 from tests.examples.behaviors.loop_with_alternative import build_looping_behaviors
 from tests.examples.behaviors.loop_without_alternative import (
     build_looping_behaviors_without_alternatives,
 )
-
-import matplotlib.pyplot as plt
 
 
 class TestLoopAlternative:
@@ -24,7 +22,7 @@ class TestLoopAlternative:
         draw = False
         unrolled_graph = unroll_graph(self.gather_wood.graph)
         if draw:
-            _plot_graph(unrolled_graph)
+            plot_graph(unrolled_graph)
 
         expected_graph = nx.DiGraph()
         expected_graph.add_edge("Has axe", "Punch tree")
@@ -34,17 +32,19 @@ class TestLoopAlternative:
         # Expected sub-behavior
         expected_graph.add_edge("Has wood", "Gather wood")
         expected_graph.add_edge("Has wood", "Craft axe")
+        expected_graph.add_edge("Has wood", "Summon axe out of thin air")
         check.is_true(nx.is_isomorphic(unrolled_graph, expected_graph))
 
     def test_unroll_get_new_axe(self):
         draw = False
         unrolled_graph = unroll_graph(self.get_new_axe.graph)
         if draw:
-            _plot_graph(unrolled_graph)
+            plot_graph(unrolled_graph)
 
         expected_graph = nx.DiGraph()
         expected_graph.add_edge("Has wood", "Has axe")
         expected_graph.add_edge("Has wood", "Craft new axe")
+        expected_graph.add_edge("Has wood", "Summon axe out of thin air")
 
         # Expected sub-behavior
         expected_graph.add_edge("Has axe", "Punch tree")
@@ -55,20 +55,20 @@ class TestLoopAlternative:
     def test_unroll_gather_wood_cutting_alternatives(self):
         draw = False
         unrolled_graph = unroll_graph(
-            self.gather_wood.graph,
-            cut_looping_alternatives=True,
+            self.gather_wood.graph, cut_looping_alternatives=True
         )
         if draw:
-            _plot_graph(unrolled_graph)
+            plot_graph(unrolled_graph)
 
         expected_graph = nx.DiGraph()
         expected_graph.add_edge("Has axe", "Punch tree")
-        expected_graph.add_edge("Has axe", "Cut tree with axe")
         expected_graph.add_edge("Has axe", "Has wood")
+        expected_graph.add_edge("Has axe", "Use axe")
 
         # Expected sub-behavior
-        expected_graph.add_edge("Has wood", "Punch tree")
+        expected_graph.add_edge("Has wood", "Summon axe of out thin air")
         expected_graph.add_edge("Has wood", "Craft axe")
+
         check.is_true(nx.is_isomorphic(unrolled_graph, expected_graph))
 
     def test_unroll_get_new_axe_cutting_alternatives(self):
@@ -78,11 +78,12 @@ class TestLoopAlternative:
             cut_looping_alternatives=True,
         )
         if draw:
-            _plot_graph(unrolled_graph)
+            plot_graph(unrolled_graph)
 
         expected_graph = nx.DiGraph()
         expected_graph.add_edge("Has wood", "Has axe")
         expected_graph.add_edge("Has wood", "Craft new axe")
+        expected_graph.add_edge("Has wood", "Summon axe out of thin air")
 
         # Expected sub-behavior
         expected_graph.add_edge("Has axe", "Punch tree")
@@ -110,22 +111,7 @@ class TestLoopWithoutAlternative:
             cut_looping_alternatives=True,
         )
         if draw:
-            _plot_graph(unrolled_graph)
+            plot_graph(unrolled_graph)
 
         expected_graph = nx.DiGraph()
         check.is_true(nx.is_isomorphic(unrolled_graph, expected_graph))
-
-
-def _plot_graph(graph: "HEBGraph"):
-    _, ax = plt.subplots()
-    pos = None
-    if len(graph.roots) == 0:
-        pos = nx.spring_layout(graph)
-    graph.draw(ax, pos=pos)
-    plt.show()
-
-
-def _plot_graph(graph: "HEBGraph"):
-    _, ax = plt.subplots()
-    graph.draw(ax)
-    plt.show()

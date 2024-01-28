@@ -1,10 +1,8 @@
 from tests.examples.behaviors.basic import (
     FundamentalBehavior,
-    AA_Behavior,
     F_A_Behavior,
     F_AA_Behavior,
     F_F_A_Behavior,
-    AF_A_Behavior,
 )
 from tests.examples.behaviors.basic_empty import (
     E_A_Behavior,
@@ -21,11 +19,9 @@ from tests.examples.behaviors.loop_without_alternative import (
 
 __all__ = [
     "FundamentalBehavior",
-    "AA_Behavior",
     "F_A_Behavior",
     "F_AA_Behavior",
     "F_F_A_Behavior",
-    "AF_A_Behavior",
     "E_A_Behavior",
     "E_F_A_Behavior",
     "F_E_A_Behavior",

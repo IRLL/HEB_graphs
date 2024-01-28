@@ -240,9 +240,7 @@ def compose_heb_graphs(graph_of_reference: "HEBGraph", other_graph: "HEBGraph"):
 
     """
     new_graph = graph_of_reference.__class__(
-        graph_of_reference.behavior,
-        all_behaviors=graph_of_reference.all_behaviors,
-        any_mode=graph_of_reference.any_mode,
+        graph_of_reference.behavior, all_behaviors=graph_of_reference.all_behaviors
     )
     # add graph attributes, H attributes take precedent over G attributes
     new_graph.graph.update(graph_of_reference.graph)
