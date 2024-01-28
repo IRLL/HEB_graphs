@@ -12,7 +12,7 @@ class ThresholdFeatureCondition(FeatureCondition):
         LESSER_THAN = "<"
 
     def __init__(
-        self, relation: Union[Relation, str] = ">=", threshold: float = 0
+        self, relation: Union[Relation, str] = ">=", threshold: float = 0, **kwargs
     ) -> None:
         """Threshold-based feature condition for scalar feature."""
         self.relation = relation
@@ -20,7 +20,7 @@ class ThresholdFeatureCondition(FeatureCondition):
         self._relation = self.Relation(relation)
         display_name = self._relation.name.capitalize().replace("_", " ")
         name = f"{display_name} {threshold} ?"
-        super().__init__(name=name, image=None)
+        super().__init__(name=name, **kwargs)
 
     def __call__(self, observation: float) -> int:
         conditions = {

@@ -21,6 +21,7 @@ class Node:
         self,
         name: str,
         node_type: str,
+        cost: float = 1.0,
         complexity: int = None,
         image=None,
     ) -> None:
@@ -39,6 +40,7 @@ class Node:
         """
         self.name = name
         self.image = image
+        self.cost = cost
         if node_type not in self.NODE_TYPES:
             raise ValueError(
                 f"node_type ({node_type})"

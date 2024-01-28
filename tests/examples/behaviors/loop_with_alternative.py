@@ -1,6 +1,15 @@
-from typing import List
+from typing import Any, List
 
 from hebg import HEBGraph, Action, FeatureCondition, Behavior
+
+
+class HasItem(FeatureCondition):
+    def __init__(self, item_name: str) -> None:
+        self.item_name = item_name
+        super().__init__(name=f"Has {item_name} ?")
+
+    def __call__(self, observation: Any) -> int:
+        return self.item_name in observation
 
 
 class GatherWood(Behavior):
@@ -12,10 +21,10 @@ class GatherWood(Behavior):
 
     def build_graph(self) -> HEBGraph:
         graph = HEBGraph(self)
-        feature = FeatureCondition("Has an axe")
-        graph.add_edge(feature, Action("Punch tree"), index=False)
-        graph.add_edge(feature, Behavior("Get new axe"), index=False)
-        graph.add_edge(feature, Action("Use axe on tree"), index=True)
+        has_axe = HasItem("axe")
+        graph.add_edge(has_axe, Action("Punch tree", cost=2.0), index=False)
+        graph.add_edge(has_axe, Behavior("Get new axe"), index=False)
+        graph.add_edge(has_axe, Action("Use axe on tree"), index=True)
         return graph
 
 
@@ -28,9 +37,12 @@ class GetNewAxe(Behavior):
 
     def build_graph(self) -> HEBGraph:
         graph = HEBGraph(self)
-        feature = FeatureCondition("Has wood")
-        graph.add_edge(feature, Behavior("Gather wood"), index=False)
-        graph.add_edge(feature, Action("Craft axe"), index=True)
+        has_wood = HasItem("wood")
+        graph.add_edge(has_wood, Behavior("Gather wood"), index=False)
+        graph.add_edge(
+            has_wood, Action("Summon axe out of thin air", cost=10.0), index=False
+        )
+        graph.add_edge(has_wood, Action("Craft axe"), index=True)
         return graph
 
 
