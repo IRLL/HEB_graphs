@@ -1,12 +1,7 @@
-from typing import Union
-from networkx import (
-    DiGraph,
-    draw_networkx_edges,
-    draw_networkx_labels,
-    draw_networkx_nodes,
-)
+from networkx import DiGraph
+
 from hebg.behavior import Behavior
-from hebg.heb_graph import CallEdgeStatus, HEBGraph
+from hebg.heb_graph import HEBGraph
 from hebg.node import Action
 
 from pytest_mock import MockerFixture
@@ -137,6 +132,9 @@ class TestCallGraph:
 
         call_graph = get_axe.graph.call_graph
 
+        if draw:
+            plot_graph(call_graph)
+
         expected_order = [
             "Get new axe",
             "Has wood ?",
@@ -150,46 +148,6 @@ class TestCallGraph:
             key=lambda x: x[1],
         )
         assert [node for node, _order in nodes_by_order] == expected_order
-
-        if draw:
-            import matplotlib.pyplot as plt
-
-            def status_to_color(status: Union[str, CallEdgeStatus]):
-                status = CallEdgeStatus(status)
-                if status is CallEdgeStatus.UNEXPLORED:
-                    return "black"
-                if status is CallEdgeStatus.CALLED:
-                    return "green"
-                if status is CallEdgeStatus.FAILURE:
-                    return "red"
-                raise NotImplementedError
-
-            def call_graph_pos(call_graph: DiGraph):
-                pos = {}
-                amount_by_order = {}
-                for node, node_data in call_graph.nodes(data=True):
-                    order: int = node_data.get("order")
-                    if order not in amount_by_order:
-                        amount_by_order[order] = 0
-                    else:
-                        amount_by_order[order] += 1
-                    pos[node] = [order, amount_by_order[order] / 2]
-                return pos
-
-            pos = call_graph_pos(call_graph)
-            draw_networkx_nodes(call_graph, pos=pos)
-            draw_networkx_labels(call_graph, pos=pos)
-            draw_networkx_edges(
-                call_graph,
-                pos,
-                edge_color=[
-                    status_to_color(status)
-                    for _, _, status in call_graph.edges(data="status")
-                ],
-                connectionstyle="arc3,rad=-0.15",
-            )
-            plt.axis("off")  # turn off axis
-            plt.show()
 
         expected_graph = DiGraph(
             [
