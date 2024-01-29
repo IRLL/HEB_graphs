@@ -57,7 +57,7 @@ class ReachMeadow(Behavior):
         return graph
 
 
-def build_looping_behaviors_without_alternatives() -> List[Behavior]:
+def build_looping_behaviors_without_direct_alternatives() -> List[Behavior]:
     behaviors: List[Behavior] = [
         ReachForest(),
         ReachOtherZone(),

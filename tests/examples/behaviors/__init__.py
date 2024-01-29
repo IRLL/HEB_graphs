@@ -13,7 +13,7 @@ from tests.examples.behaviors.basic_empty import (
 from tests.examples.behaviors.binary_sum import build_binary_sum_behavior
 from tests.examples.behaviors.loop_with_alternative import build_looping_behaviors
 from tests.examples.behaviors.loop_without_alternative import (
-    build_looping_behaviors_without_alternatives,
+    build_looping_behaviors_without_direct_alternatives,
 )
 
 
@@ -28,5 +28,5 @@ __all__ = [
     "E_E_A_Behavior",
     "build_binary_sum_behavior",
     "build_looping_behaviors",
-    "build_looping_behaviors_without_alternatives",
+    "build_looping_behaviors_without_direct_alternatives",
 ]

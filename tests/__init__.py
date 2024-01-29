@@ -5,7 +5,6 @@
 
 from typing import Protocol
 from matplotlib import pyplot as plt
-import networkx as nx
 
 
 class Graph(Protocol):
@@ -18,9 +17,6 @@ class Graph(Protocol):
 
 def plot_graph(graph: Graph, **kwargs):
     _, ax = plt.subplots()
-    pos = None
-    if len(list(graph.nodes())) == 0:
-        pos = nx.spring_layout(graph)
-    graph.draw(ax, pos=pos, **kwargs)
+    graph.draw(ax, **kwargs)
     plt.axis("off")  # turn off axis
     plt.show()
