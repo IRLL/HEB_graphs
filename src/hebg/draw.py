@@ -10,7 +10,7 @@ import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.legend import Legend
 from matplotlib.legend_handler import HandlerPatch
-from networkx import draw_networkx_edges
+from networkx import draw_networkx_edges, spring_layout
 from scipy.spatial import ConvexHull  # pylint: disable=no-name-in-module
 
 from hebg.graph import draw_networkx_nodes_images
@@ -37,7 +37,10 @@ def draw_hebgraph(
     plt.setp(ax.spines.values(), color="orange")
 
     if pos is None:
-        pos = staircase_layout(graph)
+        if len(graph.roots) > 0:
+            pos = staircase_layout(graph)
+        else:
+            pos = spring_layout(graph)
     draw_networkx_nodes_images(graph, pos, ax=ax, img_zoom=0.5)
 
     draw_networkx_edges(

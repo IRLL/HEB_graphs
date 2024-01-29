@@ -59,7 +59,7 @@ def _unroll_graph(
     if _unrolled_behaviors is None:
         _unrolled_behaviors = {}
     if _current_alternatives is None:
-        _current_alternatives = []
+        _current_alternatives = {0: []}
 
     is_looping = False
     _unrolled_behaviors[graph.behavior.name] = None
@@ -68,14 +68,9 @@ def _unroll_graph(
     for node in list(unrolled_graph.nodes()):
         if not isinstance(node, Behavior):
             continue
-        new_alternatives = []
-        for pred, _node, data in graph.in_edges(node, data=True):
-            index = data["index"]
-            for _pred, alternative, alt_index in graph.out_edges(pred, data="index"):
-                if index == alt_index and alternative != node:
-                    new_alternatives.append(alternative)
-        if new_alternatives:
-            _current_alternatives = new_alternatives
+
+        _current_alternatives[0] = _direct_alternatives(node, graph)
+        _current_alternatives[1] = _roots_alternatives(node, graph)
         unrolled_graph, behavior_is_looping = _unroll_behavior(
             unrolled_graph,
             node,
@@ -88,6 +83,25 @@ def _unroll_graph(
             is_looping = True
 
     return unrolled_graph, is_looping
+
+
+def _direct_alternatives(node: "Node", graph: "HEBGraph"):
+    alternatives = []
+    for pred, _node, data in graph.in_edges(node, data=True):
+        index = data["index"]
+        for _pred, alternative, alt_index in graph.out_edges(pred, data="index"):
+            if index != alt_index or alternative == node:
+                continue
+            alternatives.append(alternative)
+    return alternatives
+
+
+def _roots_alternatives(node: "Node", graph: "HEBGraph"):
+    alternatives = []
+    for pred, _node, data in graph.in_edges(node, data=True):
+        if pred in graph.roots:
+            alternatives.extend([r for r in graph.roots if r != pred])
+    return alternatives
 
 
 def _unroll_behavior(
@@ -122,13 +136,24 @@ def _unroll_behavior(
     )
 
     if is_looping and cut_looping_alternatives:
-        if not _current_alternatives:
-            return graph, is_looping
-        for alternative in _current_alternatives:
+        for alternative in _current_alternatives[0]:
             for last_condition, _, data in graph.in_edges(behavior, data=True):
                 graph.add_edge(last_condition, alternative, **data)
-        graph.remove_node(behavior)
-        return graph, False
+        if _current_alternatives[0]:
+            graph.remove_node(behavior)
+            return graph, False
+        if _current_alternatives[1]:
+            predecessors = list(graph.predecessors(behavior))
+            for last_condition in predecessors:
+                successors = list(graph.successors(last_condition))
+                for descendant in successors:
+                    graph.remove_edge(last_condition, descendant)
+                    if graph.neighbors(descendant) == 0:
+                        graph.remove_node(descendant)
+                graph.remove_node(last_condition)
+            graph.remove_node(behavior)
+            return graph, False
+        raise NotImplementedError()
 
     if node_graph is None:
         # If we cannot get the node's graph, we keep it as is.
@@ -154,7 +179,7 @@ def _unrolled_behavior_graph(
     cut_looping_alternatives: bool,
     _current_alternatives: List[Union["Action", "Behavior"]],
     _unrolled_behaviors: Dict[str, Optional["HEBGraph"]],
-) -> Optional["HEBGraph"]:
+) -> Tuple[Optional["HEBGraph"], bool]:
     """Get the unrolled sub-graph of a behavior.
 
     Args:
@@ -219,9 +244,9 @@ def group_behaviors_points(
             for i in range(len(groups[:-1])):
                 key = tuple(groups[: -1 - i])
                 point = pos[node]
-                try:
+                if key in points_grouped_by_behavior:
                     points_grouped_by_behavior[key].append(point)
-                except KeyError:
+                else:
                     points_grouped_by_behavior[key] = [point]
     return points_grouped_by_behavior
 
