@@ -6,21 +6,18 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple, TypeVar
+from typing import Any, Dict, List, Optional, Tuple
 
 from matplotlib.axes import Axes
 from networkx import DiGraph
 
 from hebg.behavior import Behavior
-from hebg.call_graph import CallEdgeStatus, CallGraph
+from hebg.call_graph import CallGraph
 from hebg.codegen import get_hebg_source
 from hebg.draw import draw_hebgraph
-from hebg.graph import get_roots, get_successors_with_index
+from hebg.graph import get_roots
 from hebg.node import Node
 from hebg.unrolling import unroll_graph
-
-
-Action = TypeVar("Action")
 
 
 class HEBGraph(DiGraph):
@@ -124,58 +121,10 @@ class HEBGraph(DiGraph):
     ) -> Any:
         if call_graph is None:
             call_graph = CallGraph(initial_node=self.behavior)
-
         self.call_graph = call_graph
-        return self._split_call_between_nodes(
-            self.roots, observation, call_graph=call_graph
+        return self.call_graph.call_nodes(
+            self.roots, observation, hebgraph=self, parent=self.behavior
         )
-
-    def _get_action(self, node: Node, observation: Any, call_graph: DiGraph):
-        # Behavior
-        if node.type == "behavior":
-            # Search for name reference in all_behaviors
-            if node.name in self.all_behaviors:
-                node = self.all_behaviors[node.name]
-
-            return node(observation, call_graph)
-
-        # Action
-        if node.type == "action":
-            return node(observation)
-
-        # Feature Condition
-        if node.type == "feature_condition":
-            next_edge_index = int(node(observation))
-            next_nodes = get_successors_with_index(self, node, next_edge_index)
-            return self._split_call_between_nodes(
-                next_nodes, observation, call_graph=call_graph, parent=node
-            )
-        # Empty
-        if node.type == "empty":
-            return self._split_call_between_nodes(
-                list(self.successors(node)),
-                observation,
-                call_graph=call_graph,
-                parent=node,
-            )
-        raise ValueError(f"Unknowed value {node.type} for node.type with node: {node}.")
-
-    def _split_call_between_nodes(
-        self,
-        nodes: List[Node],
-        observation,
-        call_graph: CallGraph,
-        parent: Optional[Node] = None,
-    ) -> List[Action]:
-        if parent is None:
-            parent = self.behavior
-
-        call_graph.extend_frontiere(nodes, parent)
-        next_node = call_graph.pop_from_frontiere(parent)
-        if next_node is None:
-            raise ValueError("No valid frontiere left in call_graph")
-        action = self._get_action(next_node, observation, call_graph)
-        return action
 
     @property
     def roots(self) -> List[Node]:
@@ -202,9 +151,3 @@ class HEBGraph(DiGraph):
 
         """
         return draw_hebgraph(self, ax, **kwargs)
-
-
-def remove_duplicate_actions(actions: List[Action]) -> List[Action]:
-    seen = set()
-    seen_add = seen.add
-    return [a for a in actions if not (a in seen or seen_add(a))]
