@@ -5,6 +5,7 @@ from hebg.heb_graph import HEBGraph
 from hebg.node import Action
 
 from pytest_mock import MockerFixture
+import pytest_check as check
 
 from tests import plot_graph
 
@@ -84,8 +85,77 @@ class TestCallGraph:
         )
         assert set(call_graph.edges()) == set(expected_graph.edges())
 
+    def test_multiple_call_to_same_fc(self, mocker: MockerFixture):
+        """Call graph should allow for the same feature condition
+        to be called multiple times in the same branch (in different behaviors)."""
+        expected_action = Action("EXPECTED")
+        unexpected_action = Action("UNEXPECTED")
+
+        feature_condition_call = mocker.patch(
+            "tests.examples.feature_conditions.ThresholdFeatureCondition.__call__",
+            return_value=True,
+        )
+        feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
+
+        class SubBehavior(Behavior):
+            def __init__(self) -> None:
+                super().__init__("SubBehavior")
+
+            def build_graph(self) -> HEBGraph:
+                graph = HEBGraph(self)
+                graph.add_edge(feature_condition, expected_action, index=int(True))
+                graph.add_edge(feature_condition, unexpected_action, index=int(False))
+                return graph
+
+        class RootBehavior(Behavior):
+
+            """Feature condition with mutliple actions on same index."""
+
+            def __init__(self) -> None:
+                super().__init__("RootBehavior")
+
+            def build_graph(self) -> HEBGraph:
+                graph = HEBGraph(self)
+                graph.add_edge(feature_condition, SubBehavior(), index=int(True))
+                graph.add_edge(feature_condition, unexpected_action, index=int(False))
+
+                return graph
+
+        root_behavior = RootBehavior()
+        draw = False
+        if draw:
+            plot_graph(root_behavior.graph.unrolled_graph)
+
+        # Sanity check that the right action should be called and not the forbidden one.
+        assert root_behavior(observation=2) == expected_action.action
+
+        # Feature condition should only be called once on the same input
+        assert len(feature_condition_call.call_args_list) == 1
+
+        # Graph should have the good split
+        call_graph = root_behavior.graph.call_graph
+        expected_graph = DiGraph(
+            [
+                ("RootBehavior", "Greater or equal to 0 ?"),
+                ("Greater or equal to 0 ?", "SubBehavior"),
+                ("SubBehavior", "Greater or equal to 0 ?"),
+                ("Greater or equal to 0 ?", "Action(EXPECTED)"),
+            ]
+        )
+        assert set(call_graph.edges()) == set(expected_graph.edges())
+
+        expected_calls_order = {
+            "RootBehavior": [0],
+            "Greater or equal to 0 ?": [1, 3],
+            "SubBehavior": [2],
+            "Action(EXPECTED)": [4],
+        }
+        for node, node_calls_order in call_graph.nodes(data="calls_order"):
+            check.equal(node_calls_order, expected_calls_order[node])
+
     def test_chain_behaviors(self, mocker: MockerFixture):
-        """When sub-behaviors are chained they should be in the call graph."""
+        """When sub-behaviors with a graph are called recursively,
+        the call graph should still find their nodes."""
 
         expected_action = "EXPECTED"
 
@@ -107,15 +177,18 @@ class TestCallGraph:
 
             def build_graph(self) -> HEBGraph:
                 graph = HEBGraph(self)
-                graph.add_node(SubBehavior())
+                graph.add_node(Behavior("SubBehavior"))
                 return graph
 
-        f_aa_behavior = RootBehavior()
+        sub_behavior = SubBehavior()
+
+        root_behavior = RootBehavior()
+        root_behavior.graph.all_behaviors["SubBehavior"] = sub_behavior
 
         # Sanity check that the right action should be called.
-        assert f_aa_behavior(observation=-1) == expected_action
+        assert root_behavior(observation=-1) == expected_action
 
-        call_graph = f_aa_behavior.graph.call_graph
+        call_graph = root_behavior.graph.call_graph
         expected_graph = DiGraph(
             [
                 ("RootBehavior", "SubBehavior"),
@@ -144,7 +217,10 @@ class TestCallGraph:
             "Action(Punch tree)",
         ]
         nodes_by_order = sorted(
-            [(node, order) for (node, order) in call_graph.nodes(data="order")],
+            [
+                (node, order)
+                for (node, order) in call_graph.nodes(data="exploration_order")
+            ],
             key=lambda x: x[1],
         )
         assert [node for node, _order in nodes_by_order] == expected_order
