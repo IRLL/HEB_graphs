@@ -31,41 +31,36 @@ Action = TypeVar("Action")
 
 
 class CallGraph(DiGraph):
-    def __init__(self, initial_node: "Node", **attr):
+    def __init__(self, initial_node: "Node", heb_graph: "HEBGraph", **attr):
         super().__init__(incoming_graph_data=None, **attr)
         self.graph["n_branches"] = 0
         self.graph["n_calls"] = 0
         self.graph["frontiere"] = []
         self._known_fc: Dict[FeatureCondition, Any] = {}
         self._current_node = CallNode(0, 0)
-        self.add_node(
-            self._current_node, heb_node=initial_node, label=initial_node.name
-        )
+        self.add_node(self._current_node, heb_node=initial_node, heb_graph=heb_graph)
 
     def call_nodes(
-        self, nodes: List["Node"], observation, hebgraph: "HEBGraph"
+        self, nodes: List["Node"], observation, heb_graph: "HEBGraph"
     ) -> Action:
-        self._extend_frontiere(nodes)
-        next_node = self._pop_from_frontiere()
-        if next_node is None:
+        self._extend_frontiere(nodes, heb_graph)
+        next_call_node = self._pop_from_frontiere()
+        if next_call_node is None:
             raise ValueError("No valid frontiere left in call_graph")
-        return self._call_node(next_node, observation, hebgraph)
+        return self._call_node(next_call_node, observation)
 
     def call_edge_labels(self):
         return [
             (self.nodes[u]["label"], self.nodes[v]["label"]) for u, v in self.edges()
         ]
 
-    def _call_node(
-        self,
-        node: "Node",
-        observation: Any,
-        hebgraph: "HEBGraph",
-    ) -> Action:
+    def _call_node(self, call_node: "CallNode", observation: Any) -> Action:
+        node: "Node" = self.nodes[call_node]["heb_node"]
+        heb_graph: "HEBGraph" = self.nodes[call_node]["heb_graph"]
         if node.type == "behavior":
             # Search for name reference in all_behaviors
-            if node.name in hebgraph.all_behaviors:
-                node = hebgraph.all_behaviors[node.name]
+            if node.name in heb_graph.all_behaviors:
+                node = heb_graph.all_behaviors[node.name]
             return node(observation, self)
         elif node.type == "action":
             return node(observation)
@@ -75,21 +70,37 @@ class CallGraph(DiGraph):
             else:
                 next_edge_index = int(node(observation))
                 self._known_fc[node] = next_edge_index
-            next_nodes = get_successors_with_index(hebgraph, node, next_edge_index)
+            next_nodes = get_successors_with_index(heb_graph, node, next_edge_index)
         elif node.type == "empty":
-            next_nodes = list(hebgraph.successors(node))
+            next_nodes = list(heb_graph.successors(node))
         else:
             raise ValueError(
                 f"Unknowed value {node.type} for node.type with node: {node}."
             )
 
-        return self.call_nodes(next_nodes, observation, hebgraph=hebgraph)
+        return self.call_nodes(next_nodes, observation, heb_graph=heb_graph)
+
+    def add_node(
+        self, node_for_adding, heb_node: "Node", heb_graph: "HEBGraph", **attr
+    ):
+        super().add_node(
+            node_for_adding,
+            heb_graph=heb_graph,
+            heb_node=heb_node,
+            label=heb_node.name,
+            **attr,
+        )
+
+    def add_edge(self, u_of_edge, v_of_edge, **attr):
+        return super().add_edge(
+            u_of_edge, v_of_edge, status=CallEdgeStatus.UNEXPLORED.value, **attr
+        )
 
     def _make_new_branch(self) -> int:
         self.graph["n_branches"] += 1
         return self.graph["n_branches"]
 
-    def _extend_frontiere(self, nodes: List["Node"]):
+    def _extend_frontiere(self, nodes: List["Node"], heb_graph: "HEBGraph"):
         frontiere: List[CallNode] = self.graph["frontiere"]
 
         parent = self._current_node
@@ -101,8 +112,8 @@ class CallGraph(DiGraph):
             else:
                 branch_id = parent.branch
             call_node = CallNode(branch_id, parent.rank + 1)
-            self.add_node(call_node, label=node.name, heb_node=node)
-            self.add_edge(parent, call_node, status=CallEdgeStatus.UNEXPLORED.value)
+            self.add_node(call_node, heb_node=node, heb_graph=heb_graph)
+            self.add_edge(parent, call_node)
             call_nodes.append(call_node)
 
         frontiere.extend(call_nodes)
@@ -110,40 +121,38 @@ class CallGraph(DiGraph):
     def _heb_node_from_call_node(self, node: "CallNode") -> "Node":
         return self.nodes[node]["heb_node"]
 
-    def _pop_from_frontiere(self) -> Optional["Node"]:
+    def _pop_from_frontiere(self) -> Optional["CallNode"]:
         frontiere: List["CallNode"] = self.graph["frontiere"]
 
         next_node = None
-        parent = self._current_node
 
         while next_node is None:
             if not frontiere:
                 return None
 
-            _next_call_node = frontiere.pop(
+            next_call_node = frontiere.pop(
                 np.argmin(
                     [self._heb_node_from_call_node(node).cost for node in frontiere]
                 )
             )
-            _next_node = self._heb_node_from_call_node(_next_call_node)
+            maybe_next_node = self._heb_node_from_call_node(next_call_node)
+            # Nodes should only have one parent
+            parent = list(self.predecessors(next_call_node))[0]
 
-            if isinstance(_next_node, Behavior) and _next_node in [
+            if isinstance(maybe_next_node, Behavior) and maybe_next_node in [
                 self._heb_node_from_call_node(node)
-                for node in ancestors(self, _next_call_node)
+                for node in ancestors(self, next_call_node)
             ]:
-                self._update_edge_status(
-                    parent, _next_call_node, CallEdgeStatus.FAILURE
-                )
+                self._update_edge_status(parent, next_call_node, CallEdgeStatus.FAILURE)
                 continue
 
-            next_node = _next_node
+            next_node = maybe_next_node
 
         self.graph["n_calls"] += 1
-        self.nodes[_next_call_node]["call_rank"] = 1
-        self._update_edge_status(parent, _next_call_node, CallEdgeStatus.CALLED)
-        self._current_node = _next_call_node
-
-        return next_node
+        self.nodes[next_call_node]["call_rank"] = 1
+        self._update_edge_status(parent, next_call_node, CallEdgeStatus.CALLED)
+        self._current_node = next_call_node
+        return next_call_node
 
     def _update_edge_status(
         self, start: "Node", end: "Node", status: Union["CallEdgeStatus", str]
