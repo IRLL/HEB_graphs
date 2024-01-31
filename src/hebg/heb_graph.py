@@ -122,9 +122,7 @@ class HEBGraph(DiGraph):
         if call_graph is None:
             call_graph = CallGraph(initial_node=self.behavior)
         self.call_graph = call_graph
-        return self.call_graph.call_nodes(
-            self.roots, observation, hebgraph=self, parent=self.behavior
-        )
+        return self.call_graph.call_nodes(self.roots, observation, hebgraph=self)
 
     @property
     def roots(self) -> List[Node]:

@@ -1,5 +1,15 @@
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    NamedTuple,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 from matplotlib.axes import Axes
 
 from networkx import (
@@ -7,6 +17,7 @@ from networkx import (
     draw_networkx_edges,
     draw_networkx_labels,
     draw_networkx_nodes,
+    ancestors,
 )
 import numpy as np
 from hebg.behavior import Behavior
@@ -22,23 +33,28 @@ Action = TypeVar("Action")
 class CallGraph(DiGraph):
     def __init__(self, initial_node: "Node", **attr):
         super().__init__(incoming_graph_data=None, **attr)
+        self.graph["n_branches"] = 0
         self.graph["n_calls"] = 0
         self.graph["frontiere"] = []
         self._known_fc: Dict[FeatureCondition, Any] = {}
-        self.add_node(initial_node.name, exploration_order=0, calls_order=[0])
+        self._current_node = CallNode(0, 0)
+        self.add_node(
+            self._current_node, heb_node=initial_node, label=initial_node.name
+        )
 
     def call_nodes(
-        self,
-        nodes: List["Node"],
-        observation,
-        hebgraph: "HEBGraph",
-        parent: "Node" = None,
+        self, nodes: List["Node"], observation, hebgraph: "HEBGraph"
     ) -> Action:
-        self._extend_frontiere(nodes, parent)
-        next_node = self._pop_from_frontiere(parent)
+        self._extend_frontiere(nodes)
+        next_node = self._pop_from_frontiere()
         if next_node is None:
             raise ValueError("No valid frontiere left in call_graph")
         return self._call_node(next_node, observation, hebgraph)
+
+    def call_edge_labels(self):
+        return [
+            (self.nodes[u]["label"], self.nodes[v]["label"]) for u, v in self.edges()
+        ]
 
     def _call_node(
         self,
@@ -67,59 +83,73 @@ class CallGraph(DiGraph):
                 f"Unknowed value {node.type} for node.type with node: {node}."
             )
 
-        return self.call_nodes(
-            next_nodes,
-            observation,
-            hebgraph=hebgraph,
-            parent=node,
-        )
+        return self.call_nodes(next_nodes, observation, hebgraph=hebgraph)
 
-    def _extend_frontiere(self, nodes: List["Node"], parent: "Node"):
-        frontiere: List["Node"] = self.graph["frontiere"]
-        frontiere.extend(nodes)
+    def _make_new_branch(self) -> int:
+        self.graph["n_branches"] += 1
+        return self.graph["n_branches"]
 
-        for node in nodes:
-            self.add_edge(
-                parent.name, node.name, status=CallEdgeStatus.UNEXPLORED.value
-            )
-            node_data = self.nodes[node.name]
-            parent_data = self.nodes[parent.name]
-            if "exploration_order" not in node_data:
-                node_data["exploration_order"] = parent_data["exploration_order"] + 1
+    def _extend_frontiere(self, nodes: List["Node"]):
+        frontiere: List[CallNode] = self.graph["frontiere"]
 
-    def _pop_from_frontiere(self, parent: "Node") -> Optional["Node"]:
-        frontiere: List["Node"] = self.graph["frontiere"]
+        parent = self._current_node
+        call_nodes = []
+
+        for i, node in enumerate(nodes):
+            if i > 0:
+                branch_id = self._make_new_branch()
+            else:
+                branch_id = parent.branch
+            call_node = CallNode(branch_id, parent.rank + 1)
+            self.add_node(call_node, label=node.name, heb_node=node)
+            self.add_edge(parent, call_node, status=CallEdgeStatus.UNEXPLORED.value)
+            call_nodes.append(call_node)
+
+        frontiere.extend(call_nodes)
+
+    def _heb_node_from_call_node(self, node: "CallNode") -> "Node":
+        return self.nodes[node]["heb_node"]
+
+    def _pop_from_frontiere(self) -> Optional["Node"]:
+        frontiere: List["CallNode"] = self.graph["frontiere"]
 
         next_node = None
+        parent = self._current_node
 
         while next_node is None:
             if not frontiere:
                 return None
-            _next_node = frontiere.pop(np.argmin([node.cost for node in frontiere]))
 
-            if (
-                isinstance(_next_node, Behavior)
-                and len(list(self.successors(_next_node))) > 0
-            ):
-                self._update_edge_status(parent, _next_node, CallEdgeStatus.FAILURE)
+            _next_call_node = frontiere.pop(
+                np.argmin(
+                    [self._heb_node_from_call_node(node).cost for node in frontiere]
+                )
+            )
+            _next_node = self._heb_node_from_call_node(_next_call_node)
+
+            if isinstance(_next_node, Behavior) and _next_node in [
+                self._heb_node_from_call_node(node)
+                for node in ancestors(self, _next_call_node)
+            ]:
+                self._update_edge_status(
+                    parent, _next_call_node, CallEdgeStatus.FAILURE
+                )
                 continue
 
             next_node = _next_node
 
         self.graph["n_calls"] += 1
-        calls_order = self.nodes[next_node.name].get("calls_order", None)
-        if calls_order is None:
-            calls_order = []
-        calls_order.append(self.graph["n_calls"])
-        self.nodes[next_node.name]["calls_order"] = calls_order
-        self._update_edge_status(parent, next_node, CallEdgeStatus.CALLED)
+        self.nodes[_next_call_node]["call_rank"] = 1
+        self._update_edge_status(parent, _next_call_node, CallEdgeStatus.CALLED)
+        self._current_node = _next_call_node
+
         return next_node
 
     def _update_edge_status(
         self, start: "Node", end: "Node", status: Union["CallEdgeStatus", str]
     ):
         status = CallEdgeStatus(status)
-        self.edges[start.name, end.name]["status"] = status.value
+        self.edges[start, end]["status"] = status.value
 
     def draw(
         self,
@@ -136,7 +166,13 @@ class CallGraph(DiGraph):
         draw_networkx_nodes(self, ax=ax, pos=pos, **nodes_kwargs)
         if label_kwargs is None:
             label_kwargs = {}
-        draw_networkx_labels(self, ax=ax, pos=pos, **nodes_kwargs)
+        draw_networkx_labels(
+            self,
+            labels={node: label for node, label in self.nodes(data="label")},
+            ax=ax,
+            pos=pos,
+            **nodes_kwargs,
+        )
         if edges_kwargs is None:
             edges_kwargs = {}
         if "connectionstyle" not in edges_kwargs:
@@ -151,6 +187,11 @@ class CallGraph(DiGraph):
             ],
             **edges_kwargs,
         )
+
+
+class CallNode(NamedTuple):
+    branch: int
+    rank: int
 
 
 class CallEdgeStatus(Enum):
@@ -172,12 +213,18 @@ def _call_status_to_color(status: Union[str, "CallEdgeStatus"]):
 
 def _call_graph_pos(call_graph: DiGraph) -> Dict[str, Tuple[float, float]]:
     pos = {}
-    amount_by_order = {}
-    for node, node_data in call_graph.nodes(data=True):
-        order: int = node_data["exploration_order"]
-        if order not in amount_by_order:
-            amount_by_order[order] = 0
-        else:
-            amount_by_order[order] += 1
-        pos[node] = [order, amount_by_order[order] / 2]
+    branches_per_rank: Dict[int, List[int]] = {}
+    for node in call_graph.nodes():
+        node: CallNode = node
+        branch = node.branch
+        rank = node.rank
+
+        if rank not in branches_per_rank:
+            branches_per_rank[rank] = []
+
+        if branch not in branches_per_rank[rank]:
+            branches_per_rank[rank].append(branch)
+
+        display_branch = branches_per_rank[rank].index(branch)
+        pos[node] = [display_branch, -node.rank]
     return pos

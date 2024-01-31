@@ -1,6 +1,8 @@
+from typing import Tuple
 from networkx import DiGraph
 
 from hebg.behavior import Behavior
+from hebg.call_graph import CallGraph, CallNode
 from hebg.heb_graph import HEBGraph
 from hebg.node import Action
 
@@ -35,7 +37,7 @@ class TestCallGraph:
         )
 
         call_graph = f_f_a_behavior.graph.call_graph
-        assert set(call_graph.edges()) == set(expected_graph.edges())
+        assert set(call_graph.call_edge_labels()) == set(expected_graph.edges())
 
     def test_split_on_same_fc_index(self, mocker: MockerFixture):
         """When there are multiple indexes on the same feature condition,
@@ -83,7 +85,7 @@ class TestCallGraph:
                 ("Greater or equal to 0 ?", "Action(FORBIDDEN)"),
             ]
         )
-        assert set(call_graph.edges()) == set(expected_graph.edges())
+        assert set(call_graph.call_edge_labels()) == set(expected_graph.edges())
 
     def test_multiple_call_to_same_fc(self, mocker: MockerFixture):
         """Call graph should allow for the same feature condition
@@ -142,16 +144,17 @@ class TestCallGraph:
                 ("Greater or equal to 0 ?", "Action(EXPECTED)"),
             ]
         )
-        assert set(call_graph.edges()) == set(expected_graph.edges())
+        assert set(call_graph.call_edge_labels()) == set(expected_graph.edges())
 
-        expected_calls_order = {
-            "RootBehavior": [0],
-            "Greater or equal to 0 ?": [1, 3],
-            "SubBehavior": [2],
-            "Action(EXPECTED)": [4],
+        expected_labels = {
+            CallNode(0, 0): "RootBehavior",
+            CallNode(0, 1): "Greater or equal to 0 ?",
+            CallNode(0, 2): "SubBehavior",
+            CallNode(0, 3): "Greater or equal to 0 ?",
+            CallNode(0, 4): "Action(EXPECTED)",
         }
-        for node, node_calls_order in call_graph.nodes(data="calls_order"):
-            check.equal(node_calls_order, expected_calls_order[node])
+        for node, label in call_graph.nodes(data="label"):
+            check.equal(label, expected_labels[node])
 
     def test_chain_behaviors(self, mocker: MockerFixture):
         """When sub-behaviors with a graph are called recursively,
@@ -195,7 +198,7 @@ class TestCallGraph:
                 ("SubBehavior", "Dummy"),
             ]
         )
-        assert set(call_graph.edges()) == set(expected_graph.edges())
+        assert set(call_graph.call_edge_labels()) == set(expected_graph.edges())
 
     def test_looping_goback(self):
         """Loops with alternatives should be ignored."""
@@ -208,22 +211,17 @@ class TestCallGraph:
         if draw:
             plot_graph(call_graph)
 
-        expected_order = [
-            "Get new axe",
-            "Has wood ?",
-            "Gather wood",
-            "Action(Summon axe out of thin air)",
-            "Has axe ?",
-            "Action(Punch tree)",
-        ]
-        nodes_by_order = sorted(
-            [
-                (node, order)
-                for (node, order) in call_graph.nodes(data="exploration_order")
-            ],
-            key=lambda x: x[1],
-        )
-        assert [node for node, _order in nodes_by_order] == expected_order
+        expected_labels = {
+            CallNode(0, 0): "Get new axe",
+            CallNode(0, 1): "Has wood ?",
+            CallNode(1, 2): "Action(Summon axe out of thin air)",
+            CallNode(0, 2): "Gather wood",
+            CallNode(0, 3): "Has axe ?",
+            CallNode(2, 4): "Get new axe",
+            CallNode(0, 4): "Action(Punch tree)",
+        }
+        for node, label in call_graph.nodes(data="label"):
+            check.equal(label, expected_labels[node])
 
         expected_graph = DiGraph(
             [
@@ -236,4 +234,5 @@ class TestCallGraph:
             ]
         )
 
-        assert set(call_graph.edges()) == set(expected_graph.edges())
+        assert set(call_graph.call_edge_labels()) == set(expected_graph.edges())
+        call_graph.draw()
