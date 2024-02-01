@@ -44,41 +44,44 @@ class CallGraph(DiGraph):
         self, nodes: List["Node"], observation, heb_graph: "HEBGraph"
     ) -> Action:
         self._extend_frontiere(nodes, heb_graph)
-        next_call_node = self._pop_from_frontiere()
-        if next_call_node is None:
-            raise ValueError("No valid frontiere left in call_graph")
-        return self._call_node(next_call_node, observation)
+
+        while len(self.graph["frontiere"]) > 0:
+            next_call_node = self._pop_from_frontiere()
+            if next_call_node is None:
+                break
+
+            node: "Node" = self.nodes[next_call_node]["heb_node"]
+            heb_graph: "HEBGraph" = self.nodes[next_call_node]["heb_graph"]
+
+            if node.type == "behavior":
+                # Search for name reference in all_behaviors
+                if node.name in heb_graph.all_behaviors:
+                    node = heb_graph.all_behaviors[node.name]
+                return node(observation, self)
+            elif node.type == "action":
+                return node(observation)
+            elif node.type == "feature_condition":
+                if node in self._known_fc:
+                    next_edge_index = self._known_fc[node]
+                else:
+                    next_edge_index = int(node(observation))
+                    self._known_fc[node] = next_edge_index
+                next_nodes = get_successors_with_index(heb_graph, node, next_edge_index)
+            elif node.type == "empty":
+                next_nodes = list(heb_graph.successors(node))
+            else:
+                raise ValueError(
+                    f"Unknowed value {node.type} for node.type with node: {node}."
+                )
+
+            self._extend_frontiere(next_nodes, heb_graph)
+
+        raise ValueError("No valid frontiere left in call_graph")
 
     def call_edge_labels(self):
         return [
             (self.nodes[u]["label"], self.nodes[v]["label"]) for u, v in self.edges()
         ]
-
-    def _call_node(self, call_node: "CallNode", observation: Any) -> Action:
-        node: "Node" = self.nodes[call_node]["heb_node"]
-        heb_graph: "HEBGraph" = self.nodes[call_node]["heb_graph"]
-        if node.type == "behavior":
-            # Search for name reference in all_behaviors
-            if node.name in heb_graph.all_behaviors:
-                node = heb_graph.all_behaviors[node.name]
-            return node(observation, self)
-        elif node.type == "action":
-            return node(observation)
-        elif node.type == "feature_condition":
-            if node in self._known_fc:
-                next_edge_index = self._known_fc[node]
-            else:
-                next_edge_index = int(node(observation))
-                self._known_fc[node] = next_edge_index
-            next_nodes = get_successors_with_index(heb_graph, node, next_edge_index)
-        elif node.type == "empty":
-            next_nodes = list(heb_graph.successors(node))
-        else:
-            raise ValueError(
-                f"Unknowed value {node.type} for node.type with node: {node}."
-            )
-
-        return self.call_nodes(next_nodes, observation, heb_graph=heb_graph)
 
     def add_node(
         self, node_for_adding, heb_node: "Node", heb_graph: "HEBGraph", **attr
@@ -132,7 +135,10 @@ class CallGraph(DiGraph):
 
             next_call_node = frontiere.pop(
                 np.argmin(
-                    [self._heb_node_from_call_node(node).cost for node in frontiere]
+                    [
+                        self._heb_node_from_call_node(node).complexity
+                        for node in frontiere
+                    ]
                 )
             )
             maybe_next_node = self._heb_node_from_call_node(next_call_node)
