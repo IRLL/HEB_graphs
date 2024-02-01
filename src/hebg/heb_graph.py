@@ -120,7 +120,8 @@ class HEBGraph(DiGraph):
         call_graph: Optional[CallGraph] = None,
     ) -> Any:
         if call_graph is None:
-            call_graph = CallGraph(initial_node=self.behavior, heb_graph=self)
+            call_graph = CallGraph()
+            call_graph.add_root(heb_node=self.behavior, heb_graph=self)
         self.call_graph = call_graph
         return self.call_graph.call_nodes(self.roots, observation, heb_graph=self)
 

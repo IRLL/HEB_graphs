@@ -21,7 +21,6 @@ class Node:
         self,
         name: str,
         node_type: str,
-        cost: float = 1.0,
         complexity: int = None,
         image=None,
     ) -> None:
@@ -40,18 +39,13 @@ class Node:
         """
         self.name = name
         self.image = image
-        self.cost = cost
         if node_type not in self.NODE_TYPES:
             raise ValueError(
                 f"node_type ({node_type})"
                 f"not in authorised node_types ({self.NODE_TYPES})."
             )
         self.type = node_type
-        if complexity is not None:
-            self.complexity = complexity
-        else:
-            self.complexity = bytecode_complexity(self.__init__)
-            self.complexity += bytecode_complexity(self.__call__)
+        self.complexity = complexity
 
     def __call__(self, observation: Any) -> Any:
         raise NotImplementedError
