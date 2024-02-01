@@ -17,8 +17,8 @@ if TYPE_CHECKING:
 class Behavior(Node):
     """Abstract class for a Behavior as Node"""
 
-    def __init__(self, name: str, image=None) -> None:
-        super().__init__(name, "behavior", image=image)
+    def __init__(self, name: str, image=None, **kwargs) -> None:
+        super().__init__(name, "behavior", image=image, **kwargs)
         self._graph = None
 
     def __call__(self, observation, *args, **kwargs):
