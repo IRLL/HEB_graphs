@@ -51,5 +51,5 @@ def build_looping_behaviors() -> List[Behavior]:
     all_behaviors = {behavior.name: behavior for behavior in behaviors}
     for behavior in behaviors:
         behavior.graph.all_behaviors = all_behaviors
-        behavior.complexity = 20
+        behavior.complexity = 5
     return behaviors

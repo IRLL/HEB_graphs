@@ -128,6 +128,9 @@ class CallGraph(DiGraph):
             else:
                 branch_id = parent.branch
             call_node = CallNode(branch_id, parent.rank + 1)
+
+            if node.name in heb_graph.all_behaviors:
+                node = heb_graph.all_behaviors[node.name]
             self.add_node(call_node, heb_node=node, heb_graph=heb_graph)
             self.add_edge(parent, call_node, CallEdgeStatus.UNEXPLORED)
             call_nodes.append(call_node)
