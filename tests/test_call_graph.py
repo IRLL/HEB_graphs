@@ -1,10 +1,9 @@
-from typing import Tuple
 from networkx import DiGraph
 
 from hebg.behavior import Behavior
-from hebg.call_graph import CallGraph, CallNode
+from hebg.call_graph import CallEdgeStatus, CallGraph, CallNode, _call_graph_pos
 from hebg.heb_graph import HEBGraph
-from hebg.node import Action
+from hebg.node import Action, FeatureCondition
 
 from pytest_mock import MockerFixture
 import pytest_check as check
@@ -16,7 +15,7 @@ from tests.examples.behaviors.loop_with_alternative import build_looping_behavio
 from tests.examples.feature_conditions import ThresholdFeatureCondition
 
 
-class TestCallGraph:
+class TestCall:
     """Ensure that the call graph is faithful for debugging and efficient breadth first search."""
 
     def test_call_stack_without_branches(self):
@@ -43,10 +42,10 @@ class TestCallGraph:
         """When there are multiple indexes on the same feature condition,
         a branch should be created."""
 
-        expected_action = Action("EXPECTED", cost=1)
+        expected_action = Action("EXPECTED", complexity=1)
 
         forbidden_value = "FORBIDDEN"
-        forbidden_action = Action(forbidden_value, cost=2)
+        forbidden_action = Action(forbidden_value, complexity=2)
         forbidden_action.__call__ = mocker.MagicMock(return_value=forbidden_value)
 
         class F_AA_Behavior(Behavior):
@@ -61,7 +60,9 @@ class TestCallGraph:
                 feature_condition = ThresholdFeatureCondition(
                     relation=">=", threshold=0
                 )
-                graph.add_edge(feature_condition, Action(0, cost=0), index=int(True))
+                graph.add_edge(
+                    feature_condition, Action(0, complexity=0), index=int(True)
+                )
                 graph.add_edge(feature_condition, forbidden_action, index=int(False))
                 graph.add_edge(feature_condition, expected_action, index=int(False))
 
@@ -235,4 +236,55 @@ class TestCallGraph:
         )
 
         assert set(call_graph.call_edge_labels()) == set(expected_graph.edges())
-        call_graph.draw()
+
+
+class TestDraw:
+    """Ensures that the graph is readable even in complex situations."""
+
+    def test_result_on_first_branch(self):
+        """Resulting action should always be on the first branch."""
+        draw = False
+        root_behavior = Behavior("Root", complexity=20)
+        call_graph = CallGraph()
+        call_graph.add_root(root_behavior, None)
+
+        nodes = [
+            (CallNode(0, 1), FeatureCondition("FC1", complexity=1)),
+            (CallNode(0, 2), FeatureCondition("FC2", complexity=1)),
+            (CallNode(0, 3), root_behavior),
+            (CallNode(1, 1), FeatureCondition("FC3", complexity=1)),
+            (CallNode(1, 2), FeatureCondition("FC4", complexity=1)),
+            (CallNode(1, 3), FeatureCondition("FC5", complexity=1)),
+            (CallNode(1, 4), Action("A", complexity=1)),
+        ]
+
+        for node, heb_node in nodes:
+            call_graph.add_node(node, heb_node, None)
+
+        edges = [
+            (CallNode(0, 0), CallNode(0, 1), CallEdgeStatus.CALLED),
+            (CallNode(0, 1), CallNode(0, 2), CallEdgeStatus.CALLED),
+            (CallNode(0, 2), CallNode(0, 3), CallEdgeStatus.FAILURE),
+            (CallNode(0, 0), CallNode(1, 1), CallEdgeStatus.CALLED),
+            (CallNode(1, 1), CallNode(1, 2), CallEdgeStatus.CALLED),
+            (CallNode(1, 2), CallNode(1, 3), CallEdgeStatus.CALLED),
+            (CallNode(1, 3), CallNode(1, 4), CallEdgeStatus.CALLED),
+        ]
+
+        for start, end, status in edges:
+            call_graph.add_edge(start, end, status)
+
+        expected_poses = {
+            CallNode(0, 0): [0, 0],
+            CallNode(1, 1): [0, -1],
+            CallNode(1, 2): [0, -2],
+            CallNode(1, 3): [0, -3],
+            CallNode(1, 4): [0, -4],
+            CallNode(0, 1): [1, -1],
+            CallNode(0, 2): [1, -2],
+            CallNode(0, 3): [1, -3],
+        }
+        if draw:
+            plot_graph(call_graph)
+
+        assert _call_graph_pos(call_graph) == expected_poses

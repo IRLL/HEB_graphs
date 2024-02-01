@@ -308,9 +308,9 @@ def _get_node_histogram_complexity(
         if behaviors_in_search is not None and str(node) in behaviors_in_search:
             return {}, np.inf
     if node.type in ("action", "feature_condition", "behavior"):
-        try:
+        if node.complexity is not None:
             node_complexity = node.complexity
-        except AttributeError:
+        else:
             node_complexity = default_node_complexity
         return {node: 1}, node_complexity
     if node.type == "empty":

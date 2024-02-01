@@ -98,9 +98,9 @@ class TestCostBehavior:
 
             def build_graph(self) -> HEBGraph:
                 graph = HEBGraph(self)
-                graph.add_node(Action(0, cost=2))
-                graph.add_node(Action(expected_action, cost=1))
-                graph.add_node(Action(2, cost=3))
+                graph.add_node(Action(0, complexity=2))
+                graph.add_node(Action(expected_action, complexity=1))
+                graph.add_node(Action(2, complexity=3))
                 return graph
 
         behavior = AAA_Behavior()
@@ -119,13 +119,17 @@ class TestCostBehavior:
             def build_graph(self) -> HEBGraph:
                 graph = HEBGraph(self)
 
-                graph.add_node(Action(0, cost=1.5))
+                graph.add_node(Action(0, complexity=1.5))
                 feature_condition = ThresholdFeatureCondition(
-                    relation=">=", threshold=0, cost=1.0
+                    relation=">=", threshold=0, complexity=1.0
                 )
 
-                graph.add_edge(feature_condition, Action(1, cost=1.0), index=int(True))
-                graph.add_edge(feature_condition, Action(2, cost=1.0), index=int(False))
+                graph.add_edge(
+                    feature_condition, Action(1, complexity=1.0), index=int(True)
+                )
+                graph.add_edge(
+                    feature_condition, Action(2, complexity=1.0), index=int(False)
+                )
 
                 return graph
 
