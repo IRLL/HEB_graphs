@@ -64,7 +64,7 @@ class CallGraph(DiGraph):
                 # Search for name reference in all_behaviors
                 if node.name in heb_graph.all_behaviors:
                     node = heb_graph.all_behaviors[node.name]
-                if not hasattr(node, "graph"):
+                if not hasattr(node, "_graph") or node._graph is None:
                     action = node(observation)
                     break
                 self._extend_frontiere(node.graph.roots, heb_graph=node.graph)

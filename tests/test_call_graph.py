@@ -185,6 +185,7 @@ class TestCall:
                 return graph
 
         sub_behavior = SubBehavior()
+        sub_behavior.graph
 
         root_behavior = RootBehavior()
         root_behavior.graph.all_behaviors["SubBehavior"] = sub_behavior
