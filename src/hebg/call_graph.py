@@ -33,7 +33,7 @@ EnvAction = TypeVar("EnvAction")
 
 
 class CallGraph(DiGraph):
-    def __init__(self, **attr):
+    def __init__(self, **attr) -> None:
         super().__init__(incoming_graph_data=None, **attr)
         self.graph["n_branches"] = 0
         self.graph["n_calls"] = 0
@@ -41,7 +41,7 @@ class CallGraph(DiGraph):
         self._known_fc: Dict[FeatureCondition, Any] = {}
         self._current_node = CallNode(0, 0)
 
-    def add_root(self, heb_node: "Node", heb_graph: "HEBGraph", **kwargs):
+    def add_root(self, heb_node: "Node", heb_graph: "HEBGraph", **kwargs) -> None:
         self.add_node(
             self._current_node, heb_node=heb_node, heb_graph=heb_graph, **kwargs
         )
@@ -91,7 +91,7 @@ class CallGraph(DiGraph):
 
         return action
 
-    def call_edge_labels(self):
+    def call_edge_labels(self) -> list[tuple]:
         return [
             (self.nodes[u]["label"], self.nodes[v]["label"]) for u, v in self.edges()
         ]
@@ -120,7 +120,7 @@ class CallGraph(DiGraph):
         self.graph["n_branches"] += 1
         return self.graph["n_branches"]
 
-    def _extend_frontiere(self, nodes: List["Node"], heb_graph: "HEBGraph"):
+    def _extend_frontiere(self, nodes: List["Node"], heb_graph: "HEBGraph") -> None:
         frontiere: List[CallNode] = self.graph["frontiere"]
 
         parent = self._current_node
@@ -276,7 +276,7 @@ class CallEdgeStatus(Enum):
     FAILURE = "failure"
 
 
-def _node_color(node: Union[Action, FeatureCondition, Behavior]):
+def _node_color(node: Union[Action, FeatureCondition, Behavior]) -> str:
     if isinstance(node, Action):
         return "red"
     if isinstance(node, FeatureCondition):
@@ -286,7 +286,7 @@ def _node_color(node: Union[Action, FeatureCondition, Behavior]):
     raise NotImplementedError
 
 
-def _call_status_to_color(status: Union[str, "CallEdgeStatus"]):
+def _call_status_to_color(status: Union[str, "CallEdgeStatus"]) -> str:
     status = CallEdgeStatus(status)
     if status is CallEdgeStatus.UNEXPLORED:
         return "black"

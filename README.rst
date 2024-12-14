@@ -90,7 +90,7 @@ Here is an example to show how could we hierarchicaly build an explanable behavi
       def __init__(self, hand) -> None:
          super().__init__(name="Is hand near the cat ?")
          self.hand = hand
-      def __call__(self, observation):
+      def __call__(self, observation) -> int:
          # Could be a very complex function that returns 1 is the hand is near the cat else 0.
          if observation["cat"] == observation[self.hand]:
                return int(True)  # 1
@@ -119,7 +119,7 @@ Here is an example to show how could we hierarchicaly build an explanable behavi
    class IsThereACatAround(FeatureCondition):
       def __init__(self) -> None:
          super().__init__(name="Is there a cat around ?")
-      def __call__(self, observation):
+      def __call__(self, observation) -> int:
          # Could be a very complex function that returns 1 is there is a cat around else 0.
          if "cat" in observation:
                return int(True)  # 1
@@ -217,7 +217,7 @@ Will generate the code bellow:
    # Require 'Look for a nearby cat' behavior to be given.
    # Require 'Move slowly your hand near the cat' behavior to be given.
    class PetTheCat(GeneratedBehavior):
-      def __call__(self, observation):
+      def __call__(self, observation) -> Any:
          edge_index = self.feature_conditions['Is there a cat around ?'](observation)
          if edge_index == 0:
                return self.known_behaviors['Look for a nearby cat'](observation)

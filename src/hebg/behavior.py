@@ -21,7 +21,7 @@ class Behavior(Node):
         super().__init__(name, "behavior", image=image, **kwargs)
         self._graph = None
 
-    def __call__(self, observation, *args, **kwargs):
+    def __call__(self, observation, *args, **kwargs) -> None:
         """Use the behavior to get next actions.
 
         By default, uses the HEBGraph if it can be built.
