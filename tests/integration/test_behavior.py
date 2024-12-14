@@ -1,7 +1,7 @@
 # HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" Behavior of HEBGraphs when called. """
+"""Behavior of HEBGraphs when called."""
 
 import pytest_check as check
 

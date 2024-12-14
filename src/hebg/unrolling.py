@@ -4,6 +4,7 @@ Unrolling means expanding each sub-behavior node as it's own graph in the global
 Behaviors that do not have a graph (Unexplainable behaviors) should stay as is in the graph.
 
 """
+
 from copy import copy
 from typing import TYPE_CHECKING, Dict, List, Tuple, Optional, Union
 

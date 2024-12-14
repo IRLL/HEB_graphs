@@ -2,7 +2,7 @@
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 # pylint: disable=protected-access
 
-""" Metaheuristics based layouts """
+"""Metaheuristics based layouts"""
 
 from copy import deepcopy
 

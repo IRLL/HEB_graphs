@@ -1,7 +1,7 @@
 # HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" Utility functions for complexity computation. """
+"""Utility functions for complexity computation."""
 
 from copy import deepcopy
 

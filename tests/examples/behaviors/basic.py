@@ -8,7 +8,6 @@ from tests.examples.feature_conditions import ThresholdFeatureCondition
 
 
 class FundamentalBehavior(Behavior):
-
     """Fundamental behavior based on an Action."""
 
     def __init__(self, action: Action) -> None:
@@ -23,7 +22,6 @@ class FundamentalBehavior(Behavior):
 
 
 class AA_Behavior(Behavior):
-
     """Double root fundamental behavior"""
 
     def __init__(self, name: str, any_mode: str) -> None:
@@ -40,7 +38,6 @@ class AA_Behavior(Behavior):
 
 
 class F_A_Behavior(Behavior):
-
     """Single feature condition behavior"""
 
     def __init__(
@@ -68,7 +65,6 @@ class F_A_Behavior(Behavior):
 
 
 class F_F_A_Behavior(Behavior):
-
     """Double layer feature conditions behavior"""
 
     def build_graph(self) -> HEBGraph:
@@ -91,7 +87,6 @@ class F_F_A_Behavior(Behavior):
 
 
 class F_AA_Behavior(Behavior):
-
     """Feature condition with mutliple actions on same index."""
 
     def __init__(self, name: str, any_mode: str) -> None:
@@ -110,7 +105,6 @@ class F_AA_Behavior(Behavior):
 
 
 class AF_A_Behavior(Behavior):
-
     """Double root with feature condition and action"""
 
     def __init__(self, name: str, any_mode: str) -> None:

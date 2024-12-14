@@ -1,7 +1,7 @@
 # HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" Module for base Behavior. """
+"""Module for base Behavior."""
 
 from __future__ import annotations
 
@@ -15,7 +15,6 @@ if TYPE_CHECKING:
 
 
 class Behavior(Node):
-
     """Abstract class for a Behavior as Node"""
 
     def __init__(self, name: str, image=None) -> None:

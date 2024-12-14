@@ -2,7 +2,7 @@
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 # pylint: disable=protected-access, unused-argument, missing-function-docstring
 
-""" Unit tests for the hebg.behavior module. """
+"""Unit tests for the hebg.behavior module."""
 
 from copy import deepcopy
 
@@ -14,7 +14,6 @@ from hebg.heb_graph import HEBGraph, DiGraph, Behavior
 
 
 class TestHEBGraph:
-
     """HEBGraph"""
 
     @pytest.fixture(autouse=True)
@@ -143,7 +142,6 @@ class TestHEBGraph:
 
 
 class TestHEBGraphGetAnyAction:
-
     """HEBGraph._get_any_action"""
 
     @pytest.fixture(autouse=True)
@@ -201,7 +199,6 @@ class TestHEBGraphGetAnyAction:
 
 
 class TestHEBGraphGetAction:
-
     """HEBGraph._get_action"""
 
     @pytest.fixture(autouse=True)

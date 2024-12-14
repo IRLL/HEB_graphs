@@ -2,7 +2,7 @@
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 # pylint: disable=arguments-differ
 
-""" Module containing the HEBGraph base class. """
+"""Module containing the HEBGraph base class."""
 
 from __future__ import annotations
 
@@ -24,7 +24,6 @@ Action = TypeVar("Action")
 
 
 class HEBGraph(DiGraph):
-
     """Base class for Hierchical Explanation of Behavior as Graphs.
 
     An HEBGraph is a DiGraph, and as such stores nodes and directed edges with

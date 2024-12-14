@@ -2,7 +2,7 @@
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 # pylint: disable=protected-access
 
-""" Additional utility functions for networkx graphs. """
+"""Additional utility functions for networkx graphs."""
 
 from typing import TYPE_CHECKING, Any, Dict, List
 

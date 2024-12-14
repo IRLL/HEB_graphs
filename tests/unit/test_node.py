@@ -1,7 +1,7 @@
 # HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" Unit tests for the hebg.node module. """
+"""Unit tests for the hebg.node module."""
 
 import pytest
 import pytest_check as check
@@ -10,7 +10,6 @@ from hebg.node import Node, Action, FeatureCondition, EmptyNode
 
 
 class TestNode:
-
     """Node"""
 
     @pytest.fixture(autouse=True)
@@ -39,7 +38,6 @@ class TestNode:
 
 
 class TestAction:
-
     """Action"""
 
     @pytest.fixture(autouse=True)
@@ -60,7 +58,6 @@ class TestAction:
 
 
 class TestFeatureCondition:
-
     """FeatureCondition"""
 
     @pytest.fixture(autouse=True)
@@ -80,7 +77,6 @@ class TestFeatureCondition:
 
 
 class TestEmptyNode:
-
     """EmptyNode"""
 
     @pytest.fixture(autouse=True)

@@ -1,7 +1,7 @@
 # HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" Simplest binary utility for HEBGraph. """
+"""Simplest binary utility for HEBGraph."""
 
 from typing import Dict, List
 

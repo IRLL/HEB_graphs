@@ -1,7 +1,7 @@
 # HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" HEBGraph used nodes histograms computation. """
+"""HEBGraph used nodes histograms computation."""
 
 from typing import TYPE_CHECKING, Dict, List, Tuple
 from warnings import warn

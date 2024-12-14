@@ -1,7 +1,7 @@
 # HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" Module for base Node classes. """
+"""Module for base Node classes."""
 
 import dis
 from typing import Any, List
@@ -68,7 +68,6 @@ class Node:
 
 
 class Action(Node):
-
     """Node representing an action in an HEBGraph."""
 
     def __init__(self, action: Any, name: str = None, **kwargs) -> None:
@@ -84,7 +83,6 @@ class Action(Node):
 
 
 class StochasticAction(Action):
-
     """Node representing a stochastic choice between actions in an HEBGraph."""
 
     def __init__(
@@ -99,7 +97,6 @@ class StochasticAction(Action):
 
 
 class FeatureCondition(Node):
-
     """Node representing a feature condition in an HEBGraph."""
 
     def __init__(self, name: str = None, **kwargs) -> None:
@@ -110,7 +107,6 @@ class FeatureCondition(Node):
 
 
 class EmptyNode(Node):
-
     """Node representing an empty node in an HEBGraph."""
 
     def __init__(self, name: str) -> None:

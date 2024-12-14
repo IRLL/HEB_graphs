@@ -1,7 +1,7 @@
 # HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" Unit tests for the hebg.behavior module. """
+"""Unit tests for the hebg.behavior module."""
 
 import pytest
 import pytest_check as check
@@ -11,7 +11,6 @@ from hebg.behavior import Behavior
 
 
 class TestBehavior:
-
     """Behavior"""
 
     @pytest.fixture(autouse=True)

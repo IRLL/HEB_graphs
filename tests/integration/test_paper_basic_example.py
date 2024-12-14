@@ -1,7 +1,7 @@
 # HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" Integration tests for the initial paper examples. """
+"""Integration tests for the initial paper examples."""
 
 from typing import Dict, List
 from copy import deepcopy

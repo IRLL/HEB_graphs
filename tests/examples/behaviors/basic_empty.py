@@ -6,7 +6,6 @@ from tests.examples.feature_conditions import ThresholdFeatureCondition
 
 
 class E_A_Behavior(Behavior):
-
     """Empty behavior"""
 
     def __init__(self, name: str, action: Action) -> None:
@@ -20,7 +19,6 @@ class E_A_Behavior(Behavior):
 
 
 class E_F_A_Behavior(Behavior):
-
     """Double layer empty then feature conditions behavior"""
 
     def build_graph(self) -> HEBGraph:
@@ -37,7 +35,6 @@ class E_F_A_Behavior(Behavior):
 
 
 class F_E_A_Behavior(Behavior):
-
     """Double layer feature conditions then empty behavior"""
 
     def build_graph(self) -> HEBGraph:
@@ -57,7 +54,6 @@ class F_E_A_Behavior(Behavior):
 
 
 class E_E_A_Behavior(Behavior):
-
     """Double layer empty behavior"""
 
     def build_graph(self) -> HEBGraph:

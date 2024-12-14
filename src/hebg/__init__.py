@@ -1,7 +1,7 @@
 # HEBGraph for explainable hierarchical reinforcement learning
 # Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
-""" A structure for explainable hierarchical reinforcement learning """
+"""A structure for explainable hierarchical reinforcement learning"""
 
 from hebg.behavior import Behavior
 from hebg.heb_graph import HEBGraph
