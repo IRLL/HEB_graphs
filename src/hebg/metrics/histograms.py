@@ -1,5 +1,5 @@
 # HEBGraph for explainable hierarchical reinforcement learning
-# Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
+# Copyright (C) 2021-2024 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
 """HEBGraph used nodes histograms computation."""
 
@@ -308,9 +308,9 @@ def _get_node_histogram_complexity(
         if behaviors_in_search is not None and str(node) in behaviors_in_search:
             return {}, np.inf
     if node.type in ("action", "feature_condition", "behavior"):
-        try:
+        if node.complexity is not None:
             node_complexity = node.complexity
-        except AttributeError:
+        else:
             node_complexity = default_node_complexity
         return {node: 1}, node_complexity
     if node.type == "empty":

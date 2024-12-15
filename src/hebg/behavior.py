@@ -1,5 +1,5 @@
 # HEBGraph for explainable hierarchical reinforcement learning
-# Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
+# Copyright (C) 2021-2024 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
 """Module for base Behavior."""
 
@@ -17,11 +17,11 @@ if TYPE_CHECKING:
 class Behavior(Node):
     """Abstract class for a Behavior as Node"""
 
-    def __init__(self, name: str, image=None) -> None:
-        super().__init__(name, "behavior", image=image)
+    def __init__(self, name: str, image=None, **kwargs) -> None:
+        super().__init__(name, "behavior", image=image, **kwargs)
         self._graph = None
 
-    def __call__(self, observation, *args, **kwargs):
+    def __call__(self, observation, *args, **kwargs) -> None:
         """Use the behavior to get next actions.
 
         By default, uses the HEBGraph if it can be built.

@@ -1,3 +1,6 @@
+# HEBGraph for explainable hierarchical reinforcement learning
+# Copyright (C) 2021-2024 Mathïs FEDERICO <https://www.gnu.org/licenses/>
+
 """Module to unroll HEBGraph.
 
 Unrolling means expanding each sub-behavior node as it's own graph in the global HEBGraph.
@@ -20,7 +23,7 @@ if TYPE_CHECKING:
 
 def unroll_graph(
     graph: "HEBGraph",
-    add_prefix=False,
+    add_prefix: bool = False,
     cut_looping_alternatives: bool = False,
 ) -> "HEBGraph":
     """Build the the unrolled HEBGraph.
@@ -48,7 +51,7 @@ def unroll_graph(
 
 def _unroll_graph(
     graph: "HEBGraph",
-    add_prefix=False,
+    add_prefix: bool = False,
     cut_looping_alternatives: bool = False,
     _current_alternatives: Optional[List[Union["Action", "Behavior"]]] = None,
     _unrolled_behaviors: Optional[Dict[str, Optional["HEBGraph"]]] = None,
@@ -56,7 +59,7 @@ def _unroll_graph(
     if _unrolled_behaviors is None:
         _unrolled_behaviors = {}
     if _current_alternatives is None:
-        _current_alternatives = []
+        _current_alternatives = {0: []}
 
     is_looping = False
     _unrolled_behaviors[graph.behavior.name] = None
@@ -65,14 +68,9 @@ def _unroll_graph(
     for node in list(unrolled_graph.nodes()):
         if not isinstance(node, Behavior):
             continue
-        new_alternatives = []
-        for pred, _node, data in graph.in_edges(node, data=True):
-            index = data["index"]
-            for _pred, alternative, alt_index in graph.out_edges(pred, data="index"):
-                if index == alt_index and alternative != node:
-                    new_alternatives.append(alternative)
-        if new_alternatives:
-            _current_alternatives = new_alternatives
+
+        _current_alternatives[0] = _direct_alternatives(node, graph)
+        _current_alternatives[1] = _roots_alternatives(node, graph)
         unrolled_graph, behavior_is_looping = _unroll_behavior(
             unrolled_graph,
             node,
@@ -85,6 +83,25 @@ def _unroll_graph(
             is_looping = True
 
     return unrolled_graph, is_looping
+
+
+def _direct_alternatives(node: "Node", graph: "HEBGraph") -> list["Node"]:
+    alternatives = []
+    for pred, _node, data in graph.in_edges(node, data=True):
+        index = data["index"]
+        for _pred, alternative, alt_index in graph.out_edges(pred, data="index"):
+            if index != alt_index or alternative == node:
+                continue
+            alternatives.append(alternative)
+    return alternatives
+
+
+def _roots_alternatives(node: "Node", graph: "HEBGraph") -> list["Node"]:
+    alternatives = []
+    for pred, _node, _data in graph.in_edges(node, data=True):
+        if pred in graph.roots:
+            alternatives.extend([r for r in graph.roots if r != pred])
+    return alternatives
 
 
 def _unroll_behavior(
@@ -119,13 +136,24 @@ def _unroll_behavior(
     )
 
     if is_looping and cut_looping_alternatives:
-        if not _current_alternatives:
-            return graph, is_looping
-        for alternative in _current_alternatives:
+        for alternative in _current_alternatives[0]:
             for last_condition, _, data in graph.in_edges(behavior, data=True):
                 graph.add_edge(last_condition, alternative, **data)
-        graph.remove_node(behavior)
-        return graph, False
+        if _current_alternatives[0]:
+            graph.remove_node(behavior)
+            return graph, False
+        if _current_alternatives[1]:
+            predecessors = list(graph.predecessors(behavior))
+            for last_condition in predecessors:
+                successors = list(graph.successors(last_condition))
+                for descendant in successors:
+                    graph.remove_edge(last_condition, descendant)
+                    if graph.neighbors(descendant) == 0:
+                        graph.remove_node(descendant)
+                graph.remove_node(last_condition)
+            graph.remove_node(behavior)
+            return graph, False
+        raise NotImplementedError()
 
     if node_graph is None:
         # If we cannot get the node's graph, we keep it as is.
@@ -151,7 +179,7 @@ def _unrolled_behavior_graph(
     cut_looping_alternatives: bool,
     _current_alternatives: List[Union["Action", "Behavior"]],
     _unrolled_behaviors: Dict[str, Optional["HEBGraph"]],
-) -> Optional["HEBGraph"]:
+) -> Tuple[Optional["HEBGraph"], bool]:
     """Get the unrolled sub-graph of a behavior.
 
     Args:
@@ -188,7 +216,7 @@ def _add_prefix_to_graph(graph: "HEBGraph", prefix: str) -> None:
     if prefix is None:
         return graph
 
-    def rename(node: "Node"):
+    def rename(node: "Node") -> None:
         new_node = copy(node)
         new_node.name = prefix + node.name
         return new_node
@@ -216,14 +244,14 @@ def group_behaviors_points(
             for i in range(len(groups[:-1])):
                 key = tuple(groups[: -1 - i])
                 point = pos[node]
-                try:
+                if key in points_grouped_by_behavior:
                     points_grouped_by_behavior[key].append(point)
-                except KeyError:
+                else:
                     points_grouped_by_behavior[key] = [point]
     return points_grouped_by_behavior
 
 
-def compose_heb_graphs(graph_of_reference: "HEBGraph", other_graph: "HEBGraph"):
+def compose_heb_graphs(graph_of_reference: "HEBGraph", other_graph: "HEBGraph") -> None:
     """Returns a new_graph of graph_of_reference composed with other_graph.
 
     Composition is the simple union of the node sets and edge sets.
@@ -237,9 +265,7 @@ def compose_heb_graphs(graph_of_reference: "HEBGraph", other_graph: "HEBGraph"):
 
     """
     new_graph = graph_of_reference.__class__(
-        graph_of_reference.behavior,
-        all_behaviors=graph_of_reference.all_behaviors,
-        any_mode=graph_of_reference.any_mode,
+        graph_of_reference.behavior, all_behaviors=graph_of_reference.all_behaviors
     )
     # add graph attributes, H attributes take precedent over G attributes
     new_graph.graph.update(graph_of_reference.graph)

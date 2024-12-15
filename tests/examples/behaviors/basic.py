@@ -67,6 +67,9 @@ class F_A_Behavior(Behavior):
 class F_F_A_Behavior(Behavior):
     """Double layer feature conditions behavior"""
 
+    def __init__(self, name: str = "F_F_A", *args, **kwargs) -> None:
+        super().__init__(name=name, *args, **kwargs)
+
     def build_graph(self) -> HEBGraph:
         graph = HEBGraph(self)
 
@@ -89,12 +92,11 @@ class F_F_A_Behavior(Behavior):
 class F_AA_Behavior(Behavior):
     """Feature condition with mutliple actions on same index."""
 
-    def __init__(self, name: str, any_mode: str) -> None:
+    def __init__(self, name: str = "F_AA") -> None:
         super().__init__(name, image=None)
-        self.any_mode = any_mode
 
     def build_graph(self) -> HEBGraph:
-        graph = HEBGraph(self, any_mode=self.any_mode)
+        graph = HEBGraph(self)
         feature_condition = ThresholdFeatureCondition(relation=">=", threshold=0)
 
         graph.add_edge(feature_condition, Action(0), index=int(True))

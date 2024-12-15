@@ -15,8 +15,8 @@ repos:
     hooks:
       - id: pytest-fast-check
         name: pytest-fast-check
-        entry: ./venv/Scripts/python.exe -m pytest -m "not slow"
-        stages: ["commit"]
+        entry: pytest -m "not slow"
+        stages: ["pre-commit"]
         language: system
         pass_filenames: false
         always_run: true
@@ -24,8 +24,8 @@ repos:
     hooks:
       - id: pytest-check
         name: pytest-check
-        entry: ./venv/Scripts/python.exe -m pytest
-        stages: ["push"]
+        entry: pytest
+        stages: ["pre-push"]
         language: system
         pass_filenames: false
         always_run: true

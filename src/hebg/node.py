@@ -1,5 +1,5 @@
 # HEBGraph for explainable hierarchical reinforcement learning
-# Copyright (C) 2021-2022 Mathïs FEDERICO <https://www.gnu.org/licenses/>
+# Copyright (C) 2021-2024 Mathïs FEDERICO <https://www.gnu.org/licenses/>
 
 """Module for base Node classes."""
 
@@ -45,11 +45,7 @@ class Node:
                 f"not in authorised node_types ({self.NODE_TYPES})."
             )
         self.type = node_type
-        if complexity is not None:
-            self.complexity = complexity
-        else:
-            self.complexity = bytecode_complexity(self.__init__)
-            self.complexity += bytecode_complexity(self.__call__)
+        self.complexity = complexity
 
     def __call__(self, observation: Any) -> Any:
         raise NotImplementedError
