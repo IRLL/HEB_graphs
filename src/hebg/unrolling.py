@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 def unroll_graph(
     graph: "HEBGraph",
-    add_prefix=False,
+    add_prefix: bool = False,
     cut_looping_alternatives: bool = False,
 ) -> "HEBGraph":
     """Build the the unrolled HEBGraph.
@@ -51,7 +51,7 @@ def unroll_graph(
 
 def _unroll_graph(
     graph: "HEBGraph",
-    add_prefix=False,
+    add_prefix: bool = False,
     cut_looping_alternatives: bool = False,
     _current_alternatives: Optional[List[Union["Action", "Behavior"]]] = None,
     _unrolled_behaviors: Optional[Dict[str, Optional["HEBGraph"]]] = None,
@@ -85,7 +85,7 @@ def _unroll_graph(
     return unrolled_graph, is_looping
 
 
-def _direct_alternatives(node: "Node", graph: "HEBGraph"):
+def _direct_alternatives(node: "Node", graph: "HEBGraph") -> list["Node"]:
     alternatives = []
     for pred, _node, data in graph.in_edges(node, data=True):
         index = data["index"]
@@ -96,9 +96,9 @@ def _direct_alternatives(node: "Node", graph: "HEBGraph"):
     return alternatives
 
 
-def _roots_alternatives(node: "Node", graph: "HEBGraph"):
+def _roots_alternatives(node: "Node", graph: "HEBGraph") -> list["Node"]:
     alternatives = []
-    for pred, _node, data in graph.in_edges(node, data=True):
+    for pred, _node, _data in graph.in_edges(node, data=True):
         if pred in graph.roots:
             alternatives.extend([r for r in graph.roots if r != pred])
     return alternatives
@@ -216,7 +216,7 @@ def _add_prefix_to_graph(graph: "HEBGraph", prefix: str) -> None:
     if prefix is None:
         return graph
 
-    def rename(node: "Node"):
+    def rename(node: "Node") -> None:
         new_node = copy(node)
         new_node.name = prefix + node.name
         return new_node
@@ -251,7 +251,7 @@ def group_behaviors_points(
     return points_grouped_by_behavior
 
 
-def compose_heb_graphs(graph_of_reference: "HEBGraph", other_graph: "HEBGraph"):
+def compose_heb_graphs(graph_of_reference: "HEBGraph", other_graph: "HEBGraph") -> None:
     """Returns a new_graph of graph_of_reference composed with other_graph.
 
     Composition is the simple union of the node sets and edge sets.
